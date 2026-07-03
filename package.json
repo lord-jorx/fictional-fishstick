@@ -1,0 +1,22 @@
+{
+  "name": "surgeons-night",
+  "version": "0.1.0",
+  "description": "Surgeon's Night: El Turno de Guardia — simulador CLI de una guardia de cirugía general de 24 horas",
+  "type": "module",
+  "main": "dist/index.js",
+  "scripts": {
+    "build": "tsc",
+    "start": "node dist/index.js",
+    "dev": "tsc && node dist/index.js",
+    "clean": "rm -rf dist"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "keywords": ["game", "cli", "surgery", "simulator"],
+  "license": "MIT",
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "typescript": "^5.5.0"
+  }
+}
