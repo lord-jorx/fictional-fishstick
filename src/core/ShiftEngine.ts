@@ -12,11 +12,14 @@ import { lineaSeparadora } from '../ui/hud.js';
 import { pausa } from '../ui/prompt.js';
 import { crearRng, GameContext } from './GameContext.js';
 import { MaquinaEstados } from './StateMachine.js';
+import { elegir } from '../ui/prompt.js';
+
+export type ModoJuego = 'adjunto' | 'residente';
 
 export class ShiftEngine {
   private readonly ctx: GameContext;
 
-  constructor(semilla?: number) {
+  constructor(semilla?: number, private modo?: ModoJuego) {
     const rng = crearRng(semilla ?? (Date.now() & 0x7fffffff));
     this.ctx = new GameContext(rng);
 
@@ -32,6 +35,29 @@ export class ShiftEngine {
 
   async iniciar(): Promise<void> {
     this.pintarPortada();
+
+    if (this.modo === undefined) {
+      this.modo = await elegir<ModoJuego>('¿Con qué nivel sales a la guardia?', [
+        {
+          etiqueta: 'Adjunto',
+          detalle: 'sin red de seguridad, puntuación completa',
+          valor: 'adjunto',
+        },
+        {
+          etiqueta: 'Residente',
+          detalle: 'un adjunto localizable te da pistas; puntuación tutelada',
+          valor: 'residente',
+        },
+      ]);
+    }
+    this.ctx.modoResidente = this.modo === 'residente';
+    if (this.ctx.modoResidente) {
+      console.log(
+        gris('\n  Modo residente: tu adjunto sugerirá pruebas, dudará en voz alta si te') +
+          gris('\n  equivocas de destino y atenderá hasta 3 llamadas en quirófano.'),
+      );
+    }
+
     await pausa('Pulsa Intro para fichar y empezar la guardia...');
     await new MaquinaEstados().ejecutar(new TriageState(), this.ctx);
   }

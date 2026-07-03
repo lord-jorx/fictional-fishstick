@@ -34,7 +34,11 @@ export class SummaryState implements GameState {
     console.log(`  Complicaciones:           ${s.complicaciones === 0 ? verde('0') : amarillo(String(s.complicaciones))}`);
     console.log(`  Éxitus:                   ${s.exitus === 0 ? verde('0') : rojo(String(s.exitus))}`);
 
-    const puntos = this.puntuacion(ctx);
+    let puntos = this.puntuacion(ctx);
+    if (ctx.modoResidente) {
+      puntos = Math.round(puntos * 0.85);
+      console.log(gris('\n  Guardia tutelada (modo residente): la puntuación se ajusta al 85%.'));
+    }
     console.log(`\n${negrita('Puntuación final:')} ${negrita(puntos >= 0 ? verde(String(puntos)) : rojo(String(puntos)))}`);
     console.log(`${negrita('Veredicto del Jefe de Servicio:')} ${this.veredicto(puntos)}\n`);
 

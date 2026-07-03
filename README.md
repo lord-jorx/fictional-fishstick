@@ -13,12 +13,26 @@ npm install     # instala solo TypeScript (dev)
 npm run dev     # compila y arranca la guardia
 ```
 
-Partida reproducible (misma guardia, mismos pacientes):
+Partida reproducible y selección de modo desde la línea de comandos:
 
 ```bash
 npm run build
-node dist/index.js --seed 42
+node dist/index.js --seed 42            # misma guardia, mismos pacientes
+node dist/index.js --residente          # modo residente (adjunto de apoyo)
+node dist/index.js --adjunto            # modo adjunto (sin red de seguridad)
 ```
+
+## 🧑‍⚕️ Modos de juego
+
+- **Adjunto** — sin ayudas y con la puntuación completa.
+- **Residente** — sales de guardia con un adjunto localizable:
+  - En cada ficha te sugiere por teléfono la **prueba diana** del cuadro.
+  - Si con el diagnóstico confirmado eliges un destino que contradice el
+    manejo estándar, **arquea una ceja** y te deja reconsiderar (una vez
+    por paciente).
+  - En quirófano puedes **llamarle hasta 3 veces por guardia** para que te
+    señale la técnica correcta del paso.
+  - A cambio, la puntuación final se ajusta al 85% (guardia tutelada).
 
 ## 🎮 Cómo se juega
 
@@ -51,8 +65,12 @@ node dist/index.js --seed 42
 | Diverticulitis perforada (Hinchey IV) | TC | Laparotomía urgente (Hartmann) |
 | Isquemia mesentérica aguda | Angio-TC | Revascularización + resección |
 | Trauma abdominal cerrado (inestable) | Eco-FAST | Laparotomía exploradora |
+| Ulcus péptico perforado | TC | Sutura + epiploplastia de Graham |
+| Hernia inguinal estrangulada | Ecografía | Herniorrafia urgente (sin malla) |
+| Pancreatitis aguda litiásica *(¡no se opera!)* | Analítica | Ingreso conservador |
 | Gastroenteritis aguda *(distractor)* | Analítica | Alta |
 | Cólico biliar simple *(distractor)* | Ecografía | Alta |
+| Cólico renoureteral *(distractor)* | TC | Alta |
 
 Cada caso termina con una **perla docente** basada en el manejo estándar.
 
@@ -97,6 +115,19 @@ Decisiones de diseño:
   objeto a `data/pathologies.ts`; el motor no cambia.
 - **RNG determinista** (mulberry32) inyectado por constructor: partidas
   reproducibles con `--seed`, y motor testeable.
+
+## 📦 Plataformas y portabilidad
+
+El juego está pensado para **terminal** (Windows, macOS y Linux con Node ≥ 18).
+La arquitectura separa deliberadamente la lógica (`core/`, `data/`,
+`factories/`, `engine/`) de la presentación (`ui/`), así que portarlo a otra
+plataforma consiste en sustituir la capa de entrada/salida:
+
+- **Web / Steam**: empaquetar una UI web (o estilo terminal) con la misma
+  lógica en Electron o Tauri. Steam admite juegos narrativos/de texto, pero
+  exige un ejecutable de escritorio con su propia ventana, no una CLI.
+- **Android / iOS**: la lógica TypeScript es reutilizable tal cual con
+  Capacitor o React Native; solo hay que escribir la UI táctil.
 
 ## ⚠️ Descargo
 

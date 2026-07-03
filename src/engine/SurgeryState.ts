@@ -49,10 +49,7 @@ export class SurgeryState implements GameState {
       console.log(`\n  ${amarillo('EVENTO:')} ${paso.evento}`);
 
       const opciones = this.barajar(ctx, paso.opciones);
-      const eleccion = await elegir(
-        '¿Cómo procedes?',
-        opciones.map((op) => ({ etiqueta: op.texto, valor: op })),
-      );
+      const eleccion = await this.elegirTecnica(ctx, opciones);
 
       p.estabilidad = Math.min(100, Math.max(0, p.estabilidad + eleccion.deltaEstabilidad));
       ctx.cirujano.estres = Math.min(100, Math.max(0, ctx.cirujano.estres + eleccion.deltaEstres));
@@ -98,6 +95,35 @@ export class SurgeryState implements GameState {
   }
 
   // ────────────────────────────────────────────────────────────
+  /**
+   * Presenta las técnicas del paso. En modo residente, mientras queden
+   * llamadas disponibles, se puede telefonear al adjunto: señala la técnica
+   * correcta a cambio de gastar una de las 3 llamadas de la guardia.
+   */
+  private async elegirTecnica(ctx: GameContext, opciones: OpcionQuirurgica[]): Promise<OpcionQuirurgica> {
+    for (;;) {
+      const menu: { etiqueta: string; valor: OpcionQuirurgica | 'adjunto' }[] = opciones.map((op) => ({
+        etiqueta: op.texto,
+        valor: op,
+      }));
+      if (ctx.modoResidente && ctx.consultasAdjunto > 0) {
+        menu.push({
+          etiqueta: cian(`📞 Llamar al adjunto (quedan ${ctx.consultasAdjunto} llamadas)`),
+          valor: 'adjunto',
+        });
+      }
+
+      const eleccion = await elegir('¿Cómo procedes?', menu);
+      if (eleccion !== 'adjunto') return eleccion;
+
+      ctx.consultasAdjunto--;
+      const correcta = opciones.find((op) => op.correcta);
+      console.log(
+        `\n${cian('🩺 El adjunto, con voz de dormido:')} ${gris(`«Yo lo tengo claro: ${correcta?.texto.toLowerCase() ?? 'sigue tu instinto'}. Y no me llames más, que estoy en la cama.»`)}`,
+      );
+    }
+  }
+
   /** Con energía < 40 o estrés > 60, las opciones correctas pueden torcerse. */
   private probabilidadFalloOculto(ctx: GameContext): number {
     const porFatiga = Math.max(0, 40 - ctx.cirujano.energia) / 100;

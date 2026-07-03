@@ -1,17 +1,54 @@
 /**
  * Entrada de usuario por consola: menús numerados sobre readline nativo.
+ *
+ * Las líneas recibidas se guardan en una cola en lugar de perderse cuando
+ * no hay pregunta pendiente: así el juego funciona igual con un jugador
+ * al teclado que con entrada por tubería (tests automatizados).
  */
-import * as readline from 'node:readline/promises';
+import * as readline from 'node:readline';
 import { stdin, stdout } from 'node:process';
 import { amarillo, gris, negrita } from './ansi.js';
 
 const rl = readline.createInterface({ input: stdin, output: stdout });
 
-rl.on('close', () => {
-  // Stdin agotado (Ctrl+D o entrada por tubería terminada): fin limpio.
-  console.log(gris('\n— Entrada finalizada. La guardia queda interrumpida. —'));
-  process.exit(0);
+const cola: string[] = [];
+let pendiente: ((linea: string) => void) | null = null;
+let cerrado = false;
+
+rl.on('line', (linea) => {
+  if (pendiente) {
+    const resolver = pendiente;
+    pendiente = null;
+    resolver(linea);
+  } else {
+    cola.push(linea);
+  }
 });
+
+rl.on('close', () => {
+  cerrado = true;
+  // Si hay una pregunta esperando y no quedan líneas, la partida no puede seguir.
+  if (pendiente) {
+    console.log(gris('\n— Entrada finalizada. La guardia queda interrumpida. —'));
+    process.exit(0);
+  }
+});
+
+function preguntar(prompt: string): Promise<string> {
+  stdout.write(prompt);
+  const enCola = cola.shift();
+  if (enCola !== undefined) {
+    stdout.write(`${enCola}\n`);
+    return Promise.resolve(enCola);
+  }
+  if (cerrado) {
+    console.log(gris('\n— Entrada finalizada. La guardia queda interrumpida. —'));
+    process.exit(0);
+  }
+  return new Promise((resolver) => {
+    pendiente = resolver;
+  });
+}
 
 export interface Opcion<T> {
   etiqueta: string;
@@ -29,7 +66,7 @@ export async function elegir<T>(titulo: string, opciones: Opcion<T>[]): Promise<
   });
 
   for (;;) {
-    const respuesta = (await rl.question(amarillo('> '))).trim();
+    const respuesta = (await preguntar(amarillo('> '))).trim();
     const n = Number.parseInt(respuesta, 10);
     if (Number.isInteger(n) && n >= 1 && n <= opciones.length) {
       return opciones[n - 1]!.valor;
@@ -40,7 +77,7 @@ export async function elegir<T>(titulo: string, opciones: Opcion<T>[]): Promise<
 
 /** Pausa hasta que el jugador pulse Intro. */
 export async function pausa(mensaje = 'Pulsa Intro para continuar...'): Promise<void> {
-  await rl.question(gris(mensaje));
+  await preguntar(gris(mensaje));
 }
 
 export function cerrarEntrada(): void {

@@ -7,7 +7,7 @@
  */
 import { GameContext } from '../core/GameContext.js';
 import type { GameState } from '../core/StateMachine.js';
-import type { Paciente, PruebaId } from '../core/types.js';
+import type { ManejoCorrecto, Paciente, PruebaId } from '../core/types.js';
 import { INFORME_INESPECIFICO, PRUEBAS } from '../data/pruebas.js';
 import { amarillo, cian, gris, negrita, rojo, verde } from '../ui/ansi.js';
 import { fichaPaciente, horaGuardia, lineaSeparadora, pintarHUD } from '../ui/hud.js';
@@ -29,6 +29,8 @@ export class TriageState implements GameState {
   readonly nombre = 'triaje';
   /** Pacientes ya explorados en esta guardia (revela la exploración física). */
   private static explorados = new Set<number>();
+  /** Pacientes por los que el adjunto ya dudó una vez (modo residente). */
+  private static avisadosPorAdjunto = new Set<number>();
 
   async run(ctx: GameContext): Promise<GameState | null> {
     if (ctx.guardiaTerminada) return new SummaryState();
@@ -121,11 +123,13 @@ export class TriageState implements GameState {
         }
 
         case 'alta':
+          if (await this.adjuntoDuda(ctx, paciente, 'alta')) break;
           this.resolverAlta(ctx, paciente);
           await pausa();
           return this;
 
         case 'ingreso':
+          if (await this.adjuntoDuda(ctx, paciente, 'conservador')) break;
           this.resolverIngreso(ctx, paciente);
           await pausa();
           return this;
@@ -135,6 +139,7 @@ export class TriageState implements GameState {
             console.log(rojo('No hay ningún quirófano libre ahora mismo. Gana tiempo con otra decisión.'));
             break;
           }
+          if (await this.adjuntoDuda(ctx, paciente, 'cirugia')) break;
           if (!paciente.patologia.quirurgica) {
             console.log(
               rojo('\nEl anestesista revisa el caso y te para los pies: «¿Indicación quirúrgica? Yo no la veo.»'),
@@ -191,6 +196,40 @@ export class TriageState implements GameState {
     }
     if (p.diagnosticoConfirmado) {
       console.log(`  ${verde(`✔ Diagnóstico confirmado: ${p.patologia.nombre}`)}`);
+    } else if (ctx.modoResidente) {
+      console.log(
+        `  ${cian('🩺 Tu adjunto, por teléfono:')} ${gris(`«Con esa clínica, yo pediría ${PRUEBAS[p.patologia.pruebaDiana].nombre.toLowerCase()}.»`)}`,
+      );
+    }
+  }
+
+  /**
+   * Modo residente: si el diagnóstico está confirmado y la decisión contradice
+   * el manejo estándar, el adjunto duda en voz alta UNA vez por paciente.
+   * Devuelve true si el jugador decide reconsiderar.
+   */
+  private async adjuntoDuda(ctx: GameContext, p: Paciente, decision: ManejoCorrecto): Promise<boolean> {
+    if (!ctx.modoResidente) return false;
+    if (!p.diagnosticoConfirmado) return false;
+    if (decision === p.patologia.manejoCorrecto) return false;
+    if (TriageState.avisadosPorAdjunto.has(p.id)) return false;
+
+    TriageState.avisadosPorAdjunto.add(p.id);
+    console.log(
+      `\n${cian('🩺 Tu adjunto arquea una ceja:')} ${gris(`«¿${this.nombreDecision(decision)}, con un(a) ${p.patologia.nombre.toLowerCase()} confirmado/a? Tú verás, es tu paciente...»`)}`,
+    );
+    const reconsiderar = await elegir('¿Qué haces?', [
+      { etiqueta: 'Reconsiderar la decisión', valor: true },
+      { etiqueta: 'Mantenerla: el cirujano eres tú', valor: false },
+    ]);
+    return reconsiderar;
+  }
+
+  private nombreDecision(d: ManejoCorrecto): string {
+    switch (d) {
+      case 'alta': return 'Alta';
+      case 'conservador': return 'Tratamiento conservador';
+      case 'cirugia': return 'Quirófano urgente';
     }
   }
 
@@ -207,16 +246,16 @@ export class TriageState implements GameState {
     this.sacarDeEspera(ctx, p);
     ctx.stats.atendidos++;
 
-    if (!p.patologia.quirurgica) {
+    if (p.patologia.manejoCorrecto === 'alta') {
       p.estado = 'alta';
       ctx.stats.altasCorrectas++;
       ctx.cirujano.estres = Math.max(0, ctx.cirujano.estres - 4);
-      console.log(verde(`\n✔ Alta correcta: ${p.patologia.nombre} no precisaba cirugía.`));
+      console.log(verde(`\n✔ Alta correcta: ${p.patologia.nombre} no precisaba ingreso ni cirugía.`));
       console.log(gris(`  Perla docente: ${p.patologia.notaDocente}`));
       return;
     }
 
-    // Alta de un paciente quirúrgico: volverá, y volverá peor.
+    // Alta de quien necesitaba tratamiento: volverá, y volverá peor.
     ctx.stats.altasErroneas++;
     const estabilidadDeVuelta = p.estabilidad - 30;
 
@@ -248,9 +287,13 @@ export class TriageState implements GameState {
     if (p.patologia.quirurgica) {
       ctx.stats.ingresosErroneos++;
       console.log(amarillo(`\nIngresas a ${p.nombre} con sueroterapia y antibiótico. La planta lo vigilará... por ahora.`));
+    } else if (p.patologia.manejoCorrecto === 'conservador') {
+      ctx.stats.ingresosCorrectos++;
+      console.log(verde(`\n✔ Ingreso correcto: ${p.patologia.nombre} se trata con medidas conservadoras, no con bisturí.`));
+      console.log(gris(`  Perla docente: ${p.patologia.notaDocente}`));
     } else {
       ctx.stats.ingresosCorrectos++;
-      console.log(verde(`\nIngresas a ${p.nombre} en observación. Decisión prudente.`));
+      console.log(verde(`\nIngresas a ${p.nombre} en observación. Prudente, aunque podía haberse ido de alta.`));
     }
   }
 

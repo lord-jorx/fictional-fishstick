@@ -47,6 +47,11 @@ export class GameContext {
   readonly duracionGuardia = 24 * 60;
   minuto = 0;
 
+  /** Modo residente: un adjunto localizable te tutela durante la guardia. */
+  modoResidente = false;
+  /** Llamadas al adjunto disponibles en quirófano (solo modo residente). */
+  consultasAdjunto = 3;
+
   readonly cirujano: Cirujano = { energia: 100, estres: 10 };
   readonly hospital: Hospital = {
     quirofanosLibres: 2,

@@ -610,8 +610,268 @@ export const PATOLOGIAS: Patologia[] = [
     },
   },
   // ──────────────────────────────────────────────────────────────
+  {
+    id: 'ulcus',
+    nombre: 'Ulcus péptico perforado',
+    quirurgica: true,
+    frecuencia: 5,
+    presentacion: {
+      sintomas: [
+        'Dolor epigástrico brutal de inicio súbito hace 2 h, «como una puñalada»',
+        'El dolor se ha generalizado a todo el abdomen',
+        'Antecedente de epigastralgia crónica automedicada con ibuprofeno',
+      ],
+      exploracion: 'Abdomen en tabla con contractura generalizada. El paciente evita moverse. Matidez hepática dudosa.',
+      constantes: 'TA 115/75, FC 104, Sat 97%, Tª 37,4 °C',
+    },
+    pruebaDiana: 'tc',
+    hallazgoDiana:
+      'TC: neumoperitoneo evidente subdiafragmático y periportal, líquido libre y engrosamiento de la región antropilórica. Perforación de víscera hueca: ulcus péptico perforado.',
+    hallazgosParciales: {
+      analitica: 'Leucocitosis 15.600 con neutrofilia. Amilasa discretamente elevada (el líquido gástrico libre la sube).',
+      eco: 'Ecografía: líquido libre perihepático. El gas dificulta el resto del estudio.',
+    },
+    deterioroPorHora: 8,
+    estabilidadInicial: [55, 75],
+    manejoCorrecto: 'cirugia',
+    notaDocente:
+      'El «abdomen en tabla» con inicio súbito y antecedente de AINEs es un ulcus perforado hasta que se demuestre lo contrario. La sutura simple con epiploplastia de Graham resuelve la urgencia; la enfermedad ulcerosa se trata después con IBP y erradicación de H. pylori.',
+    cirugia: {
+      nombre: 'Cierre de perforación + epiploplastia de Graham',
+      duracionMin: 95,
+      pasos: [
+        {
+          titulo: 'Exploración y control de la contaminación',
+          evento: 'Peritonitis química con restos alimentarios. Identificas una perforación de 8 mm en cara anterior prepilórica.',
+          opciones: [
+            {
+              texto: 'Aspirado y lavado abundante por cuadrantes antes de reparar',
+              correcta: true,
+              resultado: 'Cavidad limpia. La perforación queda bien expuesta para la reparación.',
+              deltaEstabilidad: 0,
+              deltaEstres: -2,
+            },
+            {
+              texto: 'Suturar inmediatamente en el campo sucio: «primero cerrar el grifo»',
+              correcta: false,
+              resultado: 'Trabajas mal, con restos que ocultan los bordes. La carga séptica sigue dentro.',
+              deltaEstabilidad: -10,
+              deltaEstres: 8,
+            },
+          ],
+        },
+        {
+          titulo: 'Reparación de la perforación',
+          evento: 'Los bordes de la úlcera están edematosos y friables.',
+          opciones: [
+            {
+              texto: 'Puntos sueltos sin tensión y parche de epiplón (Graham) sobre la sutura',
+              correcta: true,
+              resultado: 'Cierre sellado con epiplón bien vascularizado. Prueba de fuga negativa.',
+              deltaEstabilidad: 0,
+              deltaEstres: -2,
+            },
+            {
+              texto: 'Sutura simple a tensión sin parche, «para acabar antes»',
+              correcta: false,
+              resultado: 'Los puntos desgarran el tejido friable: alto riesgo de fuga postoperatoria.',
+              deltaEstabilidad: -14,
+              deltaEstres: 10,
+            },
+            {
+              texto: 'Antrectomía urgente para «resolverlo de raíz»',
+              correcta: false,
+              resultado: 'Cirugía mayor innecesaria en un paciente séptico: más tiempo, más sangrado, más riesgo.',
+              deltaEstabilidad: -16,
+              deltaEstres: 8,
+            },
+          ],
+        },
+        {
+          titulo: 'Antes de cerrar',
+          evento: 'Los bordes de la úlcera te parecen indurados, algo irregulares. ¿Malignidad subyacente?',
+          opciones: [
+            {
+              texto: 'Tomar biopsias de los bordes y dejarlo registrado para el estudio diferido',
+              correcta: true,
+              resultado: 'Biopsias tomadas sin comprometer el cierre. Si es un tumor, no se escapará.',
+              deltaEstabilidad: 0,
+              deltaEstres: -2,
+            },
+            {
+              texto: 'Ignorarlo: «las úlceras son benignas casi siempre»',
+              correcta: false,
+              resultado: 'Si era un adenocarcinoma, acabas de retrasar su diagnóstico meses.',
+              deltaEstabilidad: -6,
+              deltaEstres: 4,
+            },
+          ],
+        },
+      ],
+    },
+  },
+  // ──────────────────────────────────────────────────────────────
+  {
+    id: 'hernia',
+    nombre: 'Hernia inguinal incarcerada (estrangulada)',
+    quirurgica: true,
+    frecuencia: 6,
+    presentacion: {
+      sintomas: [
+        'Bulto inguinal derecho doloroso e irreductible desde hace 10 h',
+        'Náuseas y dolor abdominal cólico creciente',
+        'La hernia «se le salía» desde hace años y siempre volvía a entrar',
+      ],
+      exploracion:
+        'Masa inguinal derecha dura, muy dolorosa, irreductible, con piel eritematosa. Dolor abdominal difuso con distensión leve.',
+      constantes: 'TA 120/78, FC 102, Sat 97%, Tª 37,9 °C',
+    },
+    pruebaDiana: 'eco',
+    hallazgoDiana:
+      'Ecografía de pared: saco herniario inguinal con asa de delgado incarcerada, aperistáltica, con líquido en el saco y engrosamiento parietal. Signos de sufrimiento de asa: hernia estrangulada.',
+    hallazgosParciales: {
+      analitica: 'Leucocitosis 14.900. Lactato 2,4 mmol/L: empieza a sufrir el asa.',
+      tc: 'TC: hernia inguinal con asa incarcerada y cambios inflamatorios. La ecografía habría bastado.',
+    },
+    deterioroPorHora: 6,
+    estabilidadInicial: [60, 80],
+    manejoCorrecto: 'cirugia',
+    notaDocente:
+      'Una hernia incarcerada dolorosa con signos inflamatorios no se reduce a la fuerza en urgencias: puede devolverse al abdomen un asa necrótica («reducción en masa»). Es quirófano urgente con valoración de viabilidad del contenido.',
+    cirugia: {
+      nombre: 'Herniorrafia urgente con revisión del contenido',
+      duracionMin: 85,
+      pasos: [
+        {
+          titulo: 'Apertura del saco herniario',
+          evento: 'Al abrir el saco sale líquido oscuro y aparece un asa violácea. El asa amenaza con escurrirse hacia el abdomen.',
+          opciones: [
+            {
+              texto: 'Sujetar el asa con una gasa antes de abrir el anillo: nada vuelve al abdomen sin ser valorado',
+              correcta: true,
+              resultado: 'Asa controlada y expuesta. Podrás decidir su viabilidad con calma.',
+              deltaEstabilidad: 0,
+              deltaEstres: -2,
+            },
+            {
+              texto: 'Reducir el contenido inmediatamente al abdomen y reparar la pared',
+              correcta: false,
+              resultado: 'El asa dudosa desaparece en la cavidad sin valorar: si estaba necrótica, la has escondido.',
+              deltaEstabilidad: -18,
+              deltaEstres: 12,
+            },
+          ],
+        },
+        {
+          titulo: 'Liberación del anillo',
+          evento: 'El anillo herniario es estrecho y fibroso: el asa no sale ni entra.',
+          opciones: [
+            {
+              texto: 'Kelotomía: ampliar el anillo con sección controlada, protegiendo asa y vasos epigástricos',
+              correcta: true,
+              resultado: 'Anillo ampliado sin lesionar nada. El asa queda liberada.',
+              deltaEstabilidad: 0,
+              deltaEstres: -2,
+            },
+            {
+              texto: 'Tracción forzada del asa a través del anillo estrecho',
+              correcta: false,
+              resultado: 'Desgarro del asa a nivel del anillo con salida de contenido intestinal.',
+              deltaEstabilidad: -16,
+              deltaEstres: 12,
+            },
+          ],
+        },
+        {
+          titulo: 'Viabilidad y reparación',
+          evento: 'Tras liberar el asa y reevaluarla con suero caliente, un segmento corto sigue necrótico. Hay contaminación del campo.',
+          opciones: [
+            {
+              texto: 'Resección segmentaria, anastomosis y reparación anatómica SIN malla (campo contaminado)',
+              correcta: true,
+              resultado: 'Resuelves la urgencia sin dejar prótesis en un campo sucio. Reparación tipo Bassini/Shouldice.',
+              deltaEstabilidad: 0,
+              deltaEstres: -2,
+            },
+            {
+              texto: 'Resección y colocación de malla de polipropileno «para que no recidive»',
+              correcta: false,
+              resultado: 'Prótesis en campo contaminado: infección protésica casi garantizada, con reintervención futura.',
+              deltaEstabilidad: -12,
+              deltaEstres: 8,
+            },
+            {
+              texto: 'No resecar el segmento necrótico para acortar la cirugía',
+              correcta: false,
+              resultado: 'Intestino muerto dentro del abdomen: peritonitis en 24-48 h.',
+              deltaEstabilidad: -22,
+              deltaEstres: 14,
+            },
+          ],
+        },
+      ],
+    },
+  },
+  // ──────────────────────────────────────────────────────────────
+  // Casos de manejo conservador: ingresar también es tratar.
+  // ──────────────────────────────────────────────────────────────
+  {
+    id: 'pancreatitis',
+    nombre: 'Pancreatitis aguda litiásica',
+    quirurgica: false,
+    frecuencia: 6,
+    presentacion: {
+      sintomas: [
+        'Dolor epigástrico intenso irradiado «en cinturón» a la espalda, de 10 h',
+        'Vómitos repetidos que no alivian el dolor',
+        'Colelitiasis conocida pendiente de cirugía programada',
+      ],
+      exploracion: 'Dolor a la palpación epigástrica sin peritonismo franco. Distensión leve. Ruidos disminuidos.',
+      constantes: 'TA 118/72, FC 100, Sat 96%, Tª 37,5 °C',
+    },
+    pruebaDiana: 'analitica',
+    hallazgoDiana:
+      'Analítica: lipasa 1.850 U/L (>3 veces el límite) y amilasa 1.200 U/L. Perfil hepático con patrón de colestasis leve. Pancreatitis aguda de origen biliar.',
+    hallazgosParciales: {
+      eco: 'Ecografía: colelitiasis múltiple sin signos de colecistitis. Vía biliar de 7 mm. Páncreas mal visualizado por gas.',
+      tc: 'TC precoz: edema peripancreático. Recuerda: el TC precoz no cambia el manejo inicial; la clínica y la lipasa dan el diagnóstico.',
+    },
+    deterioroPorHora: 3,
+    estabilidadInicial: [65, 85],
+    manejoCorrecto: 'conservador',
+    notaDocente:
+      'La pancreatitis aguda NO se opera en fase aguda: el tratamiento es ingreso, fluidoterapia, analgesia y nutrición precoz. La colecistectomía se hace diferida en el mismo ingreso una vez resuelto el cuadro. Operar el páncreas inflamado de urgencia es un error clásico.',
+  },
+  // ──────────────────────────────────────────────────────────────
   // Distractores no quirúrgicos: dar el alta también es medicina.
   // ──────────────────────────────────────────────────────────────
+  {
+    id: 'colico_renal',
+    nombre: 'Cólico renoureteral',
+    quirurgica: false,
+    frecuencia: 5,
+    presentacion: {
+      sintomas: [
+        'Dolor lumbar derecho intensísimo irradiado a genitales, de inicio brusco',
+        'El paciente no encuentra postura: se retuerce en la camilla',
+        'Un episodio similar hace dos años que «expulsó una piedrecita»',
+      ],
+      exploracion: 'Puñopercusión renal derecha positiva. Abdomen blando, sin defensa ni peritonismo.',
+      constantes: 'TA 135/85, FC 95, Sat 99%, Tª 36,8 °C',
+    },
+    pruebaDiana: 'tc',
+    hallazgoDiana:
+      'TC sin contraste: litiasis de 4 mm en uréter distal derecho con ectasia leve de la vía. Sin signos de complicación. Cólico renoureteral no complicado.',
+    hallazgosParciales: {
+      analitica: 'Función renal normal, sin leucocitosis. Microhematuria en el sedimento: pista clave.',
+      eco: 'Ecografía: discreta ectasia pielocalicial derecha. No se visualiza la litiasis.',
+    },
+    deterioroPorHora: 0,
+    estabilidadInicial: [85, 95],
+    manejoCorrecto: 'alta',
+    notaDocente:
+      'Dolor que no deja quieto al paciente (a diferencia del peritonítico, que no se mueve), puñopercusión positiva y microhematuria: cólico renal. Analgesia, alta y control por urología. Nada que cortar.',
+  },
   {
     id: 'gastroenteritis',
     nombre: 'Gastroenteritis aguda',
