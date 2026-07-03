@@ -193,6 +193,16 @@
   .baliza { fill: #ff6b6b; animation: baliza .8s steps(1) infinite; }
   .sol { fill: #ffd54a; filter: drop-shadow(0 0 14px rgba(255, 213, 74, .8)); animation: amanecer 3s ease-out forwards; }
 
+  #reloj-vivo {
+    flex: none;
+    font-size: .85em;
+    color: var(--acento);
+    border: 1px solid var(--borde);
+    border-radius: 8px;
+    padding: 4px 9px;
+    white-space: nowrap;
+  }
+  #reloj-vivo.apurado { color: var(--alarma); border-color: #7d2b35; animation: pulso-cruz 1s ease-in-out infinite; }
   #silencio {
     flex: none;
     background: transparent;
@@ -316,6 +326,7 @@
   <svg class="ecg" viewBox="0 0 300 36" preserveAspectRatio="none" aria-hidden="true">
     <path d="M0 18 h56 l6 0 4 -11 6 22 4 -11 h50 l6 0 4 -11 6 22 4 -11 h50 l6 0 4 -11 6 22 4 -11 H300"/>
   </svg>
+  <span id="reloj-vivo" hidden></span>
   <button id="silencio" type="button" aria-label="Sonido">🔊</button>
 </header>
 <div id="app"></div>

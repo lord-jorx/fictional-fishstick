@@ -15,6 +15,7 @@ import { crearRng, GameContext } from './GameContext.js';
 import { MaquinaEstados } from './StateMachine.js';
 
 export type ModoJuego = 'adjunto' | 'residente' | 'negra';
+export type RitmoJuego = 'turnos' | 'real';
 
 export class ShiftEngine {
   private readonly ctx: GameContext;
@@ -24,6 +25,7 @@ export class ShiftEngine {
     private readonly io: IO,
     semilla?: number,
     private modo?: ModoJuego,
+    private ritmo?: RitmoJuego,
   ) {
     this.rng = crearRng(semilla ?? (Date.now() & 0x7fffffff));
     this.ctx = new GameContext(this.rng, io);
@@ -83,6 +85,38 @@ export class ShiftEngine {
     if (this.ctx.modoNegra) {
       const inicio3 = 1080 + Math.floor(this.rng() * 200);
       this.ctx.programarOcupacionExterna(inicio3, inicio3 + 110, 'aneurisma de aorta roto');
+    }
+
+    // Tiempo real: solo si el adaptador tiene la capacidad (la web sí, la
+    // terminal no). La guardia avanza sola mientras deliberas.
+    if (this.io.iniciarTiempoReal) {
+      if (this.ritmo === undefined) {
+        this.ritmo = await this.io.elegir<RitmoJuego>('¿Cómo quieres vivir la guardia?', [
+          {
+            etiqueta: 'Por turnos',
+            detalle: 'clásico: el tiempo solo corre cuando actúas',
+            valor: 'turnos',
+          },
+          {
+            etiqueta: 'Tiempo real',
+            detalle: 'arcade: 1 segundo = 1 minuto; la guardia no espera a nadie',
+            valor: 'real',
+          },
+        ]);
+      }
+      if (this.ritmo === 'real') {
+        this.io.iniciarTiempoReal(() => ({
+          avisos: this.ctx.avanzarTiempo(1),
+          tablero: this.ctx.tablero(),
+          minuto: this.ctx.minuto,
+          minutosRestantes: Math.max(0, this.ctx.duracionGuardia - this.ctx.minuto),
+          terminada: this.ctx.guardiaTerminada,
+        }));
+        this.io.escribir(
+          gris('\n  Tiempo real activado: el reloj de arriba es tu enemigo. Los pacientes') +
+            gris('\n  se deterioran mientras dudas, y dudar también es una decisión.'),
+        );
+      }
     }
 
     await this.io.pausa('Pulsa Intro para fichar y empezar la guardia...');

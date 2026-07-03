@@ -33,19 +33,7 @@ export class SurgeryState implements GameState {
       patologiaId: p.patologia.id,
       nombre: p.nombre,
       edad: p.edad,
-      tablero: [
-        ...ctx.salaEspera.map((x) => ({
-          nombre: x.nombre,
-          estabilidad: x.estabilidad,
-          lugar: 'espera' as const,
-          alerta: x.reingresado || x.alertaPlanta,
-        })),
-        ...ctx.ingresados.map((x) => ({
-          nombre: x.nombre,
-          estabilidad: x.estabilidad,
-          lugar: 'planta' as const,
-        })),
-      ],
+      tablero: ctx.tablero(),
     });
     ctx.io.escribir('\n' + lineaSeparadora());
     ctx.io.escribir(`  ${negrita(cian('🔪 QUIRÓFANO'))} — ${negrita(plan.nombre)}`);

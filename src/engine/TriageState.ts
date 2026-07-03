@@ -15,7 +15,12 @@ import type { Opcion } from '../core/io.js';
 import { SummaryState } from './SummaryState.js';
 import { SurgeryState } from './SurgeryState.js';
 
-type AccionSala = { tipo: 'paciente'; paciente: Paciente } | { tipo: 'cafe' } | { tipo: 'esperar' } | { tipo: 'ronda' };
+type AccionSala =
+  | { tipo: 'paciente'; paciente: Paciente }
+  | { tipo: 'cafe' }
+  | { tipo: 'esperar' }
+  | { tipo: 'ronda' }
+  | { tipo: 'refrescar' };
 
 type AccionPaciente =
   | { tipo: 'explorar' }
@@ -23,7 +28,8 @@ type AccionPaciente =
   | { tipo: 'alta' }
   | { tipo: 'ingreso' }
   | { tipo: 'cirugia' }
-  | { tipo: 'volver' };
+  | { tipo: 'volver' }
+  | { tipo: 'reevaluar' };
 
 export class TriageState implements GameState {
   readonly nombre = 'triaje';
@@ -35,21 +41,7 @@ export class TriageState implements GameState {
   async run(ctx: GameContext): Promise<GameState | null> {
     if (ctx.guardiaTerminada) return new SummaryState();
 
-    ctx.io.escena?.('triaje', {
-      tablero: [
-        ...ctx.salaEspera.map((p) => ({
-          nombre: p.nombre,
-          estabilidad: p.estabilidad,
-          lugar: 'espera' as const,
-          alerta: p.reingresado || p.alertaPlanta,
-        })),
-        ...ctx.ingresados.map((p) => ({
-          nombre: p.nombre,
-          estabilidad: p.estabilidad,
-          lugar: 'planta' as const,
-        })),
-      ],
-    });
+    ctx.io.escena?.('triaje', { tablero: ctx.tablero() });
     pintarHUD(ctx);
     const accion = await this.elegirAccionDeSala(ctx);
 
@@ -72,6 +64,9 @@ export class TriageState implements GameState {
         this.mostrarAvisos(ctx, ctx.avanzarTiempo(15));
         return this;
       }
+      case 'refrescar':
+        // Tiempo real: han pasado cosas mientras deliberabas; repintar.
+        return this;
       case 'paciente':
         return this.atenderPaciente(ctx, accion.paciente);
     }
@@ -91,6 +86,8 @@ export class TriageState implements GameState {
     if (ctx.salaEspera.length === 0) {
       opciones.push({ etiqueta: 'Descansar hasta que suene el busca', detalle: 'recupera energía', valor: { tipo: 'esperar' } });
     }
+
+    opciones.push({ etiqueta: '⟳', oculta: true, valor: { tipo: 'refrescar' } });
 
     const titulo =
       ctx.salaEspera.length > 0
@@ -124,6 +121,10 @@ export class TriageState implements GameState {
       const accion = await this.elegirAccionPaciente(paciente, ctx);
 
       switch (accion.tipo) {
+        case 'reevaluar':
+          // Tiempo real: repintar la ficha (el bucle re-chequea éxitus y hora).
+          break;
+
         case 'volver':
           ctx.io.escribir(gris(`${paciente.nombre} queda en el box, monitorizado.`));
           return this;
@@ -215,6 +216,7 @@ export class TriageState implements GameState {
       { etiqueta: negrita('Ingresar para tratamiento conservador / observación'), valor: { tipo: 'ingreso' } },
       { etiqueta: negrita(rojo('Programar CIRUGÍA URGENTE')), detalle: `quirófanos libres: ${ctx.hospital.quirofanosLibres}`, valor: { tipo: 'cirugia' } },
       { etiqueta: gris('Dejarlo en el box y volver al control'), valor: { tipo: 'volver' } },
+      { etiqueta: '⟳', oculta: true, valor: { tipo: 'reevaluar' } },
     );
 
     return ctx.io.elegir(`¿Qué haces con ${paciente.nombre}?`, opciones);

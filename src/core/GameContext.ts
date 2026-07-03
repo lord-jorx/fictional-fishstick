@@ -7,7 +7,7 @@
  * `avanzarTiempo`, que es quien aplica deterioro, fatiga, llegadas
  * y liberación de recursos.
  */
-import type { IO } from './io.js';
+import type { ComandaPaciente, IO } from './io.js';
 import type { Cirujano, Estadisticas, Hospital, Paciente } from './types.js';
 
 /** PRNG determinista (mulberry32) para partidas reproducibles con --seed. */
@@ -113,6 +113,23 @@ export class GameContext {
 
   get guardiaTerminada(): boolean {
     return this.minuto >= this.duracionGuardia;
+  }
+
+  /** Fotografía del tablero de pacientes pendientes (para las "comandas"). */
+  tablero(): ComandaPaciente[] {
+    return [
+      ...this.salaEspera.map((p) => ({
+        nombre: p.nombre,
+        estabilidad: p.estabilidad,
+        lugar: 'espera' as const,
+        alerta: p.reingresado || p.alertaPlanta,
+      })),
+      ...this.ingresados.map((p) => ({
+        nombre: p.nombre,
+        estabilidad: p.estabilidad,
+        lugar: 'planta' as const,
+      })),
+    ];
   }
 
   /** Minuto de la próxima llegada pendiente, o null si no quedan. */

@@ -6,7 +6,8 @@
  * convierten a <span> con clases CSS. También se puede elegir opción
  * con las teclas 1-9.
  */
-import type { ComandaPaciente, EscenaDato, EscenaId, IO, Opcion } from '../core/io.js';
+import type { ComandaPaciente, EscenaDato, EscenaId, IO, LatidoTiempoReal, Opcion } from '../core/io.js';
+import { horaGuardia } from '../ui/hud.js';
 import { ARTE_AMANECER, ARTE_PORTADA, BANNER_QUIROFANO, cuerpoConDolor, SVG_AMBULANCIA } from './arte.js';
 import { escenaCampo, iconoHerramienta } from './quirofano.js';
 import { retratoPaciente } from './retrato.js';
@@ -62,6 +63,9 @@ export class WebIO implements IO {
   private readonly menu: HTMLElement;
   private readonly comandas: HTMLElement;
   private teclado: ((ev: KeyboardEvent) => void) | null = null;
+  /** Refresco automático del menú pendiente (opción oculta), en tiempo real. */
+  private autoRefresco: (() => void) | null = null;
+  private ticker: number | null = null;
 
   constructor(raiz: HTMLElement) {
     this.salida = document.createElement('div');
@@ -149,8 +153,18 @@ export class WebIO implements IO {
       cabecera.innerHTML = ansiAHtml(titulo);
       this.menu.appendChild(cabecera);
 
+      // La opción oculta no se pinta: queda armada para el tick de tiempo real.
+      const oculta = opciones.find((op) => op.oculta);
+      const visibles = opciones.filter((op) => !op.oculta);
+      if (oculta) {
+        this.autoRefresco = () => {
+          this.limpiarMenu();
+          resolver(oculta.valor);
+        };
+      }
+
       const botones: HTMLButtonElement[] = [];
-      opciones.forEach((op, i) => {
+      visibles.forEach((op, i) => {
         const boton = document.createElement('button');
         boton.className = visual ? 'opcion tarjeta' : 'opcion';
         const detalle = op.detalle ? `<span class="detalle">(${escaparHtml(op.detalle)})</span>` : '';
@@ -185,8 +199,42 @@ export class WebIO implements IO {
     return this.elegir(' ', [{ etiqueta, valor: undefined as void }]);
   }
 
+  /** Modo tiempo real: 1 s de reloj = 1 min de guardia, aunque no toques nada. */
+  iniciarTiempoReal(latido: () => LatidoTiempoReal): void {
+    const chip = document.getElementById('reloj-vivo');
+    if (chip) chip.hidden = false;
+
+    this.ticker = window.setInterval(() => {
+      if (document.visibilityState !== 'visible') return; // pausa al ocultar pestaña
+      const foto = latido();
+
+      if (chip) {
+        const h = Math.floor(foto.minutosRestantes / 60);
+        const m = String(foto.minutosRestantes % 60).padStart(2, '0');
+        chip.textContent = `🕐 ${horaGuardia(foto.minuto)} · quedan ${h}h ${m}m`;
+        chip.classList.toggle('apurado', foto.minutosRestantes < 120);
+      }
+      this.pintarComandas(foto.tablero);
+
+      for (const aviso of foto.avisos) this.escribir(aviso);
+      if ((foto.avisos.length > 0 || foto.terminada) && this.autoRefresco) {
+        const refrescar = this.autoRefresco;
+        this.autoRefresco = null;
+        refrescar();
+      }
+      if (foto.terminada && this.ticker !== null) {
+        clearInterval(this.ticker);
+        this.ticker = null;
+      }
+    }, 1000);
+  }
+
   cerrar(): void {
     sonido.pararLatido();
+    if (this.ticker !== null) {
+      clearInterval(this.ticker);
+      this.ticker = null;
+    }
     this.limpiarMenu();
     const boton = document.createElement('button');
     boton.className = 'opcion reinicio';
@@ -244,6 +292,7 @@ export class WebIO implements IO {
       document.removeEventListener('keydown', this.teclado);
       this.teclado = null;
     }
+    this.autoRefresco = null;
     this.menu.classList.remove('quirurgico');
     this.menu.replaceChildren();
   }

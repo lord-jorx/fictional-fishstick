@@ -16,6 +16,21 @@ export interface Opcion<T> {
   valor: T;
   /** Texto secundario, p. ej. el coste en tiempo. */
   detalle?: string;
+  /**
+   * Opción invisible: no se muestra ni se puede elegir a mano. En modo
+   * tiempo real, el adaptador la dispara solo cuando ocurren novedades
+   * (llegadas, avisos, fin de guardia) para refrescar el estado actual.
+   */
+  oculta?: boolean;
+}
+
+/** Fotografía del estado que el motor entrega en cada tick de tiempo real. */
+export interface LatidoTiempoReal {
+  avisos: string[];
+  tablero: ComandaPaciente[];
+  minuto: number;
+  minutosRestantes: number;
+  terminada: boolean;
 }
 
 /** Momentos visuales del juego, para adaptadores que sepan ilustrarlos. */
@@ -57,4 +72,13 @@ export interface IO {
    * Los adaptadores de texto puro lo ignoran; el web pinta ilustraciones.
    */
   escena?(escena: EscenaId, dato?: EscenaDato): void;
+
+  /**
+   * Capacidad opcional de tiempo real: el adaptador que la implemente
+   * llamará a `latido` una vez por segundo (= 1 minuto de guardia) mientras
+   * el jugador delibera, pintará los avisos resultantes y disparará las
+   * opciones ocultas de refresco cuando haya novedades. La terminal no la
+   * implementa: allí la guardia sigue siendo por turnos.
+   */
+  iniciarTiempoReal?(latido: () => LatidoTiempoReal): void;
 }

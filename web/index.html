@@ -193,6 +193,16 @@
   .baliza { fill: #ff6b6b; animation: baliza .8s steps(1) infinite; }
   .sol { fill: #ffd54a; filter: drop-shadow(0 0 14px rgba(255, 213, 74, .8)); animation: amanecer 3s ease-out forwards; }
 
+  #reloj-vivo {
+    flex: none;
+    font-size: .85em;
+    color: var(--acento);
+    border: 1px solid var(--borde);
+    border-radius: 8px;
+    padding: 4px 9px;
+    white-space: nowrap;
+  }
+  #reloj-vivo.apurado { color: var(--alarma); border-color: #7d2b35; animation: pulso-cruz 1s ease-in-out infinite; }
   #silencio {
     flex: none;
     background: transparent;
@@ -316,6 +326,7 @@
   <svg class="ecg" viewBox="0 0 300 36" preserveAspectRatio="none" aria-hidden="true">
     <path d="M0 18 h56 l6 0 4 -11 6 22 4 -11 h50 l6 0 4 -11 6 22 4 -11 h50 l6 0 4 -11 6 22 4 -11 H300"/>
   </svg>
+  <span id="reloj-vivo" hidden></span>
   <button id="silencio" type="button" aria-label="Sonido">🔊</button>
 </header>
 <div id="app"></div>
@@ -1650,8 +1661,8 @@
       if (tas < 90) alertas.push("hipotenso");
       if (fc > 120) alertas.push("taquicárdico");
       const nota = alertas.length > 0 ? ` — ¡${alertas.join(" y ")}!` : "";
-      const ritmo = perfil.irregular ? " irregular" : "";
-      return `TA ${tas}/${tad}, FC ${fc}${ritmo}, Sat ${sat}%, Tª ${temp} °C${nota}`;
+      const ritmo2 = perfil.irregular ? " irregular" : "";
+      return `TA ${tas}/${tad}, FC ${fc}${ritmo2}, Sat ${sat}%, Tª ${temp} °C${nota}`;
     }
     /** Sortea la variante de presentación (ponderada, atenuada por atipicidad). */
     elegirVariante(patologia, edad) {
@@ -2014,19 +2025,7 @@ ${negrita("Puntuación final:")} ${negrita(puntos >= 0 ? verde(String(puntos)) :
         patologiaId: p.patologia.id,
         nombre: p.nombre,
         edad: p.edad,
-        tablero: [
-          ...ctx.salaEspera.map((x) => ({
-            nombre: x.nombre,
-            estabilidad: x.estabilidad,
-            lugar: "espera",
-            alerta: x.reingresado || x.alertaPlanta
-          })),
-          ...ctx.ingresados.map((x) => ({
-            nombre: x.nombre,
-            estabilidad: x.estabilidad,
-            lugar: "planta"
-          }))
-        ]
+        tablero: ctx.tablero()
       });
       ctx.io.escribir("\n" + lineaSeparadora());
       ctx.io.escribir(`  ${negrita(cian("🔪 QUIRÓFANO"))} — ${negrita(plan.nombre)}`);
@@ -2199,21 +2198,7 @@ ${cian("🩺 El adjunto, con voz de dormido:")} ${gris(`«Yo lo tengo claro: ${c
     }
     async run(ctx) {
       if (ctx.guardiaTerminada) return new SummaryState();
-      ctx.io.escena?.("triaje", {
-        tablero: [
-          ...ctx.salaEspera.map((p) => ({
-            nombre: p.nombre,
-            estabilidad: p.estabilidad,
-            lugar: "espera",
-            alerta: p.reingresado || p.alertaPlanta
-          })),
-          ...ctx.ingresados.map((p) => ({
-            nombre: p.nombre,
-            estabilidad: p.estabilidad,
-            lugar: "planta"
-          }))
-        ]
-      });
+      ctx.io.escena?.("triaje", { tablero: ctx.tablero() });
       pintarHUD(ctx);
       const accion = await this.elegirAccionDeSala(ctx);
       switch (accion.tipo) {
@@ -2235,6 +2220,8 @@ ${cian("🩺 El adjunto, con voz de dormido:")} ${gris(`«Yo lo tengo claro: ${c
           this.mostrarAvisos(ctx, ctx.avanzarTiempo(15));
           return this;
         }
+        case "refrescar":
+          return this;
         case "paciente":
           return this.atenderPaciente(ctx, accion.paciente);
       }
@@ -2252,6 +2239,7 @@ ${cian("🩺 El adjunto, con voz de dormido:")} ${gris(`«Yo lo tengo claro: ${c
       if (ctx.salaEspera.length === 0) {
         opciones.push({ etiqueta: "Descansar hasta que suene el busca", detalle: "recupera energía", valor: { tipo: "esperar" } });
       }
+      opciones.push({ etiqueta: "⟳", oculta: true, valor: { tipo: "refrescar" } });
       const titulo = ctx.salaEspera.length > 0 ? `Sala de urgencias — ${ctx.salaEspera.length} paciente(s) esperan tu decisión:` : "Urgencias está en calma (de momento). ¿Qué haces?";
       return ctx.io.elegir(titulo, opciones);
     }
@@ -2278,6 +2266,8 @@ ${negrita("Ronda de planta:")}`);
         this.pintarFichaClinica(ctx, paciente);
         const accion = await this.elegirAccionPaciente(paciente, ctx);
         switch (accion.tipo) {
+          case "reevaluar":
+            break;
           case "volver":
             ctx.io.escribir(gris(`${paciente.nombre} queda en el box, monitorizado.`));
             return this;
@@ -2362,7 +2352,8 @@ ${cian(`Resultado de ${prueba.nombre}:`)}
         { etiqueta: negrita("Dar de alta con tratamiento ambulatorio"), valor: { tipo: "alta" } },
         { etiqueta: negrita("Ingresar para tratamiento conservador / observación"), valor: { tipo: "ingreso" } },
         { etiqueta: negrita(rojo("Programar CIRUGÍA URGENTE")), detalle: `quirófanos libres: ${ctx.hospital.quirofanosLibres}`, valor: { tipo: "cirugia" } },
-        { etiqueta: gris("Dejarlo en el box y volver al control"), valor: { tipo: "volver" } }
+        { etiqueta: gris("Dejarlo en el box y volver al control"), valor: { tipo: "volver" } },
+        { etiqueta: "⟳", oculta: true, valor: { tipo: "reevaluar" } }
       );
       return ctx.io.elegir(`¿Qué haces con ${paciente.nombre}?`, opciones);
     }
@@ -2570,6 +2561,22 @@ Ingresas a ${p.nombre} en observación. Prudente, aunque podía haberse ido de a
     get guardiaTerminada() {
       return this.minuto >= this.duracionGuardia;
     }
+    /** Fotografía del tablero de pacientes pendientes (para las "comandas"). */
+    tablero() {
+      return [
+        ...this.salaEspera.map((p) => ({
+          nombre: p.nombre,
+          estabilidad: p.estabilidad,
+          lugar: "espera",
+          alerta: p.reingresado || p.alertaPlanta
+        })),
+        ...this.ingresados.map((p) => ({
+          nombre: p.nombre,
+          estabilidad: p.estabilidad,
+          lugar: "planta"
+        }))
+      ];
+    }
     /** Minuto de la próxima llegada pendiente, o null si no quedan. */
     get proximaLlegada() {
       return this.llegadas.length > 0 ? this.llegadas[0].minuto : null;
@@ -2676,9 +2683,10 @@ Ingresas a ${p.nombre} en observación. Prudente, aunque podía haberse ido de a
 
   // src/core/ShiftEngine.ts
   var ShiftEngine = class {
-    constructor(io2, semilla2, modo2) {
+    constructor(io2, semilla2, modo2, ritmo2) {
       this.io = io2;
       this.modo = modo2;
+      this.ritmo = ritmo2;
       __publicField(this, "ctx");
       __publicField(this, "rng");
       this.rng = crearRng(semilla2 ?? Date.now() & 2147483647);
@@ -2729,6 +2737,34 @@ Ingresas a ${p.nombre} en observación. Prudente, aunque podía haberse ido de a
       if (this.ctx.modoNegra) {
         const inicio3 = 1080 + Math.floor(this.rng() * 200);
         this.ctx.programarOcupacionExterna(inicio3, inicio3 + 110, "aneurisma de aorta roto");
+      }
+      if (this.io.iniciarTiempoReal) {
+        if (this.ritmo === void 0) {
+          this.ritmo = await this.io.elegir("¿Cómo quieres vivir la guardia?", [
+            {
+              etiqueta: "Por turnos",
+              detalle: "clásico: el tiempo solo corre cuando actúas",
+              valor: "turnos"
+            },
+            {
+              etiqueta: "Tiempo real",
+              detalle: "arcade: 1 segundo = 1 minuto; la guardia no espera a nadie",
+              valor: "real"
+            }
+          ]);
+        }
+        if (this.ritmo === "real") {
+          this.io.iniciarTiempoReal(() => ({
+            avisos: this.ctx.avanzarTiempo(1),
+            tablero: this.ctx.tablero(),
+            minuto: this.ctx.minuto,
+            minutosRestantes: Math.max(0, this.ctx.duracionGuardia - this.ctx.minuto),
+            terminada: this.ctx.guardiaTerminada
+          }));
+          this.io.escribir(
+            gris("\n  Tiempo real activado: el reloj de arriba es tu enemigo. Los pacientes") + gris("\n  se deterioran mientras dudas, y dudar también es una decisión.")
+          );
+        }
       }
       await this.io.pausa("Pulsa Intro para fichar y empezar la guardia...");
       await new MaquinaEstados().ejecutar(new TriageState(), this.ctx);
@@ -3245,6 +3281,9 @@ Ingresas a ${p.nombre} en observación. Prudente, aunque podía haberse ido de a
       __publicField(this, "menu");
       __publicField(this, "comandas");
       __publicField(this, "teclado", null);
+      /** Refresco automático del menú pendiente (opción oculta), en tiempo real. */
+      __publicField(this, "autoRefresco", null);
+      __publicField(this, "ticker", null);
       this.salida = document.createElement("div");
       this.salida.id = "salida";
       this.comandas = document.createElement("div");
@@ -3320,8 +3359,16 @@ Ingresas a ${p.nombre} en observación. Prudente, aunque podía haberse ido de a
         cabecera.className = "menu-titulo";
         cabecera.innerHTML = ansiAHtml(titulo);
         this.menu.appendChild(cabecera);
+        const oculta = opciones.find((op) => op.oculta);
+        const visibles = opciones.filter((op) => !op.oculta);
+        if (oculta) {
+          this.autoRefresco = () => {
+            this.limpiarMenu();
+            resolver(oculta.valor);
+          };
+        }
         const botones = [];
-        opciones.forEach((op, i) => {
+        visibles.forEach((op, i) => {
           const boton = document.createElement("button");
           boton.className = visual ? "opcion tarjeta" : "opcion";
           const detalle = op.detalle ? `<span class="detalle">(${escaparHtml(op.detalle)})</span>` : "";
@@ -3350,8 +3397,38 @@ Ingresas a ${p.nombre} en observación. Prudente, aunque podía haberse ido de a
       const etiqueta = mensaje.includes("fichar") ? "▸ Fichar y empezar la guardia" : "▸ Continuar";
       return this.elegir(" ", [{ etiqueta, valor: void 0 }]);
     }
+    /** Modo tiempo real: 1 s de reloj = 1 min de guardia, aunque no toques nada. */
+    iniciarTiempoReal(latido) {
+      const chip = document.getElementById("reloj-vivo");
+      if (chip) chip.hidden = false;
+      this.ticker = window.setInterval(() => {
+        if (document.visibilityState !== "visible") return;
+        const foto = latido();
+        if (chip) {
+          const h = Math.floor(foto.minutosRestantes / 60);
+          const m = String(foto.minutosRestantes % 60).padStart(2, "0");
+          chip.textContent = `🕐 ${horaGuardia(foto.minuto)} · quedan ${h}h ${m}m`;
+          chip.classList.toggle("apurado", foto.minutosRestantes < 120);
+        }
+        this.pintarComandas(foto.tablero);
+        for (const aviso of foto.avisos) this.escribir(aviso);
+        if ((foto.avisos.length > 0 || foto.terminada) && this.autoRefresco) {
+          const refrescar = this.autoRefresco;
+          this.autoRefresco = null;
+          refrescar();
+        }
+        if (foto.terminada && this.ticker !== null) {
+          clearInterval(this.ticker);
+          this.ticker = null;
+        }
+      }, 1e3);
+    }
     cerrar() {
       sonido.pararLatido();
+      if (this.ticker !== null) {
+        clearInterval(this.ticker);
+        this.ticker = null;
+      }
       this.limpiarMenu();
       const boton = document.createElement("button");
       boton.className = "opcion reinicio";
@@ -3404,6 +3481,7 @@ Ingresas a ${p.nombre} en observación. Prudente, aunque podía haberse ido de a
         document.removeEventListener("keydown", this.teclado);
         this.teclado = null;
       }
+      this.autoRefresco = null;
       this.menu.classList.remove("quirurgico");
       this.menu.replaceChildren();
     }
@@ -3420,9 +3498,11 @@ Ingresas a ${p.nombre} en observación. Prudente, aunque podía haberse ido de a
   var semillaParam = parametros.get("seed");
   var semilla = semillaParam !== null && Number.isFinite(Number(semillaParam)) ? Number(semillaParam) : void 0;
   var modoParam = parametros.get("modo");
-  var modo = modoParam === "residente" || modoParam === "adjunto" ? modoParam : void 0;
+  var modo = modoParam === "residente" || modoParam === "adjunto" || modoParam === "negra" ? modoParam : void 0;
+  var ritmoParam = parametros.get("ritmo");
+  var ritmo = ritmoParam === "real" || ritmoParam === "turnos" ? ritmoParam : void 0;
   var io = new WebIO(document.getElementById("app"));
-  new ShiftEngine(io, semilla, modo).iniciar().catch((error) => {
+  new ShiftEngine(io, semilla, modo, ritmo).iniciar().catch((error) => {
     io.escribir(`\x1B[31mLa guardia ha terminado de forma inesperada: ${String(error)}\x1B[39m`);
   });
 })();

@@ -39,8 +39,9 @@ export class ConsoleIO implements IO {
   }
 
   async elegir<T>(titulo: string, opciones: Opcion<T>[]): Promise<T> {
+    const visibles = opciones.filter((op) => !op.oculta);
     this.escribir(`\n${negrita(titulo)}`);
-    opciones.forEach((op, i) => {
+    visibles.forEach((op, i) => {
       const detalle = op.detalle ? ` ${gris(`(${op.detalle})`)}` : '';
       this.escribir(`  ${amarillo(String(i + 1))}. ${op.etiqueta}${detalle}`);
     });
@@ -48,10 +49,10 @@ export class ConsoleIO implements IO {
     for (;;) {
       const respuesta = (await this.preguntar(amarillo('> '))).trim();
       const n = Number.parseInt(respuesta, 10);
-      if (Number.isInteger(n) && n >= 1 && n <= opciones.length) {
-        return opciones[n - 1]!.valor;
+      if (Number.isInteger(n) && n >= 1 && n <= visibles.length) {
+        return visibles[n - 1]!.valor;
       }
-      this.escribir(gris(`Introduce un número entre 1 y ${opciones.length}.`));
+      this.escribir(gris(`Introduce un número entre 1 y ${visibles.length}.`));
     }
   }
 

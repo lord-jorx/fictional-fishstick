@@ -5,7 +5,7 @@
  *   ?seed=42          → partida reproducible
  *   ?modo=residente   → salta el menú de nivel (también ?modo=adjunto)
  */
-import { ShiftEngine, type ModoJuego } from '../core/ShiftEngine.js';
+import { ShiftEngine, type ModoJuego, type RitmoJuego } from '../core/ShiftEngine.js';
 import { configurarColores } from '../ui/ansi.js';
 import { WebIO } from './WebIO.js';
 
@@ -19,9 +19,15 @@ const semilla =
 
 const modoParam = parametros.get('modo');
 const modo: ModoJuego | undefined =
-  modoParam === 'residente' || modoParam === 'adjunto' ? modoParam : undefined;
+  modoParam === 'residente' || modoParam === 'adjunto' || modoParam === 'negra'
+    ? modoParam
+    : undefined;
+
+const ritmoParam = parametros.get('ritmo');
+const ritmo: RitmoJuego | undefined =
+  ritmoParam === 'real' || ritmoParam === 'turnos' ? ritmoParam : undefined;
 
 const io = new WebIO(document.getElementById('app')!);
-new ShiftEngine(io, semilla, modo).iniciar().catch((error: unknown) => {
+new ShiftEngine(io, semilla, modo, ritmo).iniciar().catch((error: unknown) => {
   io.escribir(`\x1b[31mLa guardia ha terminado de forma inesperada: ${String(error)}\x1b[39m`);
 });
