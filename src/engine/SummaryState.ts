@@ -8,7 +8,7 @@ import type { GameState } from '../core/StateMachine.js';
 import type { Paciente } from '../core/types.js';
 import { amarillo, cian, gris, negrita, rojo, verde } from '../ui/ansi.js';
 import { lineaSeparadora } from '../ui/hud.js';
-import { cerrarEntrada } from '../ui/prompt.js';
+
 
 export class SummaryState implements GameState {
   readonly nombre = 'resumen';
@@ -16,33 +16,33 @@ export class SummaryState implements GameState {
   async run(ctx: GameContext): Promise<GameState | null> {
     const s = ctx.stats;
 
-    console.log('\n\n' + lineaSeparadora());
-    console.log(negrita(cian('  ☀ 08:00 — FIN DE LA GUARDIA. Llega el relevo con cara de dormido.')));
-    console.log(lineaSeparadora());
+    ctx.io.escribir('\n\n' + lineaSeparadora());
+    ctx.io.escribir(negrita(cian('  ☀ 08:00 — FIN DE LA GUARDIA. Llega el relevo con cara de dormido.')));
+    ctx.io.escribir(lineaSeparadora());
 
-    console.log(`\n${negrita('Parte de guardia:')}`);
+    ctx.io.escribir(`\n${negrita('Parte de guardia:')}`);
     for (const p of ctx.historial) {
-      console.log(`  ${this.iconoDestino(p)} ${p.nombre} — ${p.patologia.nombre} → ${this.destino(p)}`);
+      ctx.io.escribir(`  ${this.iconoDestino(p)} ${p.nombre} — ${p.patologia.nombre} → ${this.destino(p)}`);
     }
 
-    console.log(`\n${negrita('Balance:')}`);
-    console.log(`  Pacientes atendidos:      ${s.atendidos}`);
-    console.log(`  Cirugías realizadas:      ${s.cirugiasRealizadas} ${gris(`(${s.cirugiasPerfectas} impecables)`)}`);
-    console.log(`  Altas correctas:          ${s.altasCorrectas}`);
-    console.log(`  Ingresos en observación:  ${s.ingresosCorrectos} correctos, ${s.ingresosErroneos} discutibles`);
-    console.log(`  Altas erróneas:           ${s.altasErroneas === 0 ? verde('0') : rojo(String(s.altasErroneas))}`);
-    console.log(`  Complicaciones:           ${s.complicaciones === 0 ? verde('0') : amarillo(String(s.complicaciones))}`);
-    console.log(`  Éxitus:                   ${s.exitus === 0 ? verde('0') : rojo(String(s.exitus))}`);
+    ctx.io.escribir(`\n${negrita('Balance:')}`);
+    ctx.io.escribir(`  Pacientes atendidos:      ${s.atendidos}`);
+    ctx.io.escribir(`  Cirugías realizadas:      ${s.cirugiasRealizadas} ${gris(`(${s.cirugiasPerfectas} impecables)`)}`);
+    ctx.io.escribir(`  Altas correctas:          ${s.altasCorrectas}`);
+    ctx.io.escribir(`  Ingresos en observación:  ${s.ingresosCorrectos} correctos, ${s.ingresosErroneos} discutibles`);
+    ctx.io.escribir(`  Altas erróneas:           ${s.altasErroneas === 0 ? verde('0') : rojo(String(s.altasErroneas))}`);
+    ctx.io.escribir(`  Complicaciones:           ${s.complicaciones === 0 ? verde('0') : amarillo(String(s.complicaciones))}`);
+    ctx.io.escribir(`  Éxitus:                   ${s.exitus === 0 ? verde('0') : rojo(String(s.exitus))}`);
 
     let puntos = this.puntuacion(ctx);
     if (ctx.modoResidente) {
       puntos = Math.round(puntos * 0.85);
-      console.log(gris('\n  Guardia tutelada (modo residente): la puntuación se ajusta al 85%.'));
+      ctx.io.escribir(gris('\n  Guardia tutelada (modo residente): la puntuación se ajusta al 85%.'));
     }
-    console.log(`\n${negrita('Puntuación final:')} ${negrita(puntos >= 0 ? verde(String(puntos)) : rojo(String(puntos)))}`);
-    console.log(`${negrita('Veredicto del Jefe de Servicio:')} ${this.veredicto(puntos)}\n`);
+    ctx.io.escribir(`\n${negrita('Puntuación final:')} ${negrita(puntos >= 0 ? verde(String(puntos)) : rojo(String(puntos)))}`);
+    ctx.io.escribir(`${negrita('Veredicto del Jefe de Servicio:')} ${this.veredicto(puntos)}\n`);
 
-    cerrarEntrada();
+    ctx.io.cerrar();
     return null;
   }
 

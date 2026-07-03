@@ -1,0 +1,2033 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Surgeon's Night — El Turno de Guardia</title>
+<style>
+  :root {
+    --fondo: #0d1117;
+    --panel: #131a23;
+    --tinta: #d8e1ea;
+    --borde: #2a3542;
+    --acento: #66d9e8;
+  }
+  * { box-sizing: border-box; }
+  html, body { height: 100%; }
+  body {
+    margin: 0;
+    background: radial-gradient(1200px 600px at 50% -10%, #16212e 0%, var(--fondo) 60%);
+    color: var(--tinta);
+    font-family: "Cascadia Mono", "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    font-size: 14px;
+    line-height: 1.45;
+  }
+  #app {
+    max-width: 780px;
+    height: 100dvh;
+    margin: 0 auto;
+    display: flex;
+    flex-direction: column;
+    padding: 10px;
+  }
+  #salida {
+    flex: 1;
+    overflow-y: auto;
+    background: var(--panel);
+    border: 1px solid var(--borde);
+    border-radius: 10px 10px 0 0;
+    padding: 14px 16px;
+    white-space: pre-wrap;
+    word-break: break-word;
+    scrollbar-width: thin;
+    scrollbar-color: var(--borde) transparent;
+  }
+  #menu {
+    background: #0f151d;
+    border: 1px solid var(--borde);
+    border-top: none;
+    border-radius: 0 0 10px 10px;
+    padding: 10px 12px 12px;
+    max-height: 45dvh;
+    overflow-y: auto;
+  }
+  .menu-titulo { padding: 4px 2px 8px; font-weight: 700; }
+  button.opcion {
+    display: flex;
+    align-items: baseline;
+    gap: 10px;
+    width: 100%;
+    text-align: left;
+    margin: 4px 0;
+    padding: 9px 12px;
+    background: #17202b;
+    color: var(--tinta);
+    border: 1px solid var(--borde);
+    border-radius: 8px;
+    font: inherit;
+    cursor: pointer;
+    transition: background .12s, border-color .12s, transform .05s;
+    touch-action: manipulation;
+  }
+  button.opcion:hover, button.opcion:focus-visible {
+    background: #1d2938;
+    border-color: var(--acento);
+    outline: none;
+  }
+  button.opcion:active { transform: scale(.995); }
+  button.opcion .num {
+    color: #ffd43b;
+    min-width: 1.4em;
+    flex: none;
+  }
+  button.opcion .detalle { color: #868e96; font-size: .9em; }
+  button.reinicio { justify-content: center; color: var(--acento); font-weight: 700; }
+
+  /* Estilos que emite el conversor ANSI → HTML */
+  .ansi-b { font-weight: 700; }
+  .ansi-d { opacity: .65; }
+  .ansi-i { font-style: italic; }
+  .ansi-u { text-decoration: underline; }
+  .ansi-inv { background: var(--tinta); color: var(--fondo); }
+  .ansi-rojo { color: #ff6b6b; }
+  .ansi-verde { color: #69db7c; }
+  .ansi-amarillo { color: #ffd43b; }
+  .ansi-azul { color: #74c0fc; }
+  .ansi-magenta { color: #f783ac; }
+  .ansi-cian { color: #66d9e8; }
+  .ansi-gris { color: #868e96; }
+  .ansi-fondo-rojo { background: #c92a2a; color: #fff; }
+
+  @media (max-width: 480px) {
+    body { font-size: 13px; }
+    #app { padding: 6px; }
+  }
+</style>
+</head>
+<body>
+<div id="app"></div>
+<script>
+"use strict";
+(() => {
+  var __defProp = Object.defineProperty;
+  var __defNormalProp = (obj, key, value) => key in obj ? __defProp(obj, key, { enumerable: true, configurable: true, writable: true, value }) : obj[key] = value;
+  var __publicField = (obj, key, value) => __defNormalProp(obj, typeof key !== "symbol" ? key + "" : key, value);
+
+  // src/data/pathologies.ts
+  var PATOLOGIAS = [
+    // ──────────────────────────────────────────────────────────────
+    {
+      id: "apendicitis",
+      nombre: "Apendicitis aguda",
+      quirurgica: true,
+      frecuencia: 10,
+      presentacion: {
+        sintomas: [
+          "Dolor periumbilical migrado a fosa ilíaca derecha de 12 h de evolución",
+          "Anorexia y náuseas",
+          "Febrícula de 37,8 °C"
+        ],
+        exploracion: "Blumberg positivo en FID, defensa localizada. Psoas dudoso.",
+        constantes: "TA 125/80, FC 92, Sat 98%, Tª 37,8 °C"
+      },
+      pruebaDiana: "tc",
+      hallazgoDiana: "TC: apéndice de 11 mm, engrosamiento parietal, rarefacción de la grasa periapendicular. Apendicitis aguda no complicada.",
+      hallazgosParciales: {
+        analitica: "Leucocitosis 14.500 con neutrofilia. PCR 65 mg/L.",
+        eco: "Ecografía: apéndice no visualizado por interposición de gas. No descarta apendicitis."
+      },
+      deterioroPorHora: 4,
+      estabilidadInicial: [75, 90],
+      manejoCorrecto: "cirugia",
+      notaDocente: "La TC es la prueba más sensible en adultos; la ecografía es operador-dependiente y un apéndice no visualizado no descarta el diagnóstico.",
+      cirugia: {
+        nombre: "Apendicectomía laparoscópica",
+        duracionMin: 75,
+        pasos: [
+          {
+            titulo: "Acceso y neumoperitoneo",
+            evento: "Al preparar el campo observas una cicatriz de laparotomía media previa. Riesgo de adherencias al primer trócar.",
+            opciones: [
+              {
+                texto: "Entrada abierta (técnica de Hasson) alejada de la cicatriz",
+                correcta: true,
+                resultado: "Accedes bajo visión directa sin incidencias. Neumoperitoneo estable.",
+                deltaEstabilidad: 0,
+                deltaEstres: -3
+              },
+              {
+                texto: "Aguja de Veress a ciegas sobre el ombligo, como siempre",
+                correcta: false,
+                resultado: "¡Enterotomía inadvertida de un asa adherida! Debes repararla y lavar.",
+                deltaEstabilidad: -15,
+                deltaEstres: 12
+              },
+              {
+                texto: "Convertir directamente a cirugía abierta por miedo a las adherencias",
+                correcta: false,
+                resultado: "Laparotomía innecesaria: más dolor y más íleo postoperatorio para el paciente.",
+                deltaEstabilidad: -8,
+                deltaEstres: 5
+              }
+            ]
+          },
+          {
+            titulo: "Disección del mesoapéndice",
+            evento: "Sangrado activo de la arteria apendicular que tiñe el campo.",
+            opciones: [
+              {
+                texto: "Comprimir, aspirar, identificar el vaso y controlarlo con clip/bipolar bajo visión",
+                correcta: true,
+                resultado: "Hemostasia controlada. Campo limpio.",
+                deltaEstabilidad: -2,
+                deltaEstres: 3
+              },
+              {
+                texto: "Electrocoagulación monopolar a ciegas donde parece sangrar",
+                correcta: false,
+                resultado: "Quemas tejido sano, el vaso se retrae y sangra más. Tardas en controlarlo.",
+                deltaEstabilidad: -12,
+                deltaEstres: 10
+              },
+              {
+                texto: 'Ignorar el sangrado y seguir: "ya parará solo"',
+                correcta: false,
+                resultado: "Hemoperitoneo progresivo. Anestesia avisa de taquicardia.",
+                deltaEstabilidad: -18,
+                deltaEstres: 15
+              }
+            ]
+          },
+          {
+            titulo: "Sección de la base apendicular",
+            evento: "La base apendicular está friable y parcialmente perforada.",
+            opciones: [
+              {
+                texto: "Endograpadora incluyendo un rodete de ciego sano",
+                correcta: true,
+                resultado: "Cierre seguro sobre tejido sano. Lavado y aspirado de la fosa.",
+                deltaEstabilidad: 0,
+                deltaEstres: -2
+              },
+              {
+                texto: "Doble endoloop sobre la base friable",
+                correcta: false,
+                resultado: "El endoloop desgarra el tejido friable. Fuga de contenido: lavado extenso.",
+                deltaEstabilidad: -12,
+                deltaEstres: 8
+              }
+            ]
+          }
+        ]
+      }
+    },
+    // ──────────────────────────────────────────────────────────────
+    {
+      id: "colecistitis",
+      nombre: "Colecistitis aguda litiásica",
+      quirurgica: true,
+      frecuencia: 9,
+      presentacion: {
+        sintomas: [
+          "Dolor en hipocondrio derecho de 24 h, continuo, irradiado a escápula",
+          "Fiebre de 38,4 °C con escalofríos",
+          "Vómitos alimentarios"
+        ],
+        exploracion: "Murphy positivo. No ictericia. Abdomen blando en el resto.",
+        constantes: "TA 130/85, FC 98, Sat 97%, Tª 38,4 °C"
+      },
+      pruebaDiana: "eco",
+      hallazgoDiana: "Ecografía: vesícula distendida con pared de 6 mm, litiasis enclavada en el infundíbulo, líquido perivesicular y Murphy ecográfico positivo. Colecistitis aguda.",
+      hallazgosParciales: {
+        analitica: "Leucocitosis 16.200. PCR 120 mg/L. Bilirrubina y enzimas hepáticas normales.",
+        tc: "TC: engrosamiento de la pared vesicular con líquido adyacente. La ecografía sigue siendo la prueba de elección."
+      },
+      deterioroPorHora: 3,
+      estabilidadInicial: [70, 85],
+      manejoCorrecto: "cirugia",
+      notaDocente: "La ecografía es la prueba de elección. En colecistitis de <72 h de evolución, la colecistectomía laparoscópica precoz es el tratamiento estándar (Tokyo Guidelines).",
+      cirugia: {
+        nombre: "Colecistectomía laparoscópica",
+        duracionMin: 90,
+        pasos: [
+          {
+            titulo: "Exposición del triángulo de Calot",
+            evento: "Adherencias firmes del epiplón y el duodeno a la vesícula inflamada.",
+            opciones: [
+              {
+                texto: "Disección roma y paciente pegada a la pared vesicular hasta lograr la visión crítica de seguridad",
+                correcta: true,
+                resultado: "Liberas las adherencias sin lesionar nada. Visión crítica conseguida.",
+                deltaEstabilidad: 0,
+                deltaEstres: -3
+              },
+              {
+                texto: "Sección rápida con tijera de las bandas sin identificar estructuras",
+                correcta: false,
+                resultado: "Lesión serosa duodenal que obliga a sutura. La confianza no sustituye a la anatomía.",
+                deltaEstabilidad: -14,
+                deltaEstres: 12
+              },
+              {
+                texto: 'Tirar con fuerza de la vesícula con el grasper para "despegar" en bloque',
+                correcta: false,
+                resultado: "Desgarro vesicular con salida de bilis purulenta y sangrado del lecho.",
+                deltaEstabilidad: -10,
+                deltaEstres: 8
+              }
+            ]
+          },
+          {
+            titulo: "Control del pedículo",
+            evento: "¡Sangrado activo de la arteria cística! El campo se tiñe de rojo en segundos.",
+            opciones: [
+              {
+                texto: "Compresión con gasa, aspirar, exponer y clipar el muñón bajo visión directa",
+                correcta: true,
+                resultado: "Vaso controlado con dos clips. Recuperas la calma y el campo.",
+                deltaEstabilidad: -3,
+                deltaEstres: 4
+              },
+              {
+                texto: "Clips a ciegas en medio del charco de sangre",
+                correcta: false,
+                resultado: "Uno de los clips pinza parcialmente la vía biliar. Hay que retirarlo y revisar: la lesión de vía biliar es la complicación más temida.",
+                deltaEstabilidad: -18,
+                deltaEstres: 18
+              },
+              {
+                texto: "Convertir inmediatamente a cirugía abierta sin intentar el control laparoscópico",
+                correcta: false,
+                resultado: "Conversión precipitada: el sangrado era controlable. Más morbilidad para el paciente.",
+                deltaEstabilidad: -8,
+                deltaEstres: 6
+              }
+            ]
+          },
+          {
+            titulo: "Extracción de la pieza",
+            evento: "La vesícula se perfora al despegarla del lecho: salen bilis y varios cálculos a la cavidad.",
+            opciones: [
+              {
+                texto: "Aspirar la bilis, recuperar todos los cálculos y extraer la pieza en bolsa",
+                correcta: true,
+                resultado: "Cavidad limpia, pieza extraída en bolsa sin contaminar la pared.",
+                deltaEstabilidad: 0,
+                deltaEstres: -2
+              },
+              {
+                texto: 'Dejar los cálculos: "son estériles, no pasa nada"',
+                correcta: false,
+                resultado: "Los cálculos abandonados causan abscesos tardíos. Mala praxis conocida.",
+                deltaEstabilidad: -10,
+                deltaEstres: 6
+              }
+            ]
+          }
+        ]
+      }
+    },
+    // ──────────────────────────────────────────────────────────────
+    {
+      id: "obstruccion",
+      nombre: "Obstrucción intestinal por bridas (estrangulada)",
+      quirurgica: true,
+      frecuencia: 7,
+      presentacion: {
+        sintomas: [
+          "Dolor abdominal cólico que se ha vuelto continuo en las últimas horas",
+          "Vómitos biliosos y distensión abdominal",
+          "Ausencia de tránsito para gases y heces desde hace 36 h"
+        ],
+        exploracion: "Abdomen distendido y timpánico, cicatriz de laparotomía previa. Dolor fijo en mesogastrio con defensa. Ruidos metálicos.",
+        constantes: "TA 110/70, FC 108, Sat 96%, Tª 37,6 °C"
+      },
+      pruebaDiana: "tc",
+      hallazgoDiana: "TC: dilatación de asas de delgado con punto de transición brusco, asa cerrada con edema de pared, líquido libre y pobre realce mural. Sospecha de estrangulación.",
+      hallazgosParciales: {
+        analitica: "Leucocitosis 13.800. Lactato 2,8 mmol/L: sugiere sufrimiento de asa.",
+        eco: "Ecografía: asas dilatadas con contenido líquido. Estudio limitado por gas."
+      },
+      deterioroPorHora: 6,
+      estabilidadInicial: [55, 75],
+      manejoCorrecto: "cirugia",
+      notaDocente: "La obstrucción por bridas sin signos de sufrimiento puede manejarse con SNG y observación, pero el dolor continuo, la defensa, el lactato elevado y el pobre realce mural en TC obligan a cirugía urgente.",
+      cirugia: {
+        nombre: "Laparotomía + adhesiolisis",
+        duracionMin: 110,
+        pasos: [
+          {
+            titulo: "Adhesiolisis",
+            evento: "Encuentras una brida firme que estrangula un asa de íleon a 60 cm de la válvula ileocecal.",
+            opciones: [
+              {
+                texto: "Sección de la brida sobre tejido seguro y liberación cuidadosa del asa",
+                correcta: true,
+                resultado: "Asa liberada. Ahora toca valorar su viabilidad.",
+                deltaEstabilidad: 0,
+                deltaEstres: -2
+              },
+              {
+                texto: "Tracción enérgica del asa para liberarla sin seccionar la brida",
+                correcta: false,
+                resultado: "Desgarro de la serosa con apertura de la luz: contaminación del campo.",
+                deltaEstabilidad: -15,
+                deltaEstres: 12
+              }
+            ]
+          },
+          {
+            titulo: "Valoración de la viabilidad del asa",
+            evento: "El asa liberada está violácea, con peristaltismo dudoso.",
+            opciones: [
+              {
+                texto: "Envolverla en compresas con suero caliente y reevaluar color, peristaltismo y pulso mesentérico a los 10 minutos",
+                correcta: true,
+                resultado: "El asa recupera color rosado y peristaltismo en dos tercios; solo un segmento corto queda desvitalizado.",
+                deltaEstabilidad: 0,
+                deltaEstres: -3
+              },
+              {
+                texto: "Reintroducirla en la cavidad sin comprobar viabilidad y cerrar",
+                correcta: false,
+                resultado: "Dejas intestino necrótico dentro: peritonitis postoperatoria casi segura.",
+                deltaEstabilidad: -25,
+                deltaEstres: 15
+              },
+              {
+                texto: "Resección amplia inmediata de todo el segmento dudoso sin reevaluar",
+                correcta: false,
+                resultado: "Resecas 80 cm de intestino que habría sobrevivido. Cirugía más larga y anastomosis mayor.",
+                deltaEstabilidad: -8,
+                deltaEstres: 5
+              }
+            ]
+          },
+          {
+            titulo: "Reconstrucción",
+            evento: "Queda un segmento corto claramente necrótico. El paciente está estable.",
+            opciones: [
+              {
+                texto: "Resección segmentaria y anastomosis primaria término-terminal",
+                correcta: true,
+                resultado: "Anastomosis bien vascularizada y sin tensión. Cierre por planos.",
+                deltaEstabilidad: 0,
+                deltaEstres: -2
+              },
+              {
+                texto: 'Ileostomía terminal "por seguridad" pese a la estabilidad del paciente',
+                correcta: false,
+                resultado: "Estoma innecesario en paciente estable: morbilidad y segunda cirugía evitables.",
+                deltaEstabilidad: -6,
+                deltaEstres: 4
+              }
+            ]
+          }
+        ]
+      }
+    },
+    // ──────────────────────────────────────────────────────────────
+    {
+      id: "diverticulitis",
+      nombre: "Diverticulitis aguda perforada (Hinchey IV)",
+      quirurgica: true,
+      frecuencia: 6,
+      presentacion: {
+        sintomas: [
+          "Dolor intenso en fosa ilíaca izquierda de 48 h, ahora generalizado",
+          "Fiebre de 38,9 °C y malestar general intenso",
+          'Episodios previos de "diverticulitis" tratados con antibióticos'
+        ],
+        exploracion: "Abdomen en tabla, defensa generalizada con signos de irritación peritoneal difusa.",
+        constantes: "TA 95/60, FC 118, Sat 95%, Tª 38,9 °C"
+      },
+      pruebaDiana: "tc",
+      hallazgoDiana: "TC: engrosamiento de sigma con divertículos, neumoperitoneo franco y líquido libre difuso con burbujas extraluminales. Perforación diverticular con peritonitis difusa (Hinchey IV).",
+      hallazgosParciales: {
+        analitica: "Leucocitosis 19.400 con desviación izquierda. PCR 280 mg/L. Lactato 3,1 mmol/L.",
+        eco: "Ecografía: líquido libre en varios cuadrantes. No permite filiar el origen."
+      },
+      deterioroPorHora: 7,
+      estabilidadInicial: [45, 65],
+      manejoCorrecto: "cirugia",
+      notaDocente: "La diverticulitis Hinchey I-II se maneja con antibióticos ± drenaje percutáneo, pero la peritonitis difusa (III-IV) exige cirugía urgente; en el paciente séptico e inestable, la intervención de Hartmann sigue siendo la opción más segura.",
+      cirugia: {
+        nombre: "Laparotomía urgente por peritonitis",
+        duracionMin: 130,
+        pasos: [
+          {
+            titulo: "Entrada y control de la contaminación",
+            evento: "Al abrir encuentras peritonitis fecaloidea difusa en los cuatro cuadrantes.",
+            opciones: [
+              {
+                texto: "Aspirado del contenido y lavado abundante con suero caliente por cuadrantes",
+                correcta: true,
+                resultado: "Cavidad progresivamente limpia. Identificas la perforación en sigma.",
+                deltaEstabilidad: 0,
+                deltaEstres: -2
+              },
+              {
+                texto: "Ir directo al sigma sin lavar primero la cavidad",
+                correcta: false,
+                resultado: "Trabajas en un campo sucio: mayor carga séptica y peor visión.",
+                deltaEstabilidad: -10,
+                deltaEstres: 8
+              }
+            ]
+          },
+          {
+            titulo: "Inestabilidad intraoperatoria",
+            evento: "Anestesia avisa: TA 78/45 pese a fluidos, precisa noradrenalina. El paciente está séptico.",
+            opciones: [
+              {
+                texto: "Pausa quirúrgica coordinada: optimizar con anestesia y cambiar a estrategia de control de daños",
+                correcta: true,
+                resultado: "El paciente se estabiliza parcialmente. Acortas el plan quirúrgico: primero salvar la vida.",
+                deltaEstabilidad: 5,
+                deltaEstres: 4
+              },
+              {
+                texto: 'Seguir operando a ritmo normal: "cuanto antes acabemos, mejor"',
+                correcta: false,
+                resultado: "Hipotensión mantenida durante 20 minutos: daño orgánico añadido.",
+                deltaEstabilidad: -18,
+                deltaEstres: 12
+              }
+            ]
+          },
+          {
+            titulo: "Decisión reconstructiva",
+            evento: "Sigma perforado resecado. Paciente séptico con noradrenalina en curso.",
+            opciones: [
+              {
+                texto: "Intervención de Hartmann: colostomía terminal y cierre del muñón rectal",
+                correcta: true,
+                resultado: "Opción segura en el paciente inestable. Fin de la cirugía sin anastomosis de riesgo.",
+                deltaEstabilidad: 0,
+                deltaEstres: -3
+              },
+              {
+                texto: 'Anastomosis colorrectal primaria para "ahorrarle el estoma"',
+                correcta: false,
+                resultado: "Anastomosis en paciente séptico e inestable: riesgo altísimo de dehiscencia.",
+                deltaEstabilidad: -20,
+                deltaEstres: 10
+              }
+            ]
+          }
+        ]
+      }
+    },
+    // ──────────────────────────────────────────────────────────────
+    {
+      id: "isquemia",
+      nombre: "Isquemia mesentérica aguda (embolia de AMS)",
+      quirurgica: true,
+      frecuencia: 4,
+      presentacion: {
+        sintomas: [
+          "Dolor abdominal brutal de inicio súbito hace 3 h",
+          "El dolor es desproporcionado respecto a la exploración",
+          "Antecedente de fibrilación auricular sin anticoagular"
+        ],
+        exploracion: "Abdomen blando y poco doloroso a la palpación pese al dolor referido. Arritmia a la auscultación.",
+        constantes: "TA 105/65, FC 122 irregular, Sat 96%, Tª 36,9 °C"
+      },
+      pruebaDiana: "angiotc",
+      hallazgoDiana: "Angio-TC: defecto de repleción en la arteria mesentérica superior a 4 cm del ostium compatible con embolia. Asas de delgado con hipocaptación parietal. Isquemia mesentérica aguda.",
+      hallazgosParciales: {
+        analitica: "Lactato 4,9 mmol/L, leucocitosis 17.000, acidosis metabólica incipiente. ¡Piensa en isquemia!",
+        tc: "TC sin fase arterial dedicada: asas de calibre normal con pared adelgazada. Estudio subóptimo para valorar la AMS.",
+        eco: "Ecografía: escaso líquido libre. No valorable el eje mesentérico."
+      },
+      deterioroPorHora: 12,
+      estabilidadInicial: [50, 65],
+      manejoCorrecto: "cirugia",
+      notaDocente: '"Dolor desproporcionado a la exploración + FA" es isquemia mesentérica hasta que se demuestre lo contrario. El angio-TC es la prueba de elección y cada hora de retraso multiplica la mortalidad.',
+      cirugia: {
+        nombre: "Laparotomía + revascularización de la AMS",
+        duracionMin: 140,
+        pasos: [
+          {
+            titulo: "Exploración de la cavidad",
+            evento: "Asas de yeyuno-íleon cianóticas en un segmento extenso; el colon derecho tiene aspecto dudoso.",
+            opciones: [
+              {
+                texto: "Priorizar la revascularización: exponer la AMS y realizar embolectomía con catéter de Fogarty",
+                correcta: true,
+                resultado: "Recuperas flujo pulsátil. Gran parte del intestino recobra color en minutos.",
+                deltaEstabilidad: 5,
+                deltaEstres: 3
+              },
+              {
+                texto: "Resecar de entrada todo el intestino de aspecto isquémico sin revascularizar",
+                correcta: false,
+                resultado: "Resecas intestino potencialmente recuperable y condenas al paciente a un intestino corto.",
+                deltaEstabilidad: -20,
+                deltaEstres: 12
+              }
+            ]
+          },
+          {
+            titulo: "Tras la revascularización",
+            evento: "Persiste un segmento de íleon de 30 cm claramente necrótico.",
+            opciones: [
+              {
+                texto: "Resección limitada del segmento necrótico",
+                correcta: true,
+                resultado: "Resecas solo lo irrecuperable, preservando la máxima longitud intestinal.",
+                deltaEstabilidad: 0,
+                deltaEstres: -2
+              },
+              {
+                texto: 'Dejarlo: "con el flujo recuperado, quizá remonte"',
+                correcta: false,
+                resultado: "El intestino necrótico no resucita: sepsis postoperatoria grave.",
+                deltaEstabilidad: -25,
+                deltaEstres: 15
+              }
+            ]
+          },
+          {
+            titulo: "Cierre y planificación",
+            evento: "Quedan zonas de viabilidad intermedia. El paciente tolera mal la cirugía prolongada.",
+            opciones: [
+              {
+                texto: "Cirugía de control de daños: abdomen abierto (vacuum) y second-look programado en 24-48 h",
+                correcta: true,
+                resultado: "Estrategia correcta: reevaluarás la viabilidad con el paciente reanimado.",
+                deltaEstabilidad: 0,
+                deltaEstres: -3
+              },
+              {
+                texto: "Anastomosis definitiva y cierre completo de pared en el mismo acto",
+                correcta: false,
+                resultado: "Sin second-look, la progresión de la isquemia pasará desapercibida.",
+                deltaEstabilidad: -15,
+                deltaEstres: 8
+              }
+            ]
+          }
+        ]
+      }
+    },
+    // ──────────────────────────────────────────────────────────────
+    {
+      id: "trauma",
+      nombre: "Trauma abdominal cerrado (lesión esplénica)",
+      quirurgica: true,
+      frecuencia: 5,
+      presentacion: {
+        sintomas: [
+          "Accidente de motocicleta a alta velocidad hace 40 minutos",
+          "Dolor en hipocondrio izquierdo irradiado al hombro (signo de Kehr)",
+          "Mareo y sudoración fría en el traslado"
+        ],
+        exploracion: "Palidez mucocutánea. Dolor y defensa en hipocondrio izquierdo. Huella del manillar en la pared abdominal.",
+        constantes: "TA 88/55, FC 128, Sat 95%, Tª 36,2 °C — ¡hipotenso y taquicárdico!"
+      },
+      pruebaDiana: "ecofast",
+      hallazgoDiana: "Eco-FAST: líquido libre abundante en espacio esplenorrenal y pelvis. Paciente inestable: indicación de laparotomía urgente sin más pruebas.",
+      hallazgosParciales: {
+        analitica: "Hb 8,9 g/dL en descenso. Esperar la analítica en un inestable es perder tiempo.",
+        tc: "El paciente se hipotensa en la mesa del TC: trasladar a un inestable al escáner es una decisión peligrosa."
+      },
+      deterioroPorHora: 15,
+      estabilidadInicial: [40, 55],
+      manejoCorrecto: "cirugia",
+      notaDocente: 'En el trauma abdominal con inestabilidad hemodinámica, la eco-FAST positiva indica laparotomía inmediata. El TC es para pacientes estables; "la muerte comienza en radiología".',
+      cirugia: {
+        nombre: "Laparotomía exploradora por trauma",
+        duracionMin: 100,
+        pasos: [
+          {
+            titulo: "Entrada y control inicial",
+            evento: "Hemoperitoneo masivo al abrir. No se identifica el origen de entrada.",
+            opciones: [
+              {
+                texto: "Empaquetamiento sistemático de los cuatro cuadrantes y aspirado ordenado",
+                correcta: true,
+                resultado: "El packing controla temporalmente el sangrado. Identificas el bazo como origen.",
+                deltaEstabilidad: 5,
+                deltaEstres: 3
+              },
+              {
+                texto: "Aspirar y buscar el origen directamente sin empaquetar",
+                correcta: false,
+                resultado: "Pierdes minutos preciosos entre sangre: el paciente se hipotensa aún más.",
+                deltaEstabilidad: -18,
+                deltaEstres: 12
+              }
+            ]
+          },
+          {
+            titulo: "Lesión esplénica grado IV",
+            evento: "Bazo estallado con sangrado activo del hilio. El paciente sigue inestable.",
+            opciones: [
+              {
+                texto: "Esplenectomía: control del hilio y extirpación",
+                correcta: true,
+                resultado: "Hemostasia definitiva. En el inestable no se intenta preservar el bazo.",
+                deltaEstabilidad: 5,
+                deltaEstres: -2
+              },
+              {
+                texto: "Intentar esplenorrafia con mallas y agentes hemostáticos para preservar el bazo",
+                correcta: false,
+                resultado: "Media hora de intentos fallidos con el paciente exanguinándose. Acabas haciendo la esplenectomía igualmente.",
+                deltaEstabilidad: -20,
+                deltaEstres: 14
+              }
+            ]
+          },
+          {
+            titulo: "Fin de la intervención",
+            evento: "Anestesia informa: pH 7,21, temperatura 34,8 °C, coagulopatía en las pruebas viscoelásticas. La tríada letal acecha.",
+            opciones: [
+              {
+                texto: "Cirugía de control de daños: revisión rápida, packing si precisa y cierre temporal",
+                correcta: true,
+                resultado: "Cortas la espiral de la tríada letal. A REA a recalentar, corregir y reanimar.",
+                deltaEstabilidad: 0,
+                deltaEstres: -3
+              },
+              {
+                texto: 'Revisión exhaustiva prolongada y cierre definitivo por planos "para no reintervenir"',
+                correcta: false,
+                resultado: "Una hora más de quirófano en hipotermia y coagulopatía: el paciente lo paga caro.",
+                deltaEstabilidad: -18,
+                deltaEstres: 10
+              }
+            ]
+          }
+        ]
+      }
+    },
+    // ──────────────────────────────────────────────────────────────
+    {
+      id: "ulcus",
+      nombre: "Ulcus péptico perforado",
+      quirurgica: true,
+      frecuencia: 5,
+      presentacion: {
+        sintomas: [
+          "Dolor epigástrico brutal de inicio súbito hace 2 h, «como una puñalada»",
+          "El dolor se ha generalizado a todo el abdomen",
+          "Antecedente de epigastralgia crónica automedicada con ibuprofeno"
+        ],
+        exploracion: "Abdomen en tabla con contractura generalizada. El paciente evita moverse. Matidez hepática dudosa.",
+        constantes: "TA 115/75, FC 104, Sat 97%, Tª 37,4 °C"
+      },
+      pruebaDiana: "tc",
+      hallazgoDiana: "TC: neumoperitoneo evidente subdiafragmático y periportal, líquido libre y engrosamiento de la región antropilórica. Perforación de víscera hueca: ulcus péptico perforado.",
+      hallazgosParciales: {
+        analitica: "Leucocitosis 15.600 con neutrofilia. Amilasa discretamente elevada (el líquido gástrico libre la sube).",
+        eco: "Ecografía: líquido libre perihepático. El gas dificulta el resto del estudio."
+      },
+      deterioroPorHora: 8,
+      estabilidadInicial: [55, 75],
+      manejoCorrecto: "cirugia",
+      notaDocente: "El «abdomen en tabla» con inicio súbito y antecedente de AINEs es un ulcus perforado hasta que se demuestre lo contrario. La sutura simple con epiploplastia de Graham resuelve la urgencia; la enfermedad ulcerosa se trata después con IBP y erradicación de H. pylori.",
+      cirugia: {
+        nombre: "Cierre de perforación + epiploplastia de Graham",
+        duracionMin: 95,
+        pasos: [
+          {
+            titulo: "Exploración y control de la contaminación",
+            evento: "Peritonitis química con restos alimentarios. Identificas una perforación de 8 mm en cara anterior prepilórica.",
+            opciones: [
+              {
+                texto: "Aspirado y lavado abundante por cuadrantes antes de reparar",
+                correcta: true,
+                resultado: "Cavidad limpia. La perforación queda bien expuesta para la reparación.",
+                deltaEstabilidad: 0,
+                deltaEstres: -2
+              },
+              {
+                texto: "Suturar inmediatamente en el campo sucio: «primero cerrar el grifo»",
+                correcta: false,
+                resultado: "Trabajas mal, con restos que ocultan los bordes. La carga séptica sigue dentro.",
+                deltaEstabilidad: -10,
+                deltaEstres: 8
+              }
+            ]
+          },
+          {
+            titulo: "Reparación de la perforación",
+            evento: "Los bordes de la úlcera están edematosos y friables.",
+            opciones: [
+              {
+                texto: "Puntos sueltos sin tensión y parche de epiplón (Graham) sobre la sutura",
+                correcta: true,
+                resultado: "Cierre sellado con epiplón bien vascularizado. Prueba de fuga negativa.",
+                deltaEstabilidad: 0,
+                deltaEstres: -2
+              },
+              {
+                texto: "Sutura simple a tensión sin parche, «para acabar antes»",
+                correcta: false,
+                resultado: "Los puntos desgarran el tejido friable: alto riesgo de fuga postoperatoria.",
+                deltaEstabilidad: -14,
+                deltaEstres: 10
+              },
+              {
+                texto: "Antrectomía urgente para «resolverlo de raíz»",
+                correcta: false,
+                resultado: "Cirugía mayor innecesaria en un paciente séptico: más tiempo, más sangrado, más riesgo.",
+                deltaEstabilidad: -16,
+                deltaEstres: 8
+              }
+            ]
+          },
+          {
+            titulo: "Antes de cerrar",
+            evento: "Los bordes de la úlcera te parecen indurados, algo irregulares. ¿Malignidad subyacente?",
+            opciones: [
+              {
+                texto: "Tomar biopsias de los bordes y dejarlo registrado para el estudio diferido",
+                correcta: true,
+                resultado: "Biopsias tomadas sin comprometer el cierre. Si es un tumor, no se escapará.",
+                deltaEstabilidad: 0,
+                deltaEstres: -2
+              },
+              {
+                texto: "Ignorarlo: «las úlceras son benignas casi siempre»",
+                correcta: false,
+                resultado: "Si era un adenocarcinoma, acabas de retrasar su diagnóstico meses.",
+                deltaEstabilidad: -6,
+                deltaEstres: 4
+              }
+            ]
+          }
+        ]
+      }
+    },
+    // ──────────────────────────────────────────────────────────────
+    {
+      id: "hernia",
+      nombre: "Hernia inguinal incarcerada (estrangulada)",
+      quirurgica: true,
+      frecuencia: 6,
+      presentacion: {
+        sintomas: [
+          "Bulto inguinal derecho doloroso e irreductible desde hace 10 h",
+          "Náuseas y dolor abdominal cólico creciente",
+          "La hernia «se le salía» desde hace años y siempre volvía a entrar"
+        ],
+        exploracion: "Masa inguinal derecha dura, muy dolorosa, irreductible, con piel eritematosa. Dolor abdominal difuso con distensión leve.",
+        constantes: "TA 120/78, FC 102, Sat 97%, Tª 37,9 °C"
+      },
+      pruebaDiana: "eco",
+      hallazgoDiana: "Ecografía de pared: saco herniario inguinal con asa de delgado incarcerada, aperistáltica, con líquido en el saco y engrosamiento parietal. Signos de sufrimiento de asa: hernia estrangulada.",
+      hallazgosParciales: {
+        analitica: "Leucocitosis 14.900. Lactato 2,4 mmol/L: empieza a sufrir el asa.",
+        tc: "TC: hernia inguinal con asa incarcerada y cambios inflamatorios. La ecografía habría bastado."
+      },
+      deterioroPorHora: 6,
+      estabilidadInicial: [60, 80],
+      manejoCorrecto: "cirugia",
+      notaDocente: "Una hernia incarcerada dolorosa con signos inflamatorios no se reduce a la fuerza en urgencias: puede devolverse al abdomen un asa necrótica («reducción en masa»). Es quirófano urgente con valoración de viabilidad del contenido.",
+      cirugia: {
+        nombre: "Herniorrafia urgente con revisión del contenido",
+        duracionMin: 85,
+        pasos: [
+          {
+            titulo: "Apertura del saco herniario",
+            evento: "Al abrir el saco sale líquido oscuro y aparece un asa violácea. El asa amenaza con escurrirse hacia el abdomen.",
+            opciones: [
+              {
+                texto: "Sujetar el asa con una gasa antes de abrir el anillo: nada vuelve al abdomen sin ser valorado",
+                correcta: true,
+                resultado: "Asa controlada y expuesta. Podrás decidir su viabilidad con calma.",
+                deltaEstabilidad: 0,
+                deltaEstres: -2
+              },
+              {
+                texto: "Reducir el contenido inmediatamente al abdomen y reparar la pared",
+                correcta: false,
+                resultado: "El asa dudosa desaparece en la cavidad sin valorar: si estaba necrótica, la has escondido.",
+                deltaEstabilidad: -18,
+                deltaEstres: 12
+              }
+            ]
+          },
+          {
+            titulo: "Liberación del anillo",
+            evento: "El anillo herniario es estrecho y fibroso: el asa no sale ni entra.",
+            opciones: [
+              {
+                texto: "Kelotomía: ampliar el anillo con sección controlada, protegiendo asa y vasos epigástricos",
+                correcta: true,
+                resultado: "Anillo ampliado sin lesionar nada. El asa queda liberada.",
+                deltaEstabilidad: 0,
+                deltaEstres: -2
+              },
+              {
+                texto: "Tracción forzada del asa a través del anillo estrecho",
+                correcta: false,
+                resultado: "Desgarro del asa a nivel del anillo con salida de contenido intestinal.",
+                deltaEstabilidad: -16,
+                deltaEstres: 12
+              }
+            ]
+          },
+          {
+            titulo: "Viabilidad y reparación",
+            evento: "Tras liberar el asa y reevaluarla con suero caliente, un segmento corto sigue necrótico. Hay contaminación del campo.",
+            opciones: [
+              {
+                texto: "Resección segmentaria, anastomosis y reparación anatómica SIN malla (campo contaminado)",
+                correcta: true,
+                resultado: "Resuelves la urgencia sin dejar prótesis en un campo sucio. Reparación tipo Bassini/Shouldice.",
+                deltaEstabilidad: 0,
+                deltaEstres: -2
+              },
+              {
+                texto: "Resección y colocación de malla de polipropileno «para que no recidive»",
+                correcta: false,
+                resultado: "Prótesis en campo contaminado: infección protésica casi garantizada, con reintervención futura.",
+                deltaEstabilidad: -12,
+                deltaEstres: 8
+              },
+              {
+                texto: "No resecar el segmento necrótico para acortar la cirugía",
+                correcta: false,
+                resultado: "Intestino muerto dentro del abdomen: peritonitis en 24-48 h.",
+                deltaEstabilidad: -22,
+                deltaEstres: 14
+              }
+            ]
+          }
+        ]
+      }
+    },
+    // ──────────────────────────────────────────────────────────────
+    // Casos de manejo conservador: ingresar también es tratar.
+    // ──────────────────────────────────────────────────────────────
+    {
+      id: "pancreatitis",
+      nombre: "Pancreatitis aguda litiásica",
+      quirurgica: false,
+      frecuencia: 6,
+      presentacion: {
+        sintomas: [
+          "Dolor epigástrico intenso irradiado «en cinturón» a la espalda, de 10 h",
+          "Vómitos repetidos que no alivian el dolor",
+          "Colelitiasis conocida pendiente de cirugía programada"
+        ],
+        exploracion: "Dolor a la palpación epigástrica sin peritonismo franco. Distensión leve. Ruidos disminuidos.",
+        constantes: "TA 118/72, FC 100, Sat 96%, Tª 37,5 °C"
+      },
+      pruebaDiana: "analitica",
+      hallazgoDiana: "Analítica: lipasa 1.850 U/L (>3 veces el límite) y amilasa 1.200 U/L. Perfil hepático con patrón de colestasis leve. Pancreatitis aguda de origen biliar.",
+      hallazgosParciales: {
+        eco: "Ecografía: colelitiasis múltiple sin signos de colecistitis. Vía biliar de 7 mm. Páncreas mal visualizado por gas.",
+        tc: "TC precoz: edema peripancreático. Recuerda: el TC precoz no cambia el manejo inicial; la clínica y la lipasa dan el diagnóstico."
+      },
+      deterioroPorHora: 3,
+      estabilidadInicial: [65, 85],
+      manejoCorrecto: "conservador",
+      notaDocente: "La pancreatitis aguda NO se opera en fase aguda: el tratamiento es ingreso, fluidoterapia, analgesia y nutrición precoz. La colecistectomía se hace diferida en el mismo ingreso una vez resuelto el cuadro. Operar el páncreas inflamado de urgencia es un error clásico."
+    },
+    // ──────────────────────────────────────────────────────────────
+    // Distractores no quirúrgicos: dar el alta también es medicina.
+    // ──────────────────────────────────────────────────────────────
+    {
+      id: "colico_renal",
+      nombre: "Cólico renoureteral",
+      quirurgica: false,
+      frecuencia: 5,
+      presentacion: {
+        sintomas: [
+          "Dolor lumbar derecho intensísimo irradiado a genitales, de inicio brusco",
+          "El paciente no encuentra postura: se retuerce en la camilla",
+          "Un episodio similar hace dos años que «expulsó una piedrecita»"
+        ],
+        exploracion: "Puñopercusión renal derecha positiva. Abdomen blando, sin defensa ni peritonismo.",
+        constantes: "TA 135/85, FC 95, Sat 99%, Tª 36,8 °C"
+      },
+      pruebaDiana: "tc",
+      hallazgoDiana: "TC sin contraste: litiasis de 4 mm en uréter distal derecho con ectasia leve de la vía. Sin signos de complicación. Cólico renoureteral no complicado.",
+      hallazgosParciales: {
+        analitica: "Función renal normal, sin leucocitosis. Microhematuria en el sedimento: pista clave.",
+        eco: "Ecografía: discreta ectasia pielocalicial derecha. No se visualiza la litiasis."
+      },
+      deterioroPorHora: 0,
+      estabilidadInicial: [85, 95],
+      manejoCorrecto: "alta",
+      notaDocente: "Dolor que no deja quieto al paciente (a diferencia del peritonítico, que no se mueve), puñopercusión positiva y microhematuria: cólico renal. Analgesia, alta y control por urología. Nada que cortar."
+    },
+    {
+      id: "gastroenteritis",
+      nombre: "Gastroenteritis aguda",
+      quirurgica: false,
+      frecuencia: 6,
+      presentacion: {
+        sintomas: [
+          "Dolor abdominal difuso tipo retortijón de 8 h",
+          "Diarrea líquida (6 deposiciones) y vómitos",
+          "Varios familiares con el mismo cuadro tras una comida familiar"
+        ],
+        exploracion: "Abdomen blando, depresible, dolor difuso sin defensa ni signos de irritación peritoneal. Peristaltismo aumentado.",
+        constantes: "TA 118/75, FC 88, Sat 99%, Tª 37,2 °C"
+      },
+      pruebaDiana: "analitica",
+      hallazgoDiana: "Analítica anodina: sin leucocitosis, PCR 8 mg/L, función renal normal. Cuadro compatible con gastroenteritis.",
+      hallazgosParciales: {
+        eco: "Ecografía: asas con contenido líquido e hiperperistaltismo. Sin otros hallazgos.",
+        tc: "TC sin hallazgos quirúrgicos. Una irradiación probablemente innecesaria."
+      },
+      deterioroPorHora: 0,
+      estabilidadInicial: [85, 95],
+      manejoCorrecto: "alta",
+      notaDocente: "El contexto epidémico, la ausencia de signos peritoneales y la analítica anodina permiten el alta con tratamiento sintomático. No todo dolor abdominal es quirúrgico."
+    },
+    // ──────────────────────────────────────────────────────────────
+    {
+      id: "colico_biliar",
+      nombre: "Cólico biliar simple",
+      quirurgica: false,
+      frecuencia: 5,
+      presentacion: {
+        sintomas: [
+          "Dolor en hipocondrio derecho de 2 h tras una comida copiosa",
+          "Náuseas sin vómitos",
+          "Episodios similares autolimitados en los últimos meses"
+        ],
+        exploracion: "Molestia a la palpación profunda en hipocondrio derecho. Murphy negativo. Sin fiebre.",
+        constantes: "TA 122/78, FC 76, Sat 99%, Tª 36,7 °C"
+      },
+      pruebaDiana: "eco",
+      hallazgoDiana: "Ecografía: colelitiasis múltiple con pared vesicular fina (2 mm), sin líquido perivesicular ni Murphy ecográfico. Cólico biliar simple, sin colecistitis.",
+      hallazgosParciales: {
+        analitica: "Analítica normal: sin leucocitosis, PCR 4 mg/L, perfil hepático normal."
+      },
+      deterioroPorHora: 0,
+      estabilidadInicial: [85, 95],
+      manejoCorrecto: "alta",
+      notaDocente: "El cólico biliar sin signos inflamatorios se trata con analgesia y alta, remitiendo al paciente a consultas para colecistectomía programada. Operarlo de urgencia esta noche sería sobretratar."
+    }
+  ];
+
+  // src/factories/PatientFactory.ts
+  var NOMBRES = [
+    "Manuel Ortega",
+    "Carmen Ruiz",
+    "Antonio Vidal",
+    "Lucía Ferrer",
+    "José Andrade",
+    "Pilar Navarro",
+    "Ramón Castillo",
+    "Elena Sanz",
+    "Francisco Mora",
+    "Dolores Ibáñez",
+    "Sergio Lozano",
+    "Marta Peña",
+    "Andrés Roca",
+    "Isabel Cano",
+    "Javier Molina",
+    "Rosa Delgado",
+    "Ángel Serrano",
+    "Beatriz Vega",
+    "Tomás Fuentes",
+    "Nuria Campos"
+  ];
+  var PatientFactory = class {
+    constructor(rng, catalogo = PATOLOGIAS) {
+      this.rng = rng;
+      this.catalogo = catalogo;
+      __publicField(this, "siguienteId", 1);
+      __publicField(this, "nombresRestantes");
+      this.nombresRestantes = [...NOMBRES];
+    }
+    /** Selección ponderada por la frecuencia de cada patología. */
+    elegirPatologia() {
+      const total = this.catalogo.reduce((suma, p) => suma + p.frecuencia, 0);
+      let tirada = this.rng() * total;
+      for (const patologia of this.catalogo) {
+        tirada -= patologia.frecuencia;
+        if (tirada <= 0) return patologia;
+      }
+      return this.catalogo[this.catalogo.length - 1];
+    }
+    entre(min, max) {
+      return Math.round(min + this.rng() * (max - min));
+    }
+    elegirNombre() {
+      if (this.nombresRestantes.length === 0) this.nombresRestantes = [...NOMBRES];
+      const i = Math.floor(this.rng() * this.nombresRestantes.length);
+      return this.nombresRestantes.splice(i, 1)[0];
+    }
+    crearPaciente(minutoLlegada, patologia = this.elegirPatologia()) {
+      const [estMin, estMax] = patologia.estabilidadInicial;
+      return {
+        id: this.siguienteId++,
+        nombre: this.elegirNombre(),
+        edad: this.entre(patologia.id === "trauma" ? 18 : 25, patologia.id === "trauma" ? 45 : 88),
+        patologia,
+        estabilidad: this.entre(estMin, estMax),
+        minutoLlegada,
+        estado: "espera",
+        pruebasRealizadas: [],
+        diagnosticoConfirmado: false,
+        reingresado: false,
+        alertaPlanta: false
+      };
+    }
+    /**
+     * Genera las llegadas de las 24 h de guardia.
+     * La franja 10:00-02:00 (minutos 120-1080) concentra la mayor presión.
+     */
+    generarLlegadasDeGuardia() {
+      const llegadas = [];
+      const numPacientes = this.entre(8, 11);
+      llegadas.push({ minuto: this.entre(2, 10), paciente: this.crearPaciente(5) });
+      for (let i = 1; i < numPacientes; i++) {
+        const minuto = this.rng() < 0.7 ? this.entre(30, 1080) : this.entre(1080, 1380);
+        llegadas.push({ minuto, paciente: this.crearPaciente(minuto) });
+      }
+      llegadas.sort((a, b) => a.minuto - b.minuto);
+      return llegadas;
+    }
+  };
+
+  // src/data/pruebas.ts
+  var PRUEBAS = {
+    analitica: { id: "analitica", nombre: "Analítica completa (hemograma, PCR, lactato)", duracionMin: 45 },
+    eco: { id: "eco", nombre: "Ecografía abdominal", duracionMin: 30 },
+    tc: { id: "tc", nombre: "TC abdominal con contraste", duracionMin: 60 },
+    angiotc: { id: "angiotc", nombre: "Angio-TC abdominal", duracionMin: 75 },
+    ecofast: { id: "ecofast", nombre: "Eco-FAST", duracionMin: 10 }
+  };
+  var INFORME_INESPECIFICO = {
+    analitica: "Analítica sin alteraciones relevantes.",
+    eco: "Ecografía sin hallazgos significativos. Gas interpuesto limita el estudio.",
+    tc: "TC sin hallazgos agudos relevantes.",
+    angiotc: "Angio-TC: ejes vasculares permeables, sin otros hallazgos.",
+    ecofast: "Eco-FAST negativa: no se objetiva líquido libre."
+  };
+
+  // src/ui/ansi.ts
+  var habilitado = typeof process !== "undefined" && process !== null ? process.stdout?.isTTY ?? false : false;
+  function configurarColores(activo) {
+    habilitado = activo;
+  }
+  var estilo = (abre, cierra) => (texto) => habilitado ? `\x1B[${abre}m${texto}\x1B[${cierra}m` : texto;
+  var negrita = estilo(1, 22);
+  var tenue = estilo(2, 22);
+  var cursiva = estilo(3, 23);
+  var subrayado = estilo(4, 24);
+  var inverso = estilo(7, 27);
+  var rojo = estilo(31, 39);
+  var verde = estilo(32, 39);
+  var amarillo = estilo(33, 39);
+  var azul = estilo(34, 39);
+  var magenta = estilo(35, 39);
+  var cian = estilo(36, 39);
+  var gris = estilo(90, 39);
+  var fondoRojo = estilo(41, 49);
+
+  // src/ui/hud.ts
+  function horaGuardia(minuto) {
+    const totalMin = (8 * 60 + minuto) % (24 * 60);
+    const h = Math.floor(totalMin / 60);
+    const m = totalMin % 60;
+    return `${String(h).padStart(2, "0")}:${String(m).padStart(2, "0")}`;
+  }
+  function colorPorNivel(valor, invertido = false) {
+    const v = invertido ? 100 - valor : valor;
+    if (v >= 60) return verde;
+    if (v >= 30) return amarillo;
+    return rojo;
+  }
+  function barra(valor, invertido = false, ancho = 20) {
+    const v = Math.max(0, Math.min(100, Math.round(valor)));
+    const llenos = Math.round(v / 100 * ancho);
+    const cuerpo = "█".repeat(llenos) + gris("░".repeat(ancho - llenos));
+    return `${colorPorNivel(v, invertido)(cuerpo)} ${String(v).padStart(3)}%`;
+  }
+  function lineaSeparadora() {
+    return gris("─".repeat(64));
+  }
+  function pintarHUD(ctx) {
+    const restanteMin = Math.max(0, ctx.duracionGuardia - ctx.minuto);
+    const restante = `${Math.floor(restanteMin / 60)}h ${String(restanteMin % 60).padStart(2, "0")}m`;
+    ctx.io.escribir("\n" + lineaSeparadora());
+    ctx.io.escribir(
+      `  ${negrita(cian("SURGEON’S NIGHT"))}  ${gris("|")}  🕐 ${negrita(horaGuardia(ctx.minuto))}  ${gris("|")}  quedan ${amarillo(restante)} de guardia`
+    );
+    ctx.io.escribir(`  Energía ${barra(ctx.cirujano.energia)}   Estrés ${barra(ctx.cirujano.estres, true)}`);
+    ctx.io.escribir(
+      `  Quirófanos libres: ${negrita(`${ctx.hospital.quirofanosLibres}/${ctx.hospital.quirofanosTotales}`)}   Camas REA libres: ${negrita(`${ctx.hospital.camasReaLibres}/${ctx.hospital.camasReaTotales}`)}   Pacientes en espera: ${negrita(String(ctx.salaEspera.length))}`
+    );
+    ctx.io.escribir(lineaSeparadora());
+  }
+  function fichaPaciente(p) {
+    const alerta = p.alertaPlanta ? rojo(" ⚠ EMPEORA EN PLANTA") : "";
+    const reingreso = p.reingresado ? rojo(" ⚠ REINGRESO EN AMBULANCIA") : "";
+    return `${negrita(p.nombre)}, ${p.edad} años — estabilidad ${barra(p.estabilidad, false, 10)}${alerta}${reingreso}`;
+  }
+
+  // src/engine/SummaryState.ts
+  var SummaryState = class {
+    constructor() {
+      __publicField(this, "nombre", "resumen");
+    }
+    async run(ctx) {
+      const s = ctx.stats;
+      ctx.io.escribir("\n\n" + lineaSeparadora());
+      ctx.io.escribir(negrita(cian("  ☀ 08:00 — FIN DE LA GUARDIA. Llega el relevo con cara de dormido.")));
+      ctx.io.escribir(lineaSeparadora());
+      ctx.io.escribir(`
+${negrita("Parte de guardia:")}`);
+      for (const p of ctx.historial) {
+        ctx.io.escribir(`  ${this.iconoDestino(p)} ${p.nombre} — ${p.patologia.nombre} → ${this.destino(p)}`);
+      }
+      ctx.io.escribir(`
+${negrita("Balance:")}`);
+      ctx.io.escribir(`  Pacientes atendidos:      ${s.atendidos}`);
+      ctx.io.escribir(`  Cirugías realizadas:      ${s.cirugiasRealizadas} ${gris(`(${s.cirugiasPerfectas} impecables)`)}`);
+      ctx.io.escribir(`  Altas correctas:          ${s.altasCorrectas}`);
+      ctx.io.escribir(`  Ingresos en observación:  ${s.ingresosCorrectos} correctos, ${s.ingresosErroneos} discutibles`);
+      ctx.io.escribir(`  Altas erróneas:           ${s.altasErroneas === 0 ? verde("0") : rojo(String(s.altasErroneas))}`);
+      ctx.io.escribir(`  Complicaciones:           ${s.complicaciones === 0 ? verde("0") : amarillo(String(s.complicaciones))}`);
+      ctx.io.escribir(`  Éxitus:                   ${s.exitus === 0 ? verde("0") : rojo(String(s.exitus))}`);
+      let puntos = this.puntuacion(ctx);
+      if (ctx.modoResidente) {
+        puntos = Math.round(puntos * 0.85);
+        ctx.io.escribir(gris("\n  Guardia tutelada (modo residente): la puntuación se ajusta al 85%."));
+      }
+      ctx.io.escribir(`
+${negrita("Puntuación final:")} ${negrita(puntos >= 0 ? verde(String(puntos)) : rojo(String(puntos)))}`);
+      ctx.io.escribir(`${negrita("Veredicto del Jefe de Servicio:")} ${this.veredicto(puntos)}
+`);
+      ctx.io.cerrar();
+      return null;
+    }
+    destino(p) {
+      switch (p.estado) {
+        case "exitus":
+          return rojo("éxitus");
+        case "operado":
+          return verde("intervenido, en planta");
+        case "rea":
+          return amarillo("intervenido, en REA");
+        case "alta":
+          return verde("alta");
+        case "ingresado":
+          return amarillo("sigue ingresado (te lo dejas al de la mañana)");
+        case "espera":
+          return rojo("¡SIGUE ESPERANDO EN URGENCIAS!");
+      }
+    }
+    iconoDestino(p) {
+      if (p.estado === "exitus") return rojo("✝");
+      if (p.estado === "espera") return rojo("⚠");
+      return gris("•");
+    }
+    puntuacion(ctx) {
+      const s = ctx.stats;
+      const cirugiasConExito = ctx.historial.filter(
+        (p) => (p.estado === "operado" || p.estado === "rea") && p.patologia.quirurgica
+      ).length;
+      const abandonados = ctx.historial.filter((p) => p.estado === "espera").length;
+      return cirugiasConExito * 120 + s.cirugiasPerfectas * 40 + s.altasCorrectas * 60 + s.ingresosCorrectos * 30 - s.altasErroneas * 50 - s.ingresosErroneos * 30 - s.complicaciones * 40 - s.exitus * 200 - abandonados * 60;
+    }
+    veredicto(puntos) {
+      if (puntos >= 700) return verde("«Guardia de libro. Material de Jefe de Servicio.»");
+      if (puntos >= 450) return verde("«Adjunto senior: sólido, resolutivo, fiable.»");
+      if (puntos >= 250) return cian("«Buen adjunto de guardia. Se puede dormir contigo en el hospital.»");
+      if (puntos >= 100) return amarillo("«Nivel R5: te falta tablas, pero los pacientes sobreviven.»");
+      if (puntos >= 0) return amarillo("«Nivel R3. Repasa las indicaciones quirúrgicas, por favor.»");
+      return rojo("«¿Seguro que esto es lo tuyo? El lunes hablamos en mi despacho.»");
+    }
+  };
+
+  // src/engine/SurgeryState.ts
+  var SurgeryState = class {
+    constructor(paciente) {
+      this.paciente = paciente;
+      __publicField(this, "nombre", "quirofano");
+    }
+    async run(ctx) {
+      const p = this.paciente;
+      const plan = p.patologia.cirugia;
+      const i = ctx.salaEspera.indexOf(p);
+      if (i >= 0) ctx.salaEspera.splice(i, 1);
+      ctx.hospital.quirofanosLibres--;
+      ctx.io.escribir("\n" + lineaSeparadora());
+      ctx.io.escribir(`  ${negrita(cian("🔪 QUIRÓFANO"))} — ${negrita(plan.nombre)}`);
+      ctx.io.escribir(`  Paciente: ${p.nombre}, ${p.edad} años. ${gris(p.patologia.nombre)}`);
+      ctx.io.escribir(lineaSeparadora());
+      if (!p.diagnosticoConfirmado) {
+        p.estabilidad = Math.max(1, p.estabilidad - 8);
+        ctx.cirujano.estres = Math.min(100, ctx.cirujano.estres + 8);
+        ctx.io.escribir(
+          amarillo("Entras a quirófano SIN confirmación diagnóstica. La incertidumbre se paga: -8 estabilidad, +estrés.")
+        );
+      }
+      let perfecta = true;
+      for (const [n, paso] of plan.pasos.entries()) {
+        ctx.io.escribir(`
+${negrita(`PASO ${n + 1}/${plan.pasos.length}: ${paso.titulo}`)}`);
+        ctx.io.escribir(`  Estabilidad del paciente ${barra(p.estabilidad, false, 12)}   Tu energía ${barra(ctx.cirujano.energia, false, 12)}`);
+        ctx.io.escribir(`
+  ${amarillo("EVENTO:")} ${paso.evento}`);
+        const opciones = this.barajar(ctx, paso.opciones);
+        const eleccion = await this.elegirTecnica(ctx, opciones);
+        p.estabilidad = Math.min(100, Math.max(0, p.estabilidad + eleccion.deltaEstabilidad));
+        ctx.cirujano.estres = Math.min(100, Math.max(0, ctx.cirujano.estres + eleccion.deltaEstres));
+        if (eleccion.correcta) {
+          ctx.io.escribir(verde(`  ✔ ${eleccion.resultado}`));
+          if (ctx.rng() < this.probabilidadFalloOculto(ctx)) {
+            perfecta = false;
+            p.estabilidad = Math.max(0, p.estabilidad - 8);
+            ctx.cirujano.estres = Math.min(100, ctx.cirujano.estres + 6);
+            ctx.stats.complicaciones++;
+            ctx.io.escribir(
+              rojo("  ✖ Pero tus manos tiemblan de fatiga y la maniobra sale imperfecta: pequeña complicación añadida.")
+            );
+          }
+        } else {
+          perfecta = false;
+          ctx.stats.complicaciones++;
+          ctx.io.escribir(rojo(`  ✖ ${eleccion.resultado}`));
+        }
+        if (p.estabilidad <= 0) break;
+      }
+      const avisos = ctx.avanzarTiempo(plan.duracionMin);
+      ctx.cirujano.energia = Math.max(0, ctx.cirujano.energia - 15);
+      ctx.hospital.quirofanosLibres++;
+      ctx.stats.cirugiasRealizadas++;
+      ctx.stats.atendidos++;
+      this.resolverPostoperatorio(ctx, perfecta);
+      ctx.io.escribir(`
+${gris(`Perla docente: ${p.patologia.notaDocente}`)}`);
+      if (avisos.length > 0) {
+        ctx.io.escribir(negrita("\nMientras estabas en quirófano:"));
+        for (const a of avisos) ctx.io.escribir(`  ${a.startsWith("✝") ? rojo(a) : gris(a)}`);
+      }
+      await ctx.io.pausa();
+      return new TriageState();
+    }
+    // ────────────────────────────────────────────────────────────
+    /**
+     * Presenta las técnicas del paso. En modo residente, mientras queden
+     * llamadas disponibles, se puede telefonear al adjunto: señala la técnica
+     * correcta a cambio de gastar una de las 3 llamadas de la guardia.
+     */
+    async elegirTecnica(ctx, opciones) {
+      for (; ; ) {
+        const menu = opciones.map((op) => ({
+          etiqueta: op.texto,
+          valor: op
+        }));
+        if (ctx.modoResidente && ctx.consultasAdjunto > 0) {
+          menu.push({
+            etiqueta: cian(`📞 Llamar al adjunto (quedan ${ctx.consultasAdjunto} llamadas)`),
+            valor: "adjunto"
+          });
+        }
+        const eleccion = await ctx.io.elegir("¿Cómo procedes?", menu);
+        if (eleccion !== "adjunto") return eleccion;
+        ctx.consultasAdjunto--;
+        const correcta = opciones.find((op) => op.correcta);
+        ctx.io.escribir(
+          `
+${cian("🩺 El adjunto, con voz de dormido:")} ${gris(`«Yo lo tengo claro: ${correcta?.texto.toLowerCase() ?? "sigue tu instinto"}. Y no me llames más, que estoy en la cama.»`)}`
+        );
+      }
+    }
+    /** Con energía < 40 o estrés > 60, las opciones correctas pueden torcerse. */
+    probabilidadFalloOculto(ctx) {
+      const porFatiga = Math.max(0, 40 - ctx.cirujano.energia) / 100;
+      const porEstres = Math.max(0, ctx.cirujano.estres - 60) / 200;
+      return porFatiga + porEstres;
+    }
+    /** Baraja las opciones para que la correcta no esté siempre en el mismo sitio. */
+    barajar(ctx, opciones) {
+      const copia = [...opciones];
+      for (let i = copia.length - 1; i > 0; i--) {
+        const j = Math.floor(ctx.rng() * (i + 1));
+        [copia[i], copia[j]] = [copia[j], copia[i]];
+      }
+      return copia;
+    }
+    // ────────────────────────────────────────────────────────────
+    resolverPostoperatorio(ctx, perfecta) {
+      const p = this.paciente;
+      ctx.io.escribir("\n" + lineaSeparadora());
+      if (p.estabilidad <= 0) {
+        p.estado = "exitus";
+        ctx.stats.exitus++;
+        ctx.cirujano.estres = Math.min(100, ctx.cirujano.estres + 25);
+        ctx.io.escribir(fondoRojo(negrita(` ✝ ÉXITUS EN MESA: ${p.nombre} no supera la intervención. `)));
+        return;
+      }
+      if (perfecta) {
+        ctx.stats.cirugiasPerfectas++;
+        ctx.cirujano.estres = Math.max(0, ctx.cirujano.estres - 8);
+        ctx.io.escribir(verde(negrita("  Cirugía impecable. El equipo te mira con respeto.")));
+      }
+      if (p.estabilidad >= 55) {
+        p.estado = "operado";
+        ctx.io.escribir(verde(`  ${p.nombre} despierta estable y sube a planta. Estabilidad ${Math.round(p.estabilidad)}%.`));
+        return;
+      }
+      if (ctx.hospital.camasReaLibres > 0) {
+        p.estado = "rea";
+        const estancia = 240 + Math.round((55 - p.estabilidad) * 4);
+        ctx.ocuparCamaRea(p, estancia);
+        ctx.io.escribir(amarillo(`  ${p.nombre} sale intubado a REA (estabilidad ${Math.round(p.estabilidad)}%). Ocupa una cama ${gris(`~${Math.round(estancia / 60)} h`)}.`));
+      } else {
+        ctx.stats.complicaciones++;
+        p.estabilidad = Math.max(1, p.estabilidad - 10);
+        p.estado = "operado";
+        ctx.io.escribir(rojo("  ¡No quedan camas de REA! El paciente se queda en una URPA improvisada, más frágil de lo debido."));
+      }
+    }
+  };
+
+  // src/engine/TriageState.ts
+  var _TriageState = class _TriageState {
+    constructor() {
+      __publicField(this, "nombre", "triaje");
+    }
+    async run(ctx) {
+      if (ctx.guardiaTerminada) return new SummaryState();
+      pintarHUD(ctx);
+      const accion = await this.elegirAccionDeSala(ctx);
+      switch (accion.tipo) {
+        case "cafe": {
+          this.mostrarAvisos(ctx, ctx.avanzarTiempo(15, { descanso: true }));
+          ctx.cirujano.energia = Math.min(100, ctx.cirujano.energia + 5);
+          ctx.io.escribir(verde("☕ Un café con el residente. Respiras hondo."));
+          return this;
+        }
+        case "esperar": {
+          const proxima = ctx.proximaLlegada;
+          const salto = proxima !== null ? Math.max(15, proxima - ctx.minuto) : 60;
+          ctx.io.escribir(gris(`Te tumbas en el sofá de la sala de guardia... (${salto} min)`));
+          this.mostrarAvisos(ctx, ctx.avanzarTiempo(Math.min(salto, 120), { descanso: true }));
+          return this;
+        }
+        case "ronda": {
+          this.pasarVisita(ctx);
+          this.mostrarAvisos(ctx, ctx.avanzarTiempo(15));
+          return this;
+        }
+        case "paciente":
+          return this.atenderPaciente(ctx, accion.paciente);
+      }
+    }
+    // ────────────────────────────────────────────────────────────
+    async elegirAccionDeSala(ctx) {
+      const opciones = ctx.salaEspera.map((p) => ({
+        etiqueta: `Atender a ${fichaPaciente(p)}`,
+        valor: { tipo: "paciente", paciente: p }
+      }));
+      if (ctx.ingresados.length > 0) {
+        opciones.push({ etiqueta: "Pasar visita a los ingresados", detalle: "15 min", valor: { tipo: "ronda" } });
+      }
+      opciones.push({ etiqueta: "Tomar un café y despejarte", detalle: "15 min, recupera", valor: { tipo: "cafe" } });
+      if (ctx.salaEspera.length === 0) {
+        opciones.push({ etiqueta: "Descansar hasta que suene el busca", detalle: "recupera energía", valor: { tipo: "esperar" } });
+      }
+      const titulo = ctx.salaEspera.length > 0 ? `Sala de urgencias — ${ctx.salaEspera.length} paciente(s) esperan tu decisión:` : "Urgencias está en calma (de momento). ¿Qué haces?";
+      return ctx.io.elegir(titulo, opciones);
+    }
+    pasarVisita(ctx) {
+      ctx.io.escribir(`
+${negrita("Ronda de planta:")}`);
+      for (const p of ctx.ingresados) {
+        ctx.io.escribir(`  • ${fichaPaciente(p)} ${gris(`— ${p.patologia.nombre}`)}`);
+      }
+    }
+    // ────────────────────────────────────────────────────────────
+    async atenderPaciente(ctx, paciente) {
+      for (; ; ) {
+        if (ctx.guardiaTerminada) return new SummaryState();
+        if (paciente.estado === "exitus") return this;
+        this.pintarFichaClinica(ctx, paciente);
+        const accion = await this.elegirAccionPaciente(paciente, ctx);
+        switch (accion.tipo) {
+          case "volver":
+            ctx.io.escribir(gris(`${paciente.nombre} queda en el box, monitorizado.`));
+            return this;
+          case "explorar": {
+            _TriageState.explorados.add(paciente.id);
+            this.mostrarAvisos(ctx, ctx.avanzarTiempo(10));
+            ctx.io.escribir(`
+${cian("Exploración física:")} ${paciente.patologia.presentacion.exploracion}`);
+            break;
+          }
+          case "prueba": {
+            const prueba = PRUEBAS[accion.prueba];
+            ctx.io.escribir(gris(`Solicitas ${prueba.nombre}. Esperas el resultado...`));
+            this.mostrarAvisos(ctx, ctx.avanzarTiempo(prueba.duracionMin));
+            paciente.pruebasRealizadas.push(prueba.id);
+            const informe = this.informeDePrueba(paciente, prueba.id);
+            ctx.io.escribir(`
+${cian(`Resultado de ${prueba.nombre}:`)}
+  ${informe}`);
+            break;
+          }
+          case "alta":
+            if (await this.adjuntoDuda(ctx, paciente, "alta")) break;
+            this.resolverAlta(ctx, paciente);
+            await ctx.io.pausa();
+            return this;
+          case "ingreso":
+            if (await this.adjuntoDuda(ctx, paciente, "conservador")) break;
+            this.resolverIngreso(ctx, paciente);
+            await ctx.io.pausa();
+            return this;
+          case "cirugia": {
+            if (ctx.hospital.quirofanosLibres === 0) {
+              ctx.io.escribir(rojo("No hay ningún quirófano libre ahora mismo. Gana tiempo con otra decisión."));
+              break;
+            }
+            if (await this.adjuntoDuda(ctx, paciente, "cirugia")) break;
+            if (!paciente.patologia.quirurgica) {
+              ctx.io.escribir(
+                rojo("\nEl anestesista revisa el caso y te para los pies: «¿Indicación quirúrgica? Yo no la veo.»")
+              );
+              ctx.io.escribir(gris("Pierdes 15 minutos discutiendo y algo de credibilidad. Revisa el caso."));
+              ctx.cirujano.estres = Math.min(100, ctx.cirujano.estres + 8);
+              this.mostrarAvisos(ctx, ctx.avanzarTiempo(15));
+              break;
+            }
+            return new SurgeryState(paciente);
+          }
+        }
+      }
+    }
+    async elegirAccionPaciente(paciente, ctx) {
+      const opciones = [];
+      if (!_TriageState.explorados.has(paciente.id)) {
+        opciones.push({ etiqueta: "Explorar al paciente", detalle: "10 min", valor: { tipo: "explorar" } });
+      }
+      for (const prueba of Object.values(PRUEBAS)) {
+        if (!paciente.pruebasRealizadas.includes(prueba.id)) {
+          opciones.push({
+            etiqueta: `Solicitar ${prueba.nombre}`,
+            detalle: `${prueba.duracionMin} min`,
+            valor: { tipo: "prueba", prueba: prueba.id }
+          });
+        }
+      }
+      opciones.push(
+        { etiqueta: negrita("Dar de alta con tratamiento ambulatorio"), valor: { tipo: "alta" } },
+        { etiqueta: negrita("Ingresar para tratamiento conservador / observación"), valor: { tipo: "ingreso" } },
+        { etiqueta: negrita(rojo("Programar CIRUGÍA URGENTE")), detalle: `quirófanos libres: ${ctx.hospital.quirofanosLibres}`, valor: { tipo: "cirugia" } },
+        { etiqueta: gris("Dejarlo en el box y volver al control"), valor: { tipo: "volver" } }
+      );
+      return ctx.io.elegir(`¿Qué haces con ${paciente.nombre}?`, opciones);
+    }
+    // ────────────────────────────────────────────────────────────
+    pintarFichaClinica(ctx, p) {
+      ctx.io.escribir("\n" + lineaSeparadora());
+      ctx.io.escribir(`  ${negrita(cian(`BOX ${p.id}`))} — ${fichaPaciente(p)}  ${gris(`(llegó a las ${horaGuardia(p.minutoLlegada)})`)}`);
+      ctx.io.escribir(lineaSeparadora());
+      ctx.io.escribir(`  ${negrita("Anamnesis:")}`);
+      for (const s of p.patologia.presentacion.sintomas) ctx.io.escribir(`   • ${s}`);
+      ctx.io.escribir(`  ${negrita("Constantes:")} ${p.patologia.presentacion.constantes}`);
+      if (_TriageState.explorados.has(p.id)) {
+        ctx.io.escribir(`  ${negrita("Exploración:")} ${p.patologia.presentacion.exploracion}`);
+      }
+      for (const id of p.pruebasRealizadas) {
+        ctx.io.escribir(`  ${negrita(`${PRUEBAS[id].nombre}:`)} ${gris(this.informeDePrueba(p, id))}`);
+      }
+      if (p.diagnosticoConfirmado) {
+        ctx.io.escribir(`  ${verde(`✔ Diagnóstico confirmado: ${p.patologia.nombre}`)}`);
+      } else if (ctx.modoResidente) {
+        ctx.io.escribir(
+          `  ${cian("🩺 Tu adjunto, por teléfono:")} ${gris(`«Con esa clínica, yo pediría ${PRUEBAS[p.patologia.pruebaDiana].nombre.toLowerCase()}.»`)}`
+        );
+      }
+    }
+    /**
+     * Modo residente: si el diagnóstico está confirmado y la decisión contradice
+     * el manejo estándar, el adjunto duda en voz alta UNA vez por paciente.
+     * Devuelve true si el jugador decide reconsiderar.
+     */
+    async adjuntoDuda(ctx, p, decision) {
+      if (!ctx.modoResidente) return false;
+      if (!p.diagnosticoConfirmado) return false;
+      if (decision === p.patologia.manejoCorrecto) return false;
+      if (_TriageState.avisadosPorAdjunto.has(p.id)) return false;
+      _TriageState.avisadosPorAdjunto.add(p.id);
+      ctx.io.escribir(
+        `
+${cian("🩺 Tu adjunto arquea una ceja:")} ${gris(`«¿${this.nombreDecision(decision)}, con un(a) ${p.patologia.nombre.toLowerCase()} confirmado/a? Tú verás, es tu paciente...»`)}`
+      );
+      const reconsiderar = await ctx.io.elegir("¿Qué haces?", [
+        { etiqueta: "Reconsiderar la decisión", valor: true },
+        { etiqueta: "Mantenerla: el cirujano eres tú", valor: false }
+      ]);
+      return reconsiderar;
+    }
+    nombreDecision(d) {
+      switch (d) {
+        case "alta":
+          return "Alta";
+        case "conservador":
+          return "Tratamiento conservador";
+        case "cirugia":
+          return "Quirófano urgente";
+      }
+    }
+    informeDePrueba(p, prueba) {
+      if (prueba === p.patologia.pruebaDiana) {
+        p.diagnosticoConfirmado = true;
+        return p.patologia.hallazgoDiana;
+      }
+      return p.patologia.hallazgosParciales[prueba] ?? INFORME_INESPECIFICO[prueba];
+    }
+    // ────────────────────────────────────────────────────────────
+    resolverAlta(ctx, p) {
+      this.sacarDeEspera(ctx, p);
+      ctx.stats.atendidos++;
+      if (p.patologia.manejoCorrecto === "alta") {
+        p.estado = "alta";
+        ctx.stats.altasCorrectas++;
+        ctx.cirujano.estres = Math.max(0, ctx.cirujano.estres - 4);
+        ctx.io.escribir(verde(`
+✔ Alta correcta: ${p.patologia.nombre} no precisaba ingreso ni cirugía.`));
+        ctx.io.escribir(gris(`  Perla docente: ${p.patologia.notaDocente}`));
+        return;
+      }
+      ctx.stats.altasErroneas++;
+      const estabilidadDeVuelta = p.estabilidad - 30;
+      if (p.reingresado || estabilidadDeVuelta <= 10) {
+        p.estado = "exitus";
+        p.estabilidad = 0;
+        ctx.stats.exitus++;
+        ctx.cirujano.estres = Math.min(100, ctx.cirujano.estres + 25);
+        ctx.io.escribir(rojo(negrita(`
+✝ ${p.nombre} fallece en su domicilio horas después del alta (${p.patologia.nombre}).`)));
+        ctx.io.escribir(gris(`  ${p.patologia.notaDocente}`));
+        return;
+      }
+      p.estabilidad = estabilidadDeVuelta;
+      p.reingresado = true;
+      p.estado = "espera";
+      const vuelveEn = 90 + Math.floor(ctx.rng() * 120);
+      ctx.programarLlegadas([{ minuto: ctx.minuto + vuelveEn, paciente: p }]);
+      ctx.io.escribir(amarillo(`
+Firmas el alta de ${p.nombre}. Algo no te deja tranquilo...`));
+    }
+    resolverIngreso(ctx, p) {
+      this.sacarDeEspera(ctx, p);
+      ctx.stats.atendidos++;
+      p.estado = "ingresado";
+      p.alertaPlanta = false;
+      ctx.ingresados.push(p);
+      if (p.patologia.quirurgica) {
+        ctx.stats.ingresosErroneos++;
+        ctx.io.escribir(amarillo(`
+Ingresas a ${p.nombre} con sueroterapia y antibiótico. La planta lo vigilará... por ahora.`));
+      } else if (p.patologia.manejoCorrecto === "conservador") {
+        ctx.stats.ingresosCorrectos++;
+        ctx.io.escribir(verde(`
+✔ Ingreso correcto: ${p.patologia.nombre} se trata con medidas conservadoras, no con bisturí.`));
+        ctx.io.escribir(gris(`  Perla docente: ${p.patologia.notaDocente}`));
+      } else {
+        ctx.stats.ingresosCorrectos++;
+        ctx.io.escribir(verde(`
+Ingresas a ${p.nombre} en observación. Prudente, aunque podía haberse ido de alta.`));
+      }
+    }
+    sacarDeEspera(ctx, p) {
+      const i = ctx.salaEspera.indexOf(p);
+      if (i >= 0) ctx.salaEspera.splice(i, 1);
+    }
+    mostrarAvisos(ctx, avisos) {
+      for (const aviso of avisos) {
+        const color = aviso.startsWith("✝") ? rojo : aviso.startsWith("⚠") ? amarillo : gris;
+        ctx.io.escribir(color(aviso));
+      }
+    }
+  };
+  /** Pacientes ya explorados en esta guardia (revela la exploración física). */
+  __publicField(_TriageState, "explorados", /* @__PURE__ */ new Set());
+  /** Pacientes por los que el adjunto ya dudó una vez (modo residente). */
+  __publicField(_TriageState, "avisadosPorAdjunto", /* @__PURE__ */ new Set());
+  var TriageState = _TriageState;
+
+  // src/core/GameContext.ts
+  function crearRng(semilla2) {
+    let a = semilla2 >>> 0;
+    return () => {
+      a |= 0;
+      a = a + 1831565813 | 0;
+      let t = Math.imul(a ^ a >>> 15, 1 | a);
+      t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t;
+      return ((t ^ t >>> 14) >>> 0) / 4294967296;
+    };
+  }
+  var GameContext = class {
+    constructor(rng, io2) {
+      this.rng = rng;
+      this.io = io2;
+      __publicField(this, "duracionGuardia", 24 * 60);
+      __publicField(this, "minuto", 0);
+      /** Modo residente: un adjunto localizable te tutela durante la guardia. */
+      __publicField(this, "modoResidente", false);
+      /** Llamadas al adjunto disponibles en quirófano (solo modo residente). */
+      __publicField(this, "consultasAdjunto", 3);
+      __publicField(this, "cirujano", { energia: 100, estres: 10 });
+      __publicField(this, "hospital", {
+        quirofanosLibres: 2,
+        quirofanosTotales: 2,
+        camasReaLibres: 3,
+        camasReaTotales: 3
+      });
+      /** Pacientes en urgencias pendientes de decisión. */
+      __publicField(this, "salaEspera", []);
+      /** Pacientes ingresados en observación / tratamiento conservador. */
+      __publicField(this, "ingresados", []);
+      /** Historial completo para el informe final. */
+      __publicField(this, "historial", []);
+      __publicField(this, "stats", {
+        atendidos: 0,
+        cirugiasRealizadas: 0,
+        cirugiasPerfectas: 0,
+        altasCorrectas: 0,
+        altasErroneas: 0,
+        ingresosCorrectos: 0,
+        ingresosErroneos: 0,
+        exitus: 0,
+        complicaciones: 0
+      });
+      /** Cola de llegadas pendientes, ordenada por minuto. */
+      __publicField(this, "llegadas", []);
+      __publicField(this, "camasRea", []);
+      __publicField(this, "ocupacionesExternas", []);
+    }
+    programarLlegadas(llegadas) {
+      this.llegadas.push(...llegadas);
+      this.llegadas.sort((a, b) => a.minuto - b.minuto);
+    }
+    /** El otro equipo de guardia ocupa un quirófano durante una franja. */
+    programarOcupacionExterna(desde, hasta, motivo) {
+      this.ocupacionesExternas.push({ desde, hasta, activa: false, motivo });
+    }
+    registrarPaciente(p) {
+      if (!this.historial.includes(p)) this.historial.push(p);
+    }
+    ocuparCamaRea(p, minutosEstancia) {
+      this.hospital.camasReaLibres = Math.max(0, this.hospital.camasReaLibres - 1);
+      this.camasRea.push({ paciente: p, liberaEnMinuto: this.minuto + minutosEstancia });
+    }
+    get guardiaTerminada() {
+      return this.minuto >= this.duracionGuardia;
+    }
+    /** Minuto de la próxima llegada pendiente, o null si no quedan. */
+    get proximaLlegada() {
+      return this.llegadas.length > 0 ? this.llegadas[0].minuto : null;
+    }
+    /**
+     * Avanza el reloj y aplica todas las consecuencias del paso del tiempo.
+     * Devuelve los avisos que deben mostrarse al jugador.
+     */
+    avanzarTiempo(minutos, opciones = {}) {
+      const avisos = [];
+      const PASO = 15;
+      let restante = minutos;
+      while (restante > 0 && !this.guardiaTerminada) {
+        const dt = Math.min(PASO, restante);
+        restante -= dt;
+        this.minuto += dt;
+        if (opciones.descanso) {
+          this.cirujano.energia = Math.min(100, this.cirujano.energia + dt * 0.6);
+          this.cirujano.estres = Math.max(0, this.cirujano.estres - dt * 0.35);
+        } else {
+          this.cirujano.energia = Math.max(0, this.cirujano.energia - dt * 0.09);
+        }
+        while (this.llegadas.length > 0 && this.llegadas[0].minuto <= this.minuto) {
+          const { paciente } = this.llegadas.shift();
+          this.salaEspera.push(paciente);
+          this.registrarPaciente(paciente);
+          const etiqueta = paciente.reingresado ? `⚠ AMBULANCIA: vuelve ${paciente.nombre} (le diste el alta) — mucho peor que antes.` : `🚑 Llega un nuevo paciente a urgencias: ${paciente.nombre}, ${paciente.edad} años.`;
+          avisos.push(etiqueta);
+        }
+        for (const p of this.salaEspera) {
+          p.estabilidad -= p.patologia.deterioroPorHora * (dt / 60);
+        }
+        for (const p of this.ingresados) {
+          if (p.patologia.quirurgica) {
+            p.estabilidad -= p.patologia.deterioroPorHora * 0.6 * (dt / 60);
+            if (!p.alertaPlanta && p.estabilidad < 45) {
+              p.alertaPlanta = true;
+              avisos.push(`⚠ Llaman de planta: ${p.nombre} está empeorando. Vuelve a estar en tus manos.`);
+            }
+          }
+        }
+        for (const p of this.ingresados.filter((x) => x.alertaPlanta)) {
+          this.ingresados.splice(this.ingresados.indexOf(p), 1);
+          this.salaEspera.push(p);
+          p.estado = "espera";
+        }
+        for (const p of [...this.ingresados]) {
+          if (!p.patologia.quirurgica && this.minuto - p.minutoLlegada > 180) {
+            this.ingresados.splice(this.ingresados.indexOf(p), 1);
+            p.estado = "alta";
+            avisos.push(`ℹ ${p.nombre} se recupera en observación y es dado de alta por el internista.`);
+          }
+        }
+        for (const lista of [this.salaEspera, this.ingresados]) {
+          for (const p of [...lista]) {
+            if (p.estabilidad <= 0) {
+              lista.splice(lista.indexOf(p), 1);
+              p.estado = "exitus";
+              p.estabilidad = 0;
+              this.stats.exitus++;
+              this.cirujano.estres = Math.min(100, this.cirujano.estres + 20);
+              avisos.push(`✝ ÉXITUS: ${p.nombre} fallece sin tratamiento definitivo (${p.patologia.nombre}).`);
+            }
+          }
+        }
+        for (const cama of [...this.camasRea]) {
+          if (cama.liberaEnMinuto <= this.minuto) {
+            this.camasRea.splice(this.camasRea.indexOf(cama), 1);
+            this.hospital.camasReaLibres = Math.min(
+              this.hospital.camasReaTotales,
+              this.hospital.camasReaLibres + 1
+            );
+            cama.paciente.estado = "operado";
+            avisos.push(`ℹ ${cama.paciente.nombre} sale de REA a planta. Se libera una cama.`);
+          }
+        }
+        for (const oc of this.ocupacionesExternas) {
+          if (!oc.activa && oc.desde <= this.minuto && oc.hasta > this.minuto) {
+            if (this.hospital.quirofanosLibres > 0) {
+              oc.activa = true;
+              this.hospital.quirofanosLibres--;
+              avisos.push(`ℹ El equipo de trauma ocupa un quirófano (${oc.motivo}).`);
+            }
+          } else if (oc.activa && oc.hasta <= this.minuto) {
+            oc.activa = false;
+            this.hospital.quirofanosLibres++;
+            avisos.push("ℹ El equipo de trauma libera su quirófano.");
+          }
+        }
+      }
+      return avisos;
+    }
+  };
+
+  // src/core/StateMachine.ts
+  var MaquinaEstados = class {
+    async ejecutar(inicial, ctx) {
+      let estado = inicial;
+      while (estado !== null) {
+        estado = await estado.run(ctx);
+      }
+    }
+  };
+
+  // src/core/ShiftEngine.ts
+  var ShiftEngine = class {
+    constructor(io2, semilla2, modo2) {
+      this.io = io2;
+      this.modo = modo2;
+      __publicField(this, "ctx");
+      const rng = crearRng(semilla2 ?? Date.now() & 2147483647);
+      this.ctx = new GameContext(rng, io2);
+      const fabrica = new PatientFactory(rng);
+      this.ctx.programarLlegadas(fabrica.generarLlegadasDeGuardia());
+      const inicio1 = 180 + Math.floor(rng() * 300);
+      const inicio2 = 720 + Math.floor(rng() * 300);
+      this.ctx.programarOcupacionExterna(inicio1, inicio1 + 120, "politraumatizado de tráfico");
+      this.ctx.programarOcupacionExterna(inicio2, inicio2 + 90, "fractura abierta de fémur");
+    }
+    async iniciar() {
+      this.pintarPortada();
+      if (this.modo === void 0) {
+        this.modo = await this.io.elegir("¿Con qué nivel sales a la guardia?", [
+          {
+            etiqueta: "Adjunto",
+            detalle: "sin red de seguridad, puntuación completa",
+            valor: "adjunto"
+          },
+          {
+            etiqueta: "Residente",
+            detalle: "un adjunto localizable te da pistas; puntuación tutelada",
+            valor: "residente"
+          }
+        ]);
+      }
+      this.ctx.modoResidente = this.modo === "residente";
+      if (this.ctx.modoResidente) {
+        this.io.escribir(
+          gris("\n  Modo residente: tu adjunto sugerirá pruebas, dudará en voz alta si te") + gris("\n  equivocas de destino y atenderá hasta 3 llamadas en quirófano.")
+        );
+      }
+      await this.io.pausa("Pulsa Intro para fichar y empezar la guardia...");
+      await new MaquinaEstados().ejecutar(new TriageState(), this.ctx);
+    }
+    pintarPortada() {
+      this.io.escribir(lineaSeparadora());
+      this.io.escribir(negrita(cian("   SURGEON'S NIGHT — El Turno de Guardia")));
+      this.io.escribir(lineaSeparadora());
+      this.io.escribir(`
+  Son las ${negrita("08:00")}. Empiezan tus ${negrita("24 horas")} como cirujano general
+  de guardia en un hospital público. Tienes ${negrita("2 quirófanos")}, ${negrita("3 camas de REA")}
+  y un busca que no va a dejar de sonar.
+
+  ${negrita("Reglas de supervivencia:")}
+   • Todo cuesta tiempo, y los pacientes no tratados se deterioran.
+   • La prueba adecuada confirma el diagnóstico; operar a ciegas se paga.
+   • No todo dolor abdominal se opera: dar el alta también es decidir.
+   • Vigila tu ${negrita("energía")} y tu ${negrita("estrés")}: con fatiga, hasta la decisión
+     correcta puede salir mal. El café es tu amigo. Dosifícalo.
+
+  ${gris("Sobrevive hasta las 08:00 de mañana. Suerte, doctor/a.")}
+`);
+    }
+  };
+
+  // src/web/WebIO.ts
+  var ESTILOS_ABRE = {
+    1: "b",
+    2: "d",
+    3: "i",
+    4: "u",
+    7: "inv",
+    31: "rojo",
+    32: "verde",
+    33: "amarillo",
+    34: "azul",
+    35: "magenta",
+    36: "cian",
+    90: "gris",
+    41: "fondo-rojo"
+  };
+  var ESTILOS_CIERRA = {
+    22: ["b", "d"],
+    23: ["i"],
+    24: ["u"],
+    27: ["inv"],
+    39: ["rojo", "verde", "amarillo", "azul", "magenta", "cian", "gris"],
+    49: ["fondo-rojo"]
+  };
+  function escaparHtml(texto) {
+    return texto.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+  }
+  function ansiAHtml(texto) {
+    let activos = [];
+    let html = "";
+    for (const parte of texto.split(/(\x1b\[\d+m)/)) {
+      const codigo = parte.match(/^\x1b\[(\d+)m$/);
+      if (codigo) {
+        const n = Number(codigo[1]);
+        const abre = ESTILOS_ABRE[n];
+        const cierra = ESTILOS_CIERRA[n];
+        if (abre) activos.push(abre);
+        else if (cierra) activos = activos.filter((c) => !cierra.includes(c));
+      } else if (parte) {
+        const seguro = escaparHtml(parte);
+        html += activos.length > 0 ? `<span class="${activos.map((c) => `ansi-${c}`).join(" ")}">${seguro}</span>` : seguro;
+      }
+    }
+    return html;
+  }
+  function sinAnsi(texto) {
+    return texto.replace(/\x1b\[\d+m/g, "");
+  }
+  var WebIO = class {
+    constructor(raiz) {
+      __publicField(this, "salida");
+      __publicField(this, "menu");
+      __publicField(this, "teclado", null);
+      this.salida = document.createElement("div");
+      this.salida.id = "salida";
+      this.menu = document.createElement("div");
+      this.menu.id = "menu";
+      raiz.append(this.salida, this.menu);
+    }
+    escribir(texto = "") {
+      for (const linea of texto.split("\n")) {
+        const div = document.createElement("div");
+        div.className = "linea";
+        div.innerHTML = ansiAHtml(linea) || "&nbsp;";
+        this.salida.appendChild(div);
+      }
+      this.desplazarAlFinal();
+    }
+    elegir(titulo, opciones) {
+      return new Promise((resolver) => {
+        this.limpiarMenu();
+        const cabecera = document.createElement("div");
+        cabecera.className = "menu-titulo";
+        cabecera.innerHTML = ansiAHtml(titulo);
+        this.menu.appendChild(cabecera);
+        const botones = [];
+        opciones.forEach((op, i) => {
+          const boton = document.createElement("button");
+          boton.className = "opcion";
+          const detalle = op.detalle ? `<span class="detalle">(${escaparHtml(op.detalle)})</span>` : "";
+          boton.innerHTML = `<span class="num">${i + 1}</span><span class="texto">${ansiAHtml(op.etiqueta)} ${detalle}</span>`;
+          boton.addEventListener("click", () => {
+            this.escribir(`\x1B[90m> ${i + 1}. ${sinAnsi(op.etiqueta)}\x1B[39m`);
+            this.limpiarMenu();
+            resolver(op.valor);
+          });
+          this.menu.appendChild(boton);
+          botones.push(boton);
+        });
+        this.teclado = (ev) => {
+          const n = Number.parseInt(ev.key, 10);
+          if (Number.isInteger(n) && n >= 1 && n <= Math.min(9, botones.length)) {
+            botones[n - 1].click();
+          }
+        };
+        document.addEventListener("keydown", this.teclado);
+        this.desplazarAlFinal();
+      });
+    }
+    pausa(mensaje = "Pulsa Intro para continuar...") {
+      const etiqueta = mensaje.includes("fichar") ? "▸ Fichar y empezar la guardia" : "▸ Continuar";
+      return this.elegir(" ", [{ etiqueta, valor: void 0 }]);
+    }
+    cerrar() {
+      this.limpiarMenu();
+      const boton = document.createElement("button");
+      boton.className = "opcion reinicio";
+      boton.textContent = "⟳ Empezar una nueva guardia";
+      boton.addEventListener("click", () => location.reload());
+      this.menu.appendChild(boton);
+      this.desplazarAlFinal();
+    }
+    // ────────────────────────────────────────────────────────────
+    limpiarMenu() {
+      if (this.teclado) {
+        document.removeEventListener("keydown", this.teclado);
+        this.teclado = null;
+      }
+      this.menu.replaceChildren();
+    }
+    desplazarAlFinal() {
+      requestAnimationFrame(() => {
+        this.salida.scrollTop = this.salida.scrollHeight;
+      });
+    }
+  };
+
+  // src/web/main.ts
+  configurarColores(true);
+  var parametros = new URLSearchParams(location.search);
+  var semillaParam = parametros.get("seed");
+  var semilla = semillaParam !== null && Number.isFinite(Number(semillaParam)) ? Number(semillaParam) : void 0;
+  var modoParam = parametros.get("modo");
+  var modo = modoParam === "residente" || modoParam === "adjunto" ? modoParam : void 0;
+  var io = new WebIO(document.getElementById("app"));
+  new ShiftEngine(io, semilla, modo).iniciar().catch((error) => {
+    io.escribir(`\x1B[31mLa guardia ha terminado de forma inesperada: ${String(error)}\x1B[39m`);
+  });
+})();
+
+</script>
+</body>
+</html>

@@ -37,18 +37,18 @@ export function pintarHUD(ctx: GameContext): void {
   const restanteMin = Math.max(0, ctx.duracionGuardia - ctx.minuto);
   const restante = `${Math.floor(restanteMin / 60)}h ${String(restanteMin % 60).padStart(2, '0')}m`;
 
-  console.log('\n' + lineaSeparadora());
-  console.log(
+  ctx.io.escribir('\n' + lineaSeparadora());
+  ctx.io.escribir(
     `  ${negrita(cian('SURGEON’S NIGHT'))}  ${gris('|')}  🕐 ${negrita(horaGuardia(ctx.minuto))}` +
       `  ${gris('|')}  quedan ${amarillo(restante)} de guardia`,
   );
-  console.log(`  Energía ${barra(ctx.cirujano.energia)}   Estrés ${barra(ctx.cirujano.estres, true)}`);
-  console.log(
+  ctx.io.escribir(`  Energía ${barra(ctx.cirujano.energia)}   Estrés ${barra(ctx.cirujano.estres, true)}`);
+  ctx.io.escribir(
     `  Quirófanos libres: ${negrita(`${ctx.hospital.quirofanosLibres}/${ctx.hospital.quirofanosTotales}`)}` +
       `   Camas REA libres: ${negrita(`${ctx.hospital.camasReaLibres}/${ctx.hospital.camasReaTotales}`)}` +
       `   Pacientes en espera: ${negrita(String(ctx.salaEspera.length))}`,
   );
-  console.log(lineaSeparadora());
+  ctx.io.escribir(lineaSeparadora());
 }
 
 /** Ficha resumida de un paciente para listas y triaje. */

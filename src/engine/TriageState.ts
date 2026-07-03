@@ -11,7 +11,7 @@ import type { ManejoCorrecto, Paciente, PruebaId } from '../core/types.js';
 import { INFORME_INESPECIFICO, PRUEBAS } from '../data/pruebas.js';
 import { amarillo, cian, gris, negrita, rojo, verde } from '../ui/ansi.js';
 import { fichaPaciente, horaGuardia, lineaSeparadora, pintarHUD } from '../ui/hud.js';
-import { elegir, pausa, type Opcion } from '../ui/prompt.js';
+import type { Opcion } from '../core/io.js';
 import { SummaryState } from './SummaryState.js';
 import { SurgeryState } from './SurgeryState.js';
 
@@ -40,21 +40,21 @@ export class TriageState implements GameState {
 
     switch (accion.tipo) {
       case 'cafe': {
-        this.mostrarAvisos(ctx.avanzarTiempo(15, { descanso: true }));
+        this.mostrarAvisos(ctx, ctx.avanzarTiempo(15, { descanso: true }));
         ctx.cirujano.energia = Math.min(100, ctx.cirujano.energia + 5);
-        console.log(verde('☕ Un café con el residente. Respiras hondo.'));
+        ctx.io.escribir(verde('☕ Un café con el residente. Respiras hondo.'));
         return this;
       }
       case 'esperar': {
         const proxima = ctx.proximaLlegada;
         const salto = proxima !== null ? Math.max(15, proxima - ctx.minuto) : 60;
-        console.log(gris(`Te tumbas en el sofá de la sala de guardia... (${salto} min)`));
-        this.mostrarAvisos(ctx.avanzarTiempo(Math.min(salto, 120), { descanso: true }));
+        ctx.io.escribir(gris(`Te tumbas en el sofá de la sala de guardia... (${salto} min)`));
+        this.mostrarAvisos(ctx, ctx.avanzarTiempo(Math.min(salto, 120), { descanso: true }));
         return this;
       }
       case 'ronda': {
         this.pasarVisita(ctx);
-        this.mostrarAvisos(ctx.avanzarTiempo(15));
+        this.mostrarAvisos(ctx, ctx.avanzarTiempo(15));
         return this;
       }
       case 'paciente':
@@ -81,13 +81,13 @@ export class TriageState implements GameState {
       ctx.salaEspera.length > 0
         ? `Sala de urgencias — ${ctx.salaEspera.length} paciente(s) esperan tu decisión:`
         : 'Urgencias está en calma (de momento). ¿Qué haces?';
-    return elegir(titulo, opciones);
+    return ctx.io.elegir(titulo, opciones);
   }
 
   private pasarVisita(ctx: GameContext): void {
-    console.log(`\n${negrita('Ronda de planta:')}`);
+    ctx.io.escribir(`\n${negrita('Ronda de planta:')}`);
     for (const p of ctx.ingresados) {
-      console.log(`  • ${fichaPaciente(p)} ${gris(`— ${p.patologia.nombre}`)}`);
+      ctx.io.escribir(`  • ${fichaPaciente(p)} ${gris(`— ${p.patologia.nombre}`)}`);
     }
   }
 
@@ -102,51 +102,51 @@ export class TriageState implements GameState {
 
       switch (accion.tipo) {
         case 'volver':
-          console.log(gris(`${paciente.nombre} queda en el box, monitorizado.`));
+          ctx.io.escribir(gris(`${paciente.nombre} queda en el box, monitorizado.`));
           return this;
 
         case 'explorar': {
           TriageState.explorados.add(paciente.id);
-          this.mostrarAvisos(ctx.avanzarTiempo(10));
-          console.log(`\n${cian('Exploración física:')} ${paciente.patologia.presentacion.exploracion}`);
+          this.mostrarAvisos(ctx, ctx.avanzarTiempo(10));
+          ctx.io.escribir(`\n${cian('Exploración física:')} ${paciente.patologia.presentacion.exploracion}`);
           break;
         }
 
         case 'prueba': {
           const prueba = PRUEBAS[accion.prueba];
-          console.log(gris(`Solicitas ${prueba.nombre}. Esperas el resultado...`));
-          this.mostrarAvisos(ctx.avanzarTiempo(prueba.duracionMin));
+          ctx.io.escribir(gris(`Solicitas ${prueba.nombre}. Esperas el resultado...`));
+          this.mostrarAvisos(ctx, ctx.avanzarTiempo(prueba.duracionMin));
           paciente.pruebasRealizadas.push(prueba.id);
           const informe = this.informeDePrueba(paciente, prueba.id);
-          console.log(`\n${cian(`Resultado de ${prueba.nombre}:`)}\n  ${informe}`);
+          ctx.io.escribir(`\n${cian(`Resultado de ${prueba.nombre}:`)}\n  ${informe}`);
           break;
         }
 
         case 'alta':
           if (await this.adjuntoDuda(ctx, paciente, 'alta')) break;
           this.resolverAlta(ctx, paciente);
-          await pausa();
+          await ctx.io.pausa();
           return this;
 
         case 'ingreso':
           if (await this.adjuntoDuda(ctx, paciente, 'conservador')) break;
           this.resolverIngreso(ctx, paciente);
-          await pausa();
+          await ctx.io.pausa();
           return this;
 
         case 'cirugia': {
           if (ctx.hospital.quirofanosLibres === 0) {
-            console.log(rojo('No hay ningún quirófano libre ahora mismo. Gana tiempo con otra decisión.'));
+            ctx.io.escribir(rojo('No hay ningún quirófano libre ahora mismo. Gana tiempo con otra decisión.'));
             break;
           }
           if (await this.adjuntoDuda(ctx, paciente, 'cirugia')) break;
           if (!paciente.patologia.quirurgica) {
-            console.log(
+            ctx.io.escribir(
               rojo('\nEl anestesista revisa el caso y te para los pies: «¿Indicación quirúrgica? Yo no la veo.»'),
             );
-            console.log(gris('Pierdes 15 minutos discutiendo y algo de credibilidad. Revisa el caso.'));
+            ctx.io.escribir(gris('Pierdes 15 minutos discutiendo y algo de credibilidad. Revisa el caso.'));
             ctx.cirujano.estres = Math.min(100, ctx.cirujano.estres + 8);
-            this.mostrarAvisos(ctx.avanzarTiempo(15));
+            this.mostrarAvisos(ctx, ctx.avanzarTiempo(15));
             break;
           }
           return new SurgeryState(paciente);
@@ -177,27 +177,27 @@ export class TriageState implements GameState {
       { etiqueta: gris('Dejarlo en el box y volver al control'), valor: { tipo: 'volver' } },
     );
 
-    return elegir(`¿Qué haces con ${paciente.nombre}?`, opciones);
+    return ctx.io.elegir(`¿Qué haces con ${paciente.nombre}?`, opciones);
   }
 
   // ────────────────────────────────────────────────────────────
   private pintarFichaClinica(ctx: GameContext, p: Paciente): void {
-    console.log('\n' + lineaSeparadora());
-    console.log(`  ${negrita(cian(`BOX ${p.id}`))} — ${fichaPaciente(p)}  ${gris(`(llegó a las ${horaGuardia(p.minutoLlegada)})`)}`);
-    console.log(lineaSeparadora());
-    console.log(`  ${negrita('Anamnesis:')}`);
-    for (const s of p.patologia.presentacion.sintomas) console.log(`   • ${s}`);
-    console.log(`  ${negrita('Constantes:')} ${p.patologia.presentacion.constantes}`);
+    ctx.io.escribir('\n' + lineaSeparadora());
+    ctx.io.escribir(`  ${negrita(cian(`BOX ${p.id}`))} — ${fichaPaciente(p)}  ${gris(`(llegó a las ${horaGuardia(p.minutoLlegada)})`)}`);
+    ctx.io.escribir(lineaSeparadora());
+    ctx.io.escribir(`  ${negrita('Anamnesis:')}`);
+    for (const s of p.patologia.presentacion.sintomas) ctx.io.escribir(`   • ${s}`);
+    ctx.io.escribir(`  ${negrita('Constantes:')} ${p.patologia.presentacion.constantes}`);
     if (TriageState.explorados.has(p.id)) {
-      console.log(`  ${negrita('Exploración:')} ${p.patologia.presentacion.exploracion}`);
+      ctx.io.escribir(`  ${negrita('Exploración:')} ${p.patologia.presentacion.exploracion}`);
     }
     for (const id of p.pruebasRealizadas) {
-      console.log(`  ${negrita(`${PRUEBAS[id].nombre}:`)} ${gris(this.informeDePrueba(p, id))}`);
+      ctx.io.escribir(`  ${negrita(`${PRUEBAS[id].nombre}:`)} ${gris(this.informeDePrueba(p, id))}`);
     }
     if (p.diagnosticoConfirmado) {
-      console.log(`  ${verde(`✔ Diagnóstico confirmado: ${p.patologia.nombre}`)}`);
+      ctx.io.escribir(`  ${verde(`✔ Diagnóstico confirmado: ${p.patologia.nombre}`)}`);
     } else if (ctx.modoResidente) {
-      console.log(
+      ctx.io.escribir(
         `  ${cian('🩺 Tu adjunto, por teléfono:')} ${gris(`«Con esa clínica, yo pediría ${PRUEBAS[p.patologia.pruebaDiana].nombre.toLowerCase()}.»`)}`,
       );
     }
@@ -215,10 +215,10 @@ export class TriageState implements GameState {
     if (TriageState.avisadosPorAdjunto.has(p.id)) return false;
 
     TriageState.avisadosPorAdjunto.add(p.id);
-    console.log(
+    ctx.io.escribir(
       `\n${cian('🩺 Tu adjunto arquea una ceja:')} ${gris(`«¿${this.nombreDecision(decision)}, con un(a) ${p.patologia.nombre.toLowerCase()} confirmado/a? Tú verás, es tu paciente...»`)}`,
     );
-    const reconsiderar = await elegir('¿Qué haces?', [
+    const reconsiderar = await ctx.io.elegir('¿Qué haces?', [
       { etiqueta: 'Reconsiderar la decisión', valor: true },
       { etiqueta: 'Mantenerla: el cirujano eres tú', valor: false },
     ]);
@@ -250,8 +250,8 @@ export class TriageState implements GameState {
       p.estado = 'alta';
       ctx.stats.altasCorrectas++;
       ctx.cirujano.estres = Math.max(0, ctx.cirujano.estres - 4);
-      console.log(verde(`\n✔ Alta correcta: ${p.patologia.nombre} no precisaba ingreso ni cirugía.`));
-      console.log(gris(`  Perla docente: ${p.patologia.notaDocente}`));
+      ctx.io.escribir(verde(`\n✔ Alta correcta: ${p.patologia.nombre} no precisaba ingreso ni cirugía.`));
+      ctx.io.escribir(gris(`  Perla docente: ${p.patologia.notaDocente}`));
       return;
     }
 
@@ -264,8 +264,8 @@ export class TriageState implements GameState {
       p.estabilidad = 0;
       ctx.stats.exitus++;
       ctx.cirujano.estres = Math.min(100, ctx.cirujano.estres + 25);
-      console.log(rojo(negrita(`\n✝ ${p.nombre} fallece en su domicilio horas después del alta (${p.patologia.nombre}).`)));
-      console.log(gris(`  ${p.patologia.notaDocente}`));
+      ctx.io.escribir(rojo(negrita(`\n✝ ${p.nombre} fallece en su domicilio horas después del alta (${p.patologia.nombre}).`)));
+      ctx.io.escribir(gris(`  ${p.patologia.notaDocente}`));
       return;
     }
 
@@ -274,7 +274,7 @@ export class TriageState implements GameState {
     p.estado = 'espera';
     const vuelveEn = 90 + Math.floor(ctx.rng() * 120);
     ctx.programarLlegadas([{ minuto: ctx.minuto + vuelveEn, paciente: p }]);
-    console.log(amarillo(`\nFirmas el alta de ${p.nombre}. Algo no te deja tranquilo...`));
+    ctx.io.escribir(amarillo(`\nFirmas el alta de ${p.nombre}. Algo no te deja tranquilo...`));
   }
 
   private resolverIngreso(ctx: GameContext, p: Paciente): void {
@@ -286,14 +286,14 @@ export class TriageState implements GameState {
 
     if (p.patologia.quirurgica) {
       ctx.stats.ingresosErroneos++;
-      console.log(amarillo(`\nIngresas a ${p.nombre} con sueroterapia y antibiótico. La planta lo vigilará... por ahora.`));
+      ctx.io.escribir(amarillo(`\nIngresas a ${p.nombre} con sueroterapia y antibiótico. La planta lo vigilará... por ahora.`));
     } else if (p.patologia.manejoCorrecto === 'conservador') {
       ctx.stats.ingresosCorrectos++;
-      console.log(verde(`\n✔ Ingreso correcto: ${p.patologia.nombre} se trata con medidas conservadoras, no con bisturí.`));
-      console.log(gris(`  Perla docente: ${p.patologia.notaDocente}`));
+      ctx.io.escribir(verde(`\n✔ Ingreso correcto: ${p.patologia.nombre} se trata con medidas conservadoras, no con bisturí.`));
+      ctx.io.escribir(gris(`  Perla docente: ${p.patologia.notaDocente}`));
     } else {
       ctx.stats.ingresosCorrectos++;
-      console.log(verde(`\nIngresas a ${p.nombre} en observación. Prudente, aunque podía haberse ido de alta.`));
+      ctx.io.escribir(verde(`\nIngresas a ${p.nombre} en observación. Prudente, aunque podía haberse ido de alta.`));
     }
   }
 
@@ -302,10 +302,10 @@ export class TriageState implements GameState {
     if (i >= 0) ctx.salaEspera.splice(i, 1);
   }
 
-  private mostrarAvisos(avisos: string[]): void {
+  private mostrarAvisos(ctx: GameContext, avisos: string[]): void {
     for (const aviso of avisos) {
       const color = aviso.startsWith('✝') ? rojo : aviso.startsWith('⚠') ? amarillo : gris;
-      console.log(color(aviso));
+      ctx.io.escribir(color(aviso));
     }
   }
 }

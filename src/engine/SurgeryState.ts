@@ -11,7 +11,7 @@ import type { GameState } from '../core/StateMachine.js';
 import type { OpcionQuirurgica, Paciente } from '../core/types.js';
 import { amarillo, cian, fondoRojo, gris, negrita, rojo, verde } from '../ui/ansi.js';
 import { barra, lineaSeparadora } from '../ui/hud.js';
-import { elegir, pausa } from '../ui/prompt.js';
+
 import { TriageState } from './TriageState.js';
 
 export class SurgeryState implements GameState {
@@ -28,15 +28,15 @@ export class SurgeryState implements GameState {
     if (i >= 0) ctx.salaEspera.splice(i, 1);
     ctx.hospital.quirofanosLibres--;
 
-    console.log('\n' + lineaSeparadora());
-    console.log(`  ${negrita(cian('🔪 QUIRÓFANO'))} — ${negrita(plan.nombre)}`);
-    console.log(`  Paciente: ${p.nombre}, ${p.edad} años. ${gris(p.patologia.nombre)}`);
-    console.log(lineaSeparadora());
+    ctx.io.escribir('\n' + lineaSeparadora());
+    ctx.io.escribir(`  ${negrita(cian('🔪 QUIRÓFANO'))} — ${negrita(plan.nombre)}`);
+    ctx.io.escribir(`  Paciente: ${p.nombre}, ${p.edad} años. ${gris(p.patologia.nombre)}`);
+    ctx.io.escribir(lineaSeparadora());
 
     if (!p.diagnosticoConfirmado) {
       p.estabilidad = Math.max(1, p.estabilidad - 8);
       ctx.cirujano.estres = Math.min(100, ctx.cirujano.estres + 8);
-      console.log(
+      ctx.io.escribir(
         amarillo('Entras a quirófano SIN confirmación diagnóstica. La incertidumbre se paga: -8 estabilidad, +estrés.'),
       );
     }
@@ -44,9 +44,9 @@ export class SurgeryState implements GameState {
     let perfecta = true;
 
     for (const [n, paso] of plan.pasos.entries()) {
-      console.log(`\n${negrita(`PASO ${n + 1}/${plan.pasos.length}: ${paso.titulo}`)}`);
-      console.log(`  Estabilidad del paciente ${barra(p.estabilidad, false, 12)}   Tu energía ${barra(ctx.cirujano.energia, false, 12)}`);
-      console.log(`\n  ${amarillo('EVENTO:')} ${paso.evento}`);
+      ctx.io.escribir(`\n${negrita(`PASO ${n + 1}/${plan.pasos.length}: ${paso.titulo}`)}`);
+      ctx.io.escribir(`  Estabilidad del paciente ${barra(p.estabilidad, false, 12)}   Tu energía ${barra(ctx.cirujano.energia, false, 12)}`);
+      ctx.io.escribir(`\n  ${amarillo('EVENTO:')} ${paso.evento}`);
 
       const opciones = this.barajar(ctx, paso.opciones);
       const eleccion = await this.elegirTecnica(ctx, opciones);
@@ -55,7 +55,7 @@ export class SurgeryState implements GameState {
       ctx.cirujano.estres = Math.min(100, Math.max(0, ctx.cirujano.estres + eleccion.deltaEstres));
 
       if (eleccion.correcta) {
-        console.log(verde(`  ✔ ${eleccion.resultado}`));
+        ctx.io.escribir(verde(`  ✔ ${eleccion.resultado}`));
         // Penalización oculta por fatiga/estrés: la decisión era correcta,
         // pero la ejecución depende de las manos y la cabeza que te quedan.
         if (ctx.rng() < this.probabilidadFalloOculto(ctx)) {
@@ -63,14 +63,14 @@ export class SurgeryState implements GameState {
           p.estabilidad = Math.max(0, p.estabilidad - 8);
           ctx.cirujano.estres = Math.min(100, ctx.cirujano.estres + 6);
           ctx.stats.complicaciones++;
-          console.log(
+          ctx.io.escribir(
             rojo('  ✖ Pero tus manos tiemblan de fatiga y la maniobra sale imperfecta: pequeña complicación añadida.'),
           );
         }
       } else {
         perfecta = false;
         ctx.stats.complicaciones++;
-        console.log(rojo(`  ✖ ${eleccion.resultado}`));
+        ctx.io.escribir(rojo(`  ✖ ${eleccion.resultado}`));
       }
 
       if (p.estabilidad <= 0) break;
@@ -85,12 +85,12 @@ export class SurgeryState implements GameState {
 
     this.resolverPostoperatorio(ctx, perfecta);
 
-    console.log(`\n${gris(`Perla docente: ${p.patologia.notaDocente}`)}`);
+    ctx.io.escribir(`\n${gris(`Perla docente: ${p.patologia.notaDocente}`)}`);
     if (avisos.length > 0) {
-      console.log(negrita('\nMientras estabas en quirófano:'));
-      for (const a of avisos) console.log(`  ${a.startsWith('✝') ? rojo(a) : gris(a)}`);
+      ctx.io.escribir(negrita('\nMientras estabas en quirófano:'));
+      for (const a of avisos) ctx.io.escribir(`  ${a.startsWith('✝') ? rojo(a) : gris(a)}`);
     }
-    await pausa();
+    await ctx.io.pausa();
     return new TriageState();
   }
 
@@ -113,12 +113,12 @@ export class SurgeryState implements GameState {
         });
       }
 
-      const eleccion = await elegir('¿Cómo procedes?', menu);
+      const eleccion = await ctx.io.elegir('¿Cómo procedes?', menu);
       if (eleccion !== 'adjunto') return eleccion;
 
       ctx.consultasAdjunto--;
       const correcta = opciones.find((op) => op.correcta);
-      console.log(
+      ctx.io.escribir(
         `\n${cian('🩺 El adjunto, con voz de dormido:')} ${gris(`«Yo lo tengo claro: ${correcta?.texto.toLowerCase() ?? 'sigue tu instinto'}. Y no me llames más, que estoy en la cama.»`)}`,
       );
     }
@@ -144,25 +144,25 @@ export class SurgeryState implements GameState {
   // ────────────────────────────────────────────────────────────
   private resolverPostoperatorio(ctx: GameContext, perfecta: boolean): void {
     const p = this.paciente;
-    console.log('\n' + lineaSeparadora());
+    ctx.io.escribir('\n' + lineaSeparadora());
 
     if (p.estabilidad <= 0) {
       p.estado = 'exitus';
       ctx.stats.exitus++;
       ctx.cirujano.estres = Math.min(100, ctx.cirujano.estres + 25);
-      console.log(fondoRojo(negrita(` ✝ ÉXITUS EN MESA: ${p.nombre} no supera la intervención. `)));
+      ctx.io.escribir(fondoRojo(negrita(` ✝ ÉXITUS EN MESA: ${p.nombre} no supera la intervención. `)));
       return;
     }
 
     if (perfecta) {
       ctx.stats.cirugiasPerfectas++;
       ctx.cirujano.estres = Math.max(0, ctx.cirujano.estres - 8);
-      console.log(verde(negrita('  Cirugía impecable. El equipo te mira con respeto.')));
+      ctx.io.escribir(verde(negrita('  Cirugía impecable. El equipo te mira con respeto.')));
     }
 
     if (p.estabilidad >= 55) {
       p.estado = 'operado';
-      console.log(verde(`  ${p.nombre} despierta estable y sube a planta. Estabilidad ${Math.round(p.estabilidad)}%.`));
+      ctx.io.escribir(verde(`  ${p.nombre} despierta estable y sube a planta. Estabilidad ${Math.round(p.estabilidad)}%.`));
       return;
     }
 
@@ -171,12 +171,12 @@ export class SurgeryState implements GameState {
       p.estado = 'rea';
       const estancia = 240 + Math.round((55 - p.estabilidad) * 4);
       ctx.ocuparCamaRea(p, estancia);
-      console.log(amarillo(`  ${p.nombre} sale intubado a REA (estabilidad ${Math.round(p.estabilidad)}%). Ocupa una cama ${gris(`~${Math.round(estancia / 60)} h`)}.`));
+      ctx.io.escribir(amarillo(`  ${p.nombre} sale intubado a REA (estabilidad ${Math.round(p.estabilidad)}%). Ocupa una cama ${gris(`~${Math.round(estancia / 60)} h`)}.`));
     } else {
       ctx.stats.complicaciones++;
       p.estabilidad = Math.max(1, p.estabilidad - 10);
       p.estado = 'operado';
-      console.log(rojo('  ¡No quedan camas de REA! El paciente se queda en una URPA improvisada, más frágil de lo debido.'));
+      ctx.io.escribir(rojo('  ¡No quedan camas de REA! El paciente se queda en una URPA improvisada, más frágil de lo debido.'));
     }
   }
 }

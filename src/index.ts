@@ -9,6 +9,7 @@
  *   node dist/index.js --adjunto     # modo adjunto (sin red de seguridad)
  */
 import { ShiftEngine, type ModoJuego } from './core/ShiftEngine.js';
+import { ConsoleIO } from './ui/ConsoleIO.js';
 
 function leerSemilla(argv: string[]): number | undefined {
   const i = argv.indexOf('--seed');
@@ -24,7 +25,7 @@ function leerModo(argv: string[]): ModoJuego | undefined {
 }
 
 const argv = process.argv.slice(2);
-const engine = new ShiftEngine(leerSemilla(argv), leerModo(argv));
+const engine = new ShiftEngine(new ConsoleIO(), leerSemilla(argv), leerModo(argv));
 engine.iniciar().catch((error: unknown) => {
   console.error('La guardia ha terminado de forma inesperada:', error);
   process.exit(1);

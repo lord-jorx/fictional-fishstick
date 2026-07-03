@@ -1,27 +1,31 @@
 /**
  * ShiftEngine: monta la guardia y arranca el bucle principal.
  *
- * Composición: crea el RNG (opcionalmente sembrado), el contexto,
- * la fábrica de pacientes y la máquina de estados; programa las
- * llegadas y las ocupaciones externas de quirófano, y ejecuta.
+ * Composición: recibe el adaptador de IO (terminal, web...), crea el RNG
+ * (opcionalmente sembrado), el contexto, la fábrica de pacientes y la
+ * máquina de estados; programa las llegadas y las ocupaciones externas
+ * de quirófano, y ejecuta.
  */
 import { PatientFactory } from '../factories/PatientFactory.js';
 import { TriageState } from '../engine/TriageState.js';
 import { cian, gris, negrita } from '../ui/ansi.js';
 import { lineaSeparadora } from '../ui/hud.js';
-import { pausa } from '../ui/prompt.js';
+import type { IO } from './io.js';
 import { crearRng, GameContext } from './GameContext.js';
 import { MaquinaEstados } from './StateMachine.js';
-import { elegir } from '../ui/prompt.js';
 
 export type ModoJuego = 'adjunto' | 'residente';
 
 export class ShiftEngine {
   private readonly ctx: GameContext;
 
-  constructor(semilla?: number, private modo?: ModoJuego) {
+  constructor(
+    private readonly io: IO,
+    semilla?: number,
+    private modo?: ModoJuego,
+  ) {
     const rng = crearRng(semilla ?? (Date.now() & 0x7fffffff));
-    this.ctx = new GameContext(rng);
+    this.ctx = new GameContext(rng, io);
 
     const fabrica = new PatientFactory(rng);
     this.ctx.programarLlegadas(fabrica.generarLlegadasDeGuardia());
@@ -37,7 +41,7 @@ export class ShiftEngine {
     this.pintarPortada();
 
     if (this.modo === undefined) {
-      this.modo = await elegir<ModoJuego>('¿Con qué nivel sales a la guardia?', [
+      this.modo = await this.io.elegir<ModoJuego>('¿Con qué nivel sales a la guardia?', [
         {
           etiqueta: 'Adjunto',
           detalle: 'sin red de seguridad, puntuación completa',
@@ -52,21 +56,21 @@ export class ShiftEngine {
     }
     this.ctx.modoResidente = this.modo === 'residente';
     if (this.ctx.modoResidente) {
-      console.log(
+      this.io.escribir(
         gris('\n  Modo residente: tu adjunto sugerirá pruebas, dudará en voz alta si te') +
           gris('\n  equivocas de destino y atenderá hasta 3 llamadas en quirófano.'),
       );
     }
 
-    await pausa('Pulsa Intro para fichar y empezar la guardia...');
+    await this.io.pausa('Pulsa Intro para fichar y empezar la guardia...');
     await new MaquinaEstados().ejecutar(new TriageState(), this.ctx);
   }
 
   private pintarPortada(): void {
-    console.log(lineaSeparadora());
-    console.log(negrita(cian("   SURGEON'S NIGHT — El Turno de Guardia")));
-    console.log(lineaSeparadora());
-    console.log(`
+    this.io.escribir(lineaSeparadora());
+    this.io.escribir(negrita(cian("   SURGEON'S NIGHT — El Turno de Guardia")));
+    this.io.escribir(lineaSeparadora());
+    this.io.escribir(`
   Son las ${negrita('08:00')}. Empiezan tus ${negrita('24 horas')} como cirujano general
   de guardia en un hospital público. Tienes ${negrita('2 quirófanos')}, ${negrita('3 camas de REA')}
   y un busca que no va a dejar de sonar.

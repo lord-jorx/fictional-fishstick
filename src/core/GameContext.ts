@@ -7,6 +7,7 @@
  * `avanzarTiempo`, que es quien aplica deterioro, fatiga, llegadas
  * y liberación de recursos.
  */
+import type { IO } from './io.js';
 import type { Cirujano, Estadisticas, Hospital, Paciente } from './types.js';
 
 /** PRNG determinista (mulberry32) para partidas reproducibles con --seed. */
@@ -84,7 +85,10 @@ export class GameContext {
   private camasRea: CamaReaOcupada[] = [];
   private ocupacionesExternas: OcupacionExternaQuirofano[] = [];
 
-  constructor(public readonly rng: () => number) {}
+  constructor(
+    public readonly rng: () => number,
+    public readonly io: IO,
+  ) {}
 
   programarLlegadas(llegadas: LlegadaProgramada[]): void {
     this.llegadas.push(...llegadas);

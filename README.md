@@ -4,14 +4,22 @@ Juego de texto para terminal que simula **24 horas de guardia de un cirujano
 general** en un hospital público. Triaje en urgencias, decisiones clínicas,
 cirugías por pasos con complicaciones, y la gestión de tu propia fatiga.
 
-Sin dependencias de runtime: solo necesitas **Node.js ≥ 18**.
+Sin dependencias de runtime: solo necesitas **Node.js ≥ 18**. Y el mismo
+motor corre también en el **navegador** (`web/index.html`, un único archivo
+autocontenido, también táctil/móvil).
 
 ## 🚀 Jugar
 
+En terminal:
+
 ```bash
-npm install     # instala solo TypeScript (dev)
+npm install     # solo devDependencies (TypeScript + esbuild)
 npm run dev     # compila y arranca la guardia
 ```
+
+En navegador: abre `web/index.html` directamente (es autocontenido). Admite
+`?seed=42` y `?modo=residente` / `?modo=adjunto` en la URL. Para regenerarlo
+tras tocar el código: `npm run build:web`.
 
 Partida reproducible y selección de modo desde la línea de comandos:
 
@@ -78,9 +86,10 @@ Cada caso termina con una **perla docente** basada en el manejo estándar.
 
 ```
 src/
-├── index.ts                  # Punto de entrada (parsea --seed)
+├── index.ts                  # Entrada CLI (--seed, --residente, --adjunto)
 ├── core/
 │   ├── types.ts              # Tipos de dominio (Paciente, Patología, …)
+│   ├── io.ts                 # Puerto IO (ports & adapters): escribir/elegir/pausa
 │   ├── GameContext.ts        # Estado compartido + avanzarTiempo() (reloj,
 │   │                         #   deterioro, llegadas, fatiga, recursos)
 │   ├── StateMachine.ts       # State pattern: GameState + MaquinaEstados
@@ -94,14 +103,25 @@ src/
 │   ├── TriageState.ts        # Fase de urgencias/triaje
 │   ├── SurgeryState.ts       # Minijuego quirúrgico por pasos
 │   └── SummaryState.ts       # Parte de guardia y puntuación
-└── ui/
-    ├── ansi.ts               # Colores ANSI sin dependencias
-    ├── prompt.ts             # Menús numerados sobre readline nativo
-    └── hud.ts                # HUD, barras de estado, reloj de guardia
+├── ui/
+│   ├── ansi.ts               # Colores ANSI sin dependencias (agnóstico de entorno)
+│   ├── ConsoleIO.ts          # Adaptador IO terminal (readline nativo)
+│   └── hud.ts                # HUD, barras de estado, reloj de guardia
+└── web/
+    ├── WebIO.ts              # Adaptador IO navegador (DOM + ANSI→HTML)
+    ├── main.ts               # Bootstrap web (?seed, ?modo)
+    └── template.html         # Plantilla del index.html autocontenido
+scripts/build-web.mjs         # esbuild → web/index.html (un solo archivo)
+web/index.html                # Versión jugable en navegador (generada)
 ```
 
 Decisiones de diseño:
 
+- **Ports & adapters**: el motor solo conoce la interfaz `IO`
+  (`core/io.ts`); `ConsoleIO` (readline) y `WebIO` (DOM con botones táctiles)
+  son adaptadores intercambiables. Los textos llevan códigos ANSI que la
+  terminal muestra tal cual y el navegador convierte a `<span>` con CSS.
+  Portar a otra plataforma = escribir otro adaptador.
 - **State pattern**: cada fase (`TriageState`, `SurgeryState`, `SummaryState`)
   implementa `GameState.run(ctx)` y devuelve el siguiente estado; la
   `MaquinaEstados` solo itera. Añadir una fase nueva no toca las existentes.
@@ -118,16 +138,15 @@ Decisiones de diseño:
 
 ## 📦 Plataformas y portabilidad
 
-El juego está pensado para **terminal** (Windows, macOS y Linux con Node ≥ 18).
-La arquitectura separa deliberadamente la lógica (`core/`, `data/`,
-`factories/`, `engine/`) de la presentación (`ui/`), así que portarlo a otra
-plataforma consiste en sustituir la capa de entrada/salida:
+Hoy el juego corre en **terminal** (Windows/macOS/Linux con Node ≥ 18) y en
+**navegador** (`web/index.html`, incluida pantalla táctil/móvil), ambos sobre
+el mismo motor gracias al puerto `IO`:
 
-- **Web / Steam**: empaquetar una UI web (o estilo terminal) con la misma
-  lógica en Electron o Tauri. Steam admite juegos narrativos/de texto, pero
-  exige un ejecutable de escritorio con su propia ventana, no una CLI.
-- **Android / iOS**: la lógica TypeScript es reutilizable tal cual con
-  Capacitor o React Native; solo hay que escribir la UI táctil.
+- **Steam**: empaquetar la versión web con Electron o Tauri (Steam admite
+  juegos narrativos/de texto, pero exige un ejecutable de escritorio con su
+  propia ventana, no una CLI) y añadir Steamworks (logros, nube).
+- **Android / iOS**: envolver la versión web con Capacitor (WebView) o
+  escribir un adaptador `IO` en React Native; la lógica se reutiliza tal cual.
 
 ## ⚠️ Descargo
 

@@ -1,9 +1,19 @@
 /**
  * Mini-librería de estilos ANSI para no depender de chalk.
- * Se desactiva sola si la salida no es un TTY (p. ej. en CI).
+ *
+ * Es agnóstica del entorno: en terminal se autodetecta el TTY; el adaptador
+ * web llama a configurarColores(true) y convierte los códigos a HTML.
  */
 
-const habilitado = process.stdout.isTTY ?? false;
+declare const process: { stdout?: { isTTY?: boolean } } | undefined;
+
+let habilitado =
+  typeof process !== 'undefined' && process !== null ? (process.stdout?.isTTY ?? false) : false;
+
+/** Fuerza la emisión (o no) de códigos ANSI, ignorando la autodetección. */
+export function configurarColores(activo: boolean): void {
+  habilitado = activo;
+}
 
 const estilo =
   (abre: number, cierra: number) =>
@@ -25,7 +35,3 @@ export const cian = estilo(36, 39);
 export const gris = estilo(90, 39);
 
 export const fondoRojo = estilo(41, 49);
-
-export function limpiarPantalla(): void {
-  if (habilitado) process.stdout.write('\x1b[2J\x1b[H');
-}

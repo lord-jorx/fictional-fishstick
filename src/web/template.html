@@ -1,0 +1,113 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Surgeon's Night — El Turno de Guardia</title>
+<style>
+  :root {
+    --fondo: #0d1117;
+    --panel: #131a23;
+    --tinta: #d8e1ea;
+    --borde: #2a3542;
+    --acento: #66d9e8;
+  }
+  * { box-sizing: border-box; }
+  html, body { height: 100%; }
+  body {
+    margin: 0;
+    background: radial-gradient(1200px 600px at 50% -10%, #16212e 0%, var(--fondo) 60%);
+    color: var(--tinta);
+    font-family: "Cascadia Mono", "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    font-size: 14px;
+    line-height: 1.45;
+  }
+  #app {
+    max-width: 780px;
+    height: 100dvh;
+    margin: 0 auto;
+    display: flex;
+    flex-direction: column;
+    padding: 10px;
+  }
+  #salida {
+    flex: 1;
+    overflow-y: auto;
+    background: var(--panel);
+    border: 1px solid var(--borde);
+    border-radius: 10px 10px 0 0;
+    padding: 14px 16px;
+    white-space: pre-wrap;
+    word-break: break-word;
+    scrollbar-width: thin;
+    scrollbar-color: var(--borde) transparent;
+  }
+  #menu {
+    background: #0f151d;
+    border: 1px solid var(--borde);
+    border-top: none;
+    border-radius: 0 0 10px 10px;
+    padding: 10px 12px 12px;
+    max-height: 45dvh;
+    overflow-y: auto;
+  }
+  .menu-titulo { padding: 4px 2px 8px; font-weight: 700; }
+  button.opcion {
+    display: flex;
+    align-items: baseline;
+    gap: 10px;
+    width: 100%;
+    text-align: left;
+    margin: 4px 0;
+    padding: 9px 12px;
+    background: #17202b;
+    color: var(--tinta);
+    border: 1px solid var(--borde);
+    border-radius: 8px;
+    font: inherit;
+    cursor: pointer;
+    transition: background .12s, border-color .12s, transform .05s;
+    touch-action: manipulation;
+  }
+  button.opcion:hover, button.opcion:focus-visible {
+    background: #1d2938;
+    border-color: var(--acento);
+    outline: none;
+  }
+  button.opcion:active { transform: scale(.995); }
+  button.opcion .num {
+    color: #ffd43b;
+    min-width: 1.4em;
+    flex: none;
+  }
+  button.opcion .detalle { color: #868e96; font-size: .9em; }
+  button.reinicio { justify-content: center; color: var(--acento); font-weight: 700; }
+
+  /* Estilos que emite el conversor ANSI → HTML */
+  .ansi-b { font-weight: 700; }
+  .ansi-d { opacity: .65; }
+  .ansi-i { font-style: italic; }
+  .ansi-u { text-decoration: underline; }
+  .ansi-inv { background: var(--tinta); color: var(--fondo); }
+  .ansi-rojo { color: #ff6b6b; }
+  .ansi-verde { color: #69db7c; }
+  .ansi-amarillo { color: #ffd43b; }
+  .ansi-azul { color: #74c0fc; }
+  .ansi-magenta { color: #f783ac; }
+  .ansi-cian { color: #66d9e8; }
+  .ansi-gris { color: #868e96; }
+  .ansi-fondo-rojo { background: #c92a2a; color: #fff; }
+
+  @media (max-width: 480px) {
+    body { font-size: 13px; }
+    #app { padding: 6px; }
+  }
+</style>
+</head>
+<body>
+<div id="app"></div>
+<script>
+/*__JS__*/
+</script>
+</body>
+</html>
