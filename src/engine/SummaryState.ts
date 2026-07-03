@@ -23,7 +23,8 @@ export class SummaryState implements GameState {
 
     ctx.io.escribir(`\n${negrita('Parte de guardia:')}`);
     for (const p of ctx.historial) {
-      ctx.io.escribir(`  ${this.iconoDestino(p)} ${p.nombre} — ${p.patologia.nombre} → ${this.destino(p)}`);
+      const atipica = !p.varianteId.startsWith('tipic') ? gris(` [presentación atípica: ${p.varianteId}]`) : '';
+      ctx.io.escribir(`  ${this.iconoDestino(p)} ${p.nombre} — ${p.patologia.nombre} → ${this.destino(p)}${atipica}`);
     }
 
     ctx.io.escribir(`\n${negrita('Balance:')}`);

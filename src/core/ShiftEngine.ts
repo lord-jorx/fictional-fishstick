@@ -18,23 +18,15 @@ export type ModoJuego = 'adjunto' | 'residente';
 
 export class ShiftEngine {
   private readonly ctx: GameContext;
+  private readonly rng: () => number;
 
   constructor(
     private readonly io: IO,
     semilla?: number,
     private modo?: ModoJuego,
   ) {
-    const rng = crearRng(semilla ?? (Date.now() & 0x7fffffff));
-    this.ctx = new GameContext(rng, io);
-
-    const fabrica = new PatientFactory(rng);
-    this.ctx.programarLlegadas(fabrica.generarLlegadasDeGuardia());
-
-    // El otro equipo también opera: dos franjas en las que roban quirófano.
-    const inicio1 = 180 + Math.floor(rng() * 300);
-    const inicio2 = 720 + Math.floor(rng() * 300);
-    this.ctx.programarOcupacionExterna(inicio1, inicio1 + 120, 'politraumatizado de tráfico');
-    this.ctx.programarOcupacionExterna(inicio2, inicio2 + 90, 'fractura abierta de fémur');
+    this.rng = crearRng(semilla ?? (Date.now() & 0x7fffffff));
+    this.ctx = new GameContext(this.rng, io);
   }
 
   async iniciar(): Promise<void> {
@@ -61,6 +53,17 @@ export class ShiftEngine {
           gris('\n  equivocas de destino y atenderá hasta 3 llamadas en quirófano.'),
       );
     }
+
+    // La guardia se genera tras elegir modo: en residente, las presentaciones
+    // atípicas son la mitad de frecuentes.
+    const fabrica = new PatientFactory(this.rng, this.ctx.modoResidente ? 0.5 : 1);
+    this.ctx.programarLlegadas(fabrica.generarLlegadasDeGuardia());
+
+    // El otro equipo también opera: dos franjas en las que roban quirófano.
+    const inicio1 = 180 + Math.floor(this.rng() * 300);
+    const inicio2 = 720 + Math.floor(this.rng() * 300);
+    this.ctx.programarOcupacionExterna(inicio1, inicio1 + 120, 'politraumatizado de tráfico');
+    this.ctx.programarOcupacionExterna(inicio2, inicio2 + 90, 'fractura abierta de fémur');
 
     await this.io.pausa('Pulsa Intro para fichar y empezar la guardia...');
     await new MaquinaEstados().ejecutar(new TriageState(), this.ctx);

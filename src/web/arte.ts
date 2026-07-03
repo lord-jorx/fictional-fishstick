@@ -98,24 +98,40 @@ interface ZonaDolor {
   puntos: Array<[number, number]>;
 }
 
+/** Zonas anatómicas del mapa (las variantes clínicas pueden apuntar a cualquiera). */
 const ZONAS: Record<string, ZonaDolor> = {
-  apendicitis: { zona: 'fosa ilíaca derecha', puntos: [[46, 108]] },
-  colecistitis: { zona: 'hipocondrio derecho', puntos: [[46, 84]] },
-  colico_biliar: { zona: 'hipocondrio derecho', puntos: [[46, 84]] },
-  obstruccion: { zona: 'mesogastrio, difuso', puntos: [[60, 98]] },
-  diverticulitis: { zona: 'fosa ilíaca izquierda', puntos: [[74, 108]] },
-  isquemia: { zona: 'periumbilical, desproporcionado', puntos: [[60, 96]] },
-  trauma: { zona: 'hipocondrio izquierdo', puntos: [[74, 84]] },
-  ulcus: { zona: 'epigastrio, en puñalada', puntos: [[60, 78]] },
-  hernia: { zona: 'región inguinal derecha', puntos: [[48, 126]] },
-  pancreatitis: { zona: 'epigastrio, en cinturón', puntos: [[60, 80], [46, 86], [74, 86]] },
-  gastroenteritis: { zona: 'difuso, tipo retortijón', puntos: [[52, 92], [68, 100], [58, 112]] },
-  colico_renal: { zona: 'fosa lumbar derecha', puntos: [[40, 92]] },
+  fid: { zona: 'fosa ilíaca derecha', puntos: [[46, 108]] },
+  fii: { zona: 'fosa ilíaca izquierda', puntos: [[74, 108]] },
+  hd: { zona: 'hipocondrio derecho', puntos: [[46, 84]] },
+  hi: { zona: 'hipocondrio izquierdo', puntos: [[74, 84]] },
+  epigastrio: { zona: 'epigastrio', puntos: [[60, 78]] },
+  mesogastrio: { zona: 'mesogastrio', puntos: [[60, 98]] },
+  'inguinal-der': { zona: 'región inguinal derecha', puntos: [[48, 126]] },
+  'lumbar-der': { zona: 'fosa lumbar derecha', puntos: [[40, 92]] },
+  cinturon: { zona: 'epigastrio, en cinturón', puntos: [[60, 80], [46, 86], [74, 86]] },
+  difuso: { zona: 'difuso', puntos: [[52, 92], [68, 100], [58, 112]] },
+};
+
+/** Zona típica de cada patología (si la variante no dice otra cosa). */
+const ZONA_POR_PATOLOGIA: Record<string, string> = {
+  apendicitis: 'fid',
+  colecistitis: 'hd',
+  colico_biliar: 'hd',
+  obstruccion: 'mesogastrio',
+  diverticulitis: 'fii',
+  isquemia: 'mesogastrio',
+  trauma: 'hi',
+  ulcus: 'epigastrio',
+  hernia: 'inguinal-der',
+  pancreatitis: 'cinturon',
+  gastroenteritis: 'difuso',
+  colico_renal: 'lumbar-der',
 };
 
 /** Silueta con el foco de dolor pulsando. Devuelve null si no hay mapa. */
-export function cuerpoConDolor(patologiaId?: string): string | null {
-  const zona = patologiaId ? ZONAS[patologiaId] : undefined;
+export function cuerpoConDolor(zonaDolor?: string, patologiaId?: string): string | null {
+  const clave = zonaDolor ?? (patologiaId ? ZONA_POR_PATOLOGIA[patologiaId] : undefined);
+  const zona = clave ? ZONAS[clave] : undefined;
   if (!zona) return null;
 
   const focos = zona.puntos

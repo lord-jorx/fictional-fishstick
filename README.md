@@ -98,12 +98,41 @@ node dist/index.js --adjunto            # modo adjunto (sin red de seguridad)
 
 Cada caso termina con una **perla docente** basada en el manejo estándar.
 
-**¿Cómo de procedurales son los casos?** Las patologías (síntomas, pruebas,
-planes quirúrgicos, perlas) son contenido clínico curado a mano; cada *caso*
-se ensambla proceduralmente a partir de ellas: patología por sorteo ponderado,
-nombre, edad, estabilidad inicial, hora de llegada y **constantes vitales
-generadas por rangos clínicos de cada cuadro** (con alertas automáticas de
-hipotensión/taquicardia), todo determinista por semilla.
+**¿Cómo de procedurales son los casos?** El contenido clínico base (pruebas
+diana, planes quirúrgicos, perlas) está curado a mano; TODO lo demás se
+ensambla proceduralmente y de forma determinista por semilla: patología por
+sorteo ponderado, nombre, edad, estabilidad, hora de llegada, **constantes
+vitales por rangos clínicos** (con alertas de hipotensión/taquicardia),
+**horas de evolución insertadas en la anamnesis** y, sobre todo, la
+**variante de presentación**.
+
+### 😈 Variantes difíciles
+
+Cada patología tiene su presentación típica y una o dos **variantes
+atípicas** (~25% de los casos; la mitad en modo residente) que quitan pistas,
+mueven el dolor de sitio o aceleran el deterioro:
+
+- Apendicitis **retrocecal** que duele en la fosa lumbar y simula un cólico
+  renal, y apendicitis **larvada del anciano** sin fiebre ni Blumberg.
+- Colecistitis del anciano que debuta como **delirium** desde la residencia.
+- Obstrucción **sin cicatrices previas** (hernia interna): te quita la
+  explicación fácil de las bridas.
+- Diverticulitis disfrazada de **infección urinaria**.
+- Isquemia mesentérica **sin fibrilación auricular** (trombosis en
+  arteriópata): desaparece la pista clásica.
+- Trauma esplénico **"respondedor transitorio"**: llega estable y se
+  desploma (deterioro ×1,5).
+- Ulcus **enmascarado por corticoides**, hernia **oculta en la obesidad**,
+  pancreatitis **grave** con fallo renal incipiente…
+- Y distractores-trampa: gastroenteritis **pseudoapendicular** y litiasis
+  ureteral baja que **duele en la FID** — no toda fosa ilíaca derecha se opera.
+
+Algunas variantes hacen además que la **prueba diana salga "no concluyente"
+al primer intento** (eco limitada por obesidad, FAST dudosa con vejiga
+vacía…): queda una nota en la ficha y puedes repetir la prueba —gastando más
+tiempo— o mojarte por la clínica. El mapa corporal de la web sigue a la
+variante (la retrocecal pulsa en la zona lumbar), y el parte final etiqueta
+las presentaciones atípicas que te tocaron.
 
 ## 🏗 Arquitectura
 

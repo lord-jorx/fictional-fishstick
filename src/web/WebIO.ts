@@ -100,7 +100,7 @@ export class WebIO implements IO {
         break;
       case 'paciente': {
         const retrato = dato ? retratoPaciente(dato) : '';
-        const cuerpo = cuerpoConDolor(dato?.patologiaId) ?? '';
+        const cuerpo = cuerpoConDolor(dato?.zonaDolor, dato?.patologiaId) ?? '';
         if (retrato || cuerpo) {
           this.insertarArte(`<div class="ficha-visual">${retrato}${cuerpo}</div>`, 'paciente');
         }

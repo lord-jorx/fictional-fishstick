@@ -7,8 +7,9 @@
  *   presión asistencial en la franja de tarde-noche.
  */
 import type { LlegadaProgramada } from '../core/GameContext.js';
-import type { Paciente, Patologia } from '../core/types.js';
+import type { Paciente, Patologia, VarianteClinica } from '../core/types.js';
 import { PATOLOGIAS } from '../data/pathologies.js';
+import { VARIANTES } from '../data/variantes.js';
 
 /**
  * Rangos de constantes vitales por patología. Cada paciente recibe unos
@@ -51,8 +52,13 @@ export class PatientFactory {
   private siguienteId = 1;
   private nombresRestantes: string[];
 
+  /**
+   * @param atipicidad multiplicador del peso de las variantes difíciles:
+   *   1 = frecuencia completa (modo adjunto), 0.5 = la mitad (residente).
+   */
   constructor(
     private readonly rng: () => number,
+    private readonly atipicidad = 1,
     private readonly catalogo: Patologia[] = PATOLOGIAS,
   ) {
     this.nombresRestantes = [...NOMBRES];
@@ -101,15 +107,64 @@ export class PatientFactory {
     return `TA ${tas}/${tad}, FC ${fc}${ritmo}, Sat ${sat}%, Tª ${temp} °C${nota}`;
   }
 
+  /** Sortea la variante de presentación (ponderada, atenuada por atipicidad). */
+  private elegirVariante(patologia: Patologia, edad: number): VarianteClinica {
+    const candidatas = (VARIANTES[patologia.id] ?? []).filter(
+      (v) => !v.soloMayores || edad >= 65,
+    );
+    if (candidatas.length === 0) {
+      // Patología sin variantes definidas: presentación estática de la base de datos.
+      return {
+        id: 'tipica',
+        peso: 1,
+        horas: [6, 24],
+        sintomas: patologia.presentacion.sintomas,
+        exploracion: patologia.presentacion.exploracion,
+      };
+    }
+    const peso = (v: VarianteClinica) => (v.id.startsWith('tipic') ? v.peso : v.peso * this.atipicidad);
+    const total = candidatas.reduce((suma, v) => suma + peso(v), 0);
+    let tirada = this.rng() * total;
+    for (const v of candidatas) {
+      tirada -= peso(v);
+      if (tirada <= 0) return v;
+    }
+    return candidatas[0]!;
+  }
+
   crearPaciente(minutoLlegada: number, patologia: Patologia = this.elegirPatologia()): Paciente {
+    const edad = this.entre(patologia.id === 'trauma' ? 18 : 25, patologia.id === 'trauma' ? 45 : 88);
+    const variante = this.elegirVariante(patologia, edad);
+
+    const horas = this.entre(...variante.horas);
+    const sintomas = variante.sintomas.map((s) => s.replace('{horas}', String(horas)));
+
+    // Estabilidad: base de la patología + ajuste de la variante + castigo por
+    // presentación tardía (por encima de la mediana del rango de la variante).
     const [estMin, estMax] = patologia.estabilidadInicial;
+    const mediana = (variante.horas[0] + variante.horas[1]) / 2;
+    const castigoTardio = horas > mediana ? -4 : 0;
+    const estabilidad = Math.max(
+      20,
+      Math.min(95, this.entre(estMin, estMax) + (variante.estabilidadDelta ?? 0) + castigoTardio),
+    );
+
     return {
       id: this.siguienteId++,
       nombre: this.elegirNombre(),
-      edad: this.entre(patologia.id === 'trauma' ? 18 : 25, patologia.id === 'trauma' ? 45 : 88),
+      edad,
       constantes: this.generarConstantes(patologia),
       patologia,
-      estabilidad: this.entre(estMin, estMax),
+      varianteId: variante.id,
+      sintomas,
+      exploracion: variante.exploracion,
+      horasEvolucion: horas,
+      deterioroPorHora: patologia.deterioroPorHora * (variante.deterioroFactor ?? 1),
+      zonaDolor: variante.zonaDolor,
+      pruebaEsquiva: this.rng() < (variante.pruebaEsquiva ?? 0),
+      informeDudoso: variante.informeDudoso,
+      notasClinicas: [],
+      estabilidad,
       minutoLlegada,
       estado: 'espera',
       pruebasRealizadas: [],

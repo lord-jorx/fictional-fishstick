@@ -1174,6 +1174,352 @@
     }
   ];
 
+  // src/data/variantes.ts
+  var VARIANTES = {
+    // ──────────────────────────────────────────────────────────────
+    apendicitis: [
+      {
+        id: "tipica",
+        peso: 6,
+        horas: [8, 30],
+        sintomas: [
+          "Dolor periumbilical migrado a fosa ilíaca derecha de {horas} h de evolución",
+          "Anorexia y náuseas",
+          "Febrícula termometrada en casa"
+        ],
+        exploracion: "Blumberg positivo en FID, defensa localizada. Psoas dudoso."
+      },
+      {
+        id: "retrocecal",
+        peso: 2,
+        horas: [12, 36],
+        zonaDolor: "lumbar-der",
+        sintomas: [
+          "Dolor lumbar derecho sordo de {horas} h que no cede con analgesia",
+          "Molestia al caminar y al estirar la pierna derecha",
+          "Náuseas sin vómitos; niega síndrome miccional"
+        ],
+        exploracion: "FID poco expresiva. Psoas claramente positivo; puñopercusión renal derecha dudosa. Un cuadro que engaña: parece renal, pero el psoas delata al apéndice retrocecal.",
+        pruebaEsquiva: 0.35,
+        informeDudoso: "TC: apéndice de visualización parcial por escasa grasa intraabdominal; discreta rarefacción retrocecal inespecífica. No concluyente: correlacionar con clínica o repetir estudio dirigido."
+      },
+      {
+        id: "anciano-larvado",
+        peso: 2,
+        soloMayores: true,
+        horas: [36, 72],
+        sintomas: [
+          'Malestar abdominal vago de {horas} h, "como un empacho"',
+          "La familia lo nota decaído y sin apetito desde hace dos días",
+          "Sin fiebre termometrada en casa"
+        ],
+        exploracion: "Abdomen poco expresivo, molestia difusa en hemiabdomen derecho sin claro Blumberg. En el anciano la apendicitis avisa bajito... y perfora pronto.",
+        deterioroFactor: 1.3,
+        estabilidadDelta: -8
+      }
+    ],
+    // ──────────────────────────────────────────────────────────────
+    colecistitis: [
+      {
+        id: "tipica",
+        peso: 6,
+        horas: [12, 48],
+        sintomas: [
+          "Dolor en hipocondrio derecho de {horas} h, continuo, irradiado a escápula",
+          "Fiebre con escalofríos",
+          "Vómitos alimentarios"
+        ],
+        exploracion: "Murphy positivo. No ictericia. Abdomen blando en el resto."
+      },
+      {
+        id: "anciano-septico",
+        peso: 2,
+        soloMayores: true,
+        horas: [48, 96],
+        sintomas: [
+          "Cuadro confusional de inicio en las últimas {horas} h",
+          "Rechazo de la ingesta; la residencia lo envía por deterioro general",
+          "Sin dolor claramente referido: el paciente apenas colabora"
+        ],
+        exploracion: "Desorientado. Molestia mal definida en hemiabdomen superior; Murphy no valorable por falta de colaboración. La sepsis biliar del anciano puede debutar como delirium.",
+        deterioroFactor: 1.25,
+        estabilidadDelta: -12,
+        pruebaEsquiva: 0.3,
+        informeDudoso: "Ecografía: vesícula con barro biliar y pared en el límite alto (4 mm), paciente poco colaborador, estudio subóptimo. No concluyente: repetir o correlacionar."
+      }
+    ],
+    // ──────────────────────────────────────────────────────────────
+    obstruccion: [
+      {
+        id: "tipica",
+        peso: 6,
+        horas: [24, 48],
+        sintomas: [
+          "Dolor abdominal cólico de {horas} h que se ha vuelto continuo",
+          "Vómitos biliosos y distensión abdominal",
+          "Ausencia de tránsito para gases y heces"
+        ],
+        exploracion: "Abdomen distendido y timpánico, cicatriz de laparotomía previa. Dolor fijo en mesogastrio con defensa. Ruidos metálicos."
+      },
+      {
+        id: "hernia-interna",
+        peso: 2,
+        horas: [12, 30],
+        sintomas: [
+          "Dolor abdominal cólico intenso de {horas} h con vómitos",
+          "Distensión progresiva y ausencia de ventoseo",
+          'Sin cirugías abdominales previas: "a mí nunca me han operado"'
+        ],
+        exploracion: "Abdomen distendido, timpánico y SIN cicatrices. Dolor fijo periumbilical con defensa. Sin el dato de la laparotomía previa, la brida no puede ser la explicación fácil: piensa en hernia interna.",
+        deterioroFactor: 1.15
+      }
+    ],
+    // ──────────────────────────────────────────────────────────────
+    diverticulitis: [
+      {
+        id: "tipica",
+        peso: 5,
+        horas: [36, 72],
+        sintomas: [
+          "Dolor intenso en fosa ilíaca izquierda de {horas} h, ahora generalizado",
+          "Fiebre alta y malestar general intenso",
+          'Episodios previos de "diverticulitis" tratados con antibióticos'
+        ],
+        exploracion: "Abdomen en tabla, defensa generalizada con signos de irritación peritoneal difusa."
+      },
+      {
+        id: "urinaria-engañosa",
+        peso: 2,
+        horas: [48, 96],
+        sintomas: [
+          'Disuria y polaquiuria de {horas} h "como una cistitis que no se cura"',
+          "Dolor hipogástrico y en fosa ilíaca izquierda que va a más",
+          "Fiebre que su médico atribuyó a infección de orina, sin respuesta a antibiótico oral"
+        ],
+        exploracion: "Defensa en FII e hipogastrio, más de lo que justificaría una cistitis. El sigma inflamado apoyado en la vejiga imita clínica urinaria: no te quedes en el sedimento.",
+        deterioroFactor: 1.1,
+        estabilidadDelta: -5
+      }
+    ],
+    // ──────────────────────────────────────────────────────────────
+    isquemia: [
+      {
+        id: "tipica",
+        peso: 5,
+        horas: [2, 6],
+        sintomas: [
+          "Dolor abdominal brutal de inicio súbito hace {horas} h",
+          "El dolor es desproporcionado respecto a la exploración",
+          "Antecedente de fibrilación auricular sin anticoagular"
+        ],
+        exploracion: "Abdomen blando y poco doloroso a la palpación pese al dolor referido. Arritmia a la auscultación."
+      },
+      {
+        id: "sin-arritmia",
+        peso: 2,
+        horas: [4, 10],
+        sintomas: [
+          "Dolor abdominal intensísimo y continuo de {horas} h",
+          "Una deposición diarreica al inicio del cuadro",
+          "Fumador con claudicación intermitente en ambas piernas; niega cardiopatía"
+        ],
+        exploracion: "Abdomen casi anodino que contrasta con un paciente que se retuerce. Pulso RÍTMICO: sin la pista de la FA, solo el dolor desproporcionado y la arteriopatía te avisan (trombosis arterial, no embolia).",
+        deterioroFactor: 1.15,
+        pruebaEsquiva: 0.25,
+        informeDudoso: "Angio-TC: ateromatosis calcificada difusa de la AMS con estenosis de difícil graduación; hipocaptación parietal sutil, artefactada por movimiento. No concluyente: repetir estudio o decidir por clínica."
+      }
+    ],
+    // ──────────────────────────────────────────────────────────────
+    trauma: [
+      {
+        id: "tipica",
+        peso: 5,
+        horas: [1, 2],
+        sintomas: [
+          "Accidente de motocicleta a alta velocidad hace menos de {horas} h",
+          "Dolor en hipocondrio izquierdo irradiado al hombro (signo de Kehr)",
+          "Mareo y sudoración fría en el traslado"
+        ],
+        exploracion: "Palidez mucocutánea. Dolor y defensa en hipocondrio izquierdo. Huella del manillar en la pared abdominal."
+      },
+      {
+        id: "respondedor-transitorio",
+        peso: 2,
+        horas: [1, 3],
+        sintomas: [
+          "Caída de bicicleta contra el manillar hace {horas} h; vino caminando",
+          "Dolor en hipocondrio izquierdo que aumenta, ahora irradiado al hombro",
+          'En triaje le han dado analgesia y "estaba bien"; empieza a marearse sentado'
+        ],
+        exploracion: "Buen aspecto engañoso. Dolor con defensa en HCI y Kehr incipiente. Los respondedores transitorios se desploman en la segunda hora: no te fíes de una TA normal aislada.",
+        estabilidadDelta: 12,
+        deterioroFactor: 1.5,
+        pruebaEsquiva: 0.3,
+        informeDudoso: "Eco-FAST: mínima lengüeta de líquido esplenorrenal, dudosa con la vejiga vacía. No concluyente: repetir FAST seriada en 15 minutos o escalar según clínica."
+      }
+    ],
+    // ──────────────────────────────────────────────────────────────
+    ulcus: [
+      {
+        id: "tipica",
+        peso: 5,
+        horas: [1, 4],
+        sintomas: [
+          'Dolor epigástrico brutal de inicio súbito hace {horas} h, "como una puñalada"',
+          "El dolor se ha generalizado a todo el abdomen",
+          "Antecedente de epigastralgia crónica automedicada con ibuprofeno"
+        ],
+        exploracion: "Abdomen en tabla con contractura generalizada. El paciente evita moverse. Matidez hepática dudosa."
+      },
+      {
+        id: "anciano-corticoides",
+        peso: 2,
+        soloMayores: true,
+        horas: [6, 18],
+        sintomas: [
+          'Dolor epigástrico "soportable" de {horas} h en paciente con polimialgia en tratamiento corticoideo',
+          "Náuseas y malestar general progresivo",
+          "Los corticoides enmascaran: ni fiebre ni dolor proporcionado"
+        ],
+        exploracion: "Abdomen sorprendentemente blando para lo que esconde; molestia epigástrica difusa sin claro vientre en tabla. El corticoide apaga la alarma peritoneal.",
+        deterioroFactor: 1.2,
+        estabilidadDelta: -6
+      }
+    ],
+    // ──────────────────────────────────────────────────────────────
+    hernia: [
+      {
+        id: "tipica",
+        peso: 5,
+        horas: [6, 16],
+        sintomas: [
+          "Bulto inguinal derecho doloroso e irreductible desde hace {horas} h",
+          "Náuseas y dolor abdominal cólico creciente",
+          'La hernia "se le salía" desde hace años y siempre volvía a entrar'
+        ],
+        exploracion: "Masa inguinal derecha dura, muy dolorosa, irreductible, con piel eritematosa. Dolor abdominal difuso con distensión leve."
+      },
+      {
+        id: "oculta-obesidad",
+        peso: 2,
+        horas: [10, 24],
+        sintomas: [
+          "Dolor abdominal cólico y vómitos de {horas} h sin causa clara",
+          'Refiere "un pellizco" inguinal que no sabe precisar',
+          "Obesidad importante: nunca se ha notado bultos"
+        ],
+        exploracion: "Panículo adiposo que impide palpar con claridad; dudosa ocupación inguinal derecha muy dolorosa a la presión profunda. La hernia crural de la paciente obesa es la gran escondida.",
+        pruebaEsquiva: 0.4,
+        informeDudoso: "Ecografía de pared: exploración limitada por panículo adiposo; imagen inguinal mal definida sin poder confirmar asa. No concluyente: repetir con maniobra de Valsalva dirigida.",
+        deterioroFactor: 1.15
+      }
+    ],
+    // ──────────────────────────────────────────────────────────────
+    pancreatitis: [
+      {
+        id: "tipica",
+        peso: 5,
+        horas: [6, 16],
+        sintomas: [
+          'Dolor epigástrico intenso irradiado "en cinturón" a la espalda, de {horas} h',
+          "Vómitos repetidos que no alivian el dolor",
+          "Colelitiasis conocida pendiente de cirugía programada"
+        ],
+        exploracion: "Dolor a la palpación epigástrica sin peritonismo franco. Distensión leve. Ruidos disminuidos."
+      },
+      {
+        id: "grave",
+        peso: 2,
+        horas: [12, 30],
+        sintomas: [
+          "Dolor epigástrico transfixivo de {horas} h con vómitos incoercibles",
+          "Oliguria desde esta mañana y sed intensa",
+          "Ingesta etílica importante el fin de semana"
+        ],
+        exploracion: "Afectación del estado general, sequedad mucosa, abdomen distendido y doloroso de forma difusa sin claro peritonismo. Una pancreatitis grave se ingresa y se reanima con fluidos: abrirla sigue sin ser la respuesta.",
+        estabilidadDelta: -15,
+        deterioroFactor: 1.5
+      }
+    ],
+    // ──────────────────────────────────────────────────────────────
+    gastroenteritis: [
+      {
+        id: "tipica",
+        peso: 5,
+        horas: [6, 24],
+        sintomas: [
+          "Dolor abdominal difuso tipo retortijón de {horas} h",
+          "Diarrea líquida abundante y vómitos",
+          "Varios familiares con el mismo cuadro tras una comida familiar"
+        ],
+        exploracion: "Abdomen blando, depresible, dolor difuso sin defensa ni signos de irritación peritoneal. Peristaltismo aumentado."
+      },
+      {
+        id: "pseudoapendicular",
+        peso: 2,
+        horas: [12, 30],
+        zonaDolor: "fid",
+        sintomas: [
+          "Dolor que se ha ido centrando en fosa ilíaca derecha, de {horas} h",
+          "Alguna deposición blanda; febrícula",
+          'Un compañero de trabajo tuvo "gastroenteritis" la semana pasada'
+        ],
+        exploracion: "Molestia en FID a la palpación profunda SIN verdadera defensa ni Blumberg franco. Duele donde el apéndice… pero el peritoneo no protesta. La trampa clásica: no toda FID es apendicitis."
+      }
+    ],
+    // ──────────────────────────────────────────────────────────────
+    colico_biliar: [
+      {
+        id: "tipico",
+        peso: 5,
+        horas: [1, 4],
+        sintomas: [
+          "Dolor en hipocondrio derecho de {horas} h tras una comida copiosa",
+          "Náuseas sin vómitos",
+          "Episodios similares autolimitados en los últimos meses"
+        ],
+        exploracion: "Molestia a la palpación profunda en hipocondrio derecho. Murphy negativo. Sin fiebre."
+      },
+      {
+        id: "prolongado",
+        peso: 2,
+        horas: [5, 9],
+        sintomas: [
+          "Dolor en hipocondrio derecho que ya dura {horas} h, más de lo habitual en sus cólicos",
+          'Muy nervioso: "esta vez es distinto, seguro que es la vesícula infectada"',
+          "Sin fiebre ni escalofríos"
+        ],
+        exploracion: "Molestia en HCD con Murphy equívoco por defensa voluntaria. Un cólico prolongado obliga a descartar colecistitis... pero sin fiebre, sin leucocitosis y con eco limpia, sigue siendo un cólico."
+      }
+    ],
+    // ──────────────────────────────────────────────────────────────
+    colico_renal: [
+      {
+        id: "tipico",
+        peso: 5,
+        horas: [1, 5],
+        sintomas: [
+          "Dolor lumbar derecho intensísimo irradiado a genitales, de inicio brusco hace {horas} h",
+          "El paciente no encuentra postura: se retuerce en la camilla",
+          'Un episodio similar hace dos años que "expulsó una piedrecita"'
+        ],
+        exploracion: "Puñopercusión renal derecha positiva. Abdomen blando, sin defensa ni peritonismo."
+      },
+      {
+        id: "ureteral-bajo",
+        peso: 2,
+        horas: [2, 8],
+        zonaDolor: "fid",
+        sintomas: [
+          "Dolor en fosa ilíaca derecha de {horas} h irradiado a genitales",
+          "Náuseas; una micción con escozor",
+          "Inquieto, cambia de postura constantemente"
+        ],
+        exploracion: "Dolor en FID SIN defensa ni Blumberg; puñopercusión derecha levemente molesta. La litiasis del uréter distal juega a disfrazarse de apendicitis: el paciente que se retuerce no suele tener peritonitis."
+      }
+    ]
+  };
+
   // src/factories/PatientFactory.ts
   var VITALES = {
     apendicitis: { tas: [115, 135], tad: [70, 85], fc: [85, 100], sat: [97, 99], temp: [37.4, 38.2] },
@@ -1212,8 +1558,13 @@
     "Nuria Campos"
   ];
   var PatientFactory = class {
-    constructor(rng, catalogo = PATOLOGIAS) {
+    /**
+     * @param atipicidad multiplicador del peso de las variantes difíciles:
+     *   1 = frecuencia completa (modo adjunto), 0.5 = la mitad (residente).
+     */
+    constructor(rng, atipicidad = 1, catalogo = PATOLOGIAS) {
       this.rng = rng;
+      this.atipicidad = atipicidad;
       this.catalogo = catalogo;
       __publicField(this, "siguienteId", 1);
       __publicField(this, "nombresRestantes");
@@ -1253,15 +1604,57 @@
       const ritmo = perfil.irregular ? " irregular" : "";
       return `TA ${tas}/${tad}, FC ${fc}${ritmo}, Sat ${sat}%, Tª ${temp} °C${nota}`;
     }
+    /** Sortea la variante de presentación (ponderada, atenuada por atipicidad). */
+    elegirVariante(patologia, edad) {
+      const candidatas = (VARIANTES[patologia.id] ?? []).filter(
+        (v) => !v.soloMayores || edad >= 65
+      );
+      if (candidatas.length === 0) {
+        return {
+          id: "tipica",
+          peso: 1,
+          horas: [6, 24],
+          sintomas: patologia.presentacion.sintomas,
+          exploracion: patologia.presentacion.exploracion
+        };
+      }
+      const peso = (v) => v.id.startsWith("tipic") ? v.peso : v.peso * this.atipicidad;
+      const total = candidatas.reduce((suma, v) => suma + peso(v), 0);
+      let tirada = this.rng() * total;
+      for (const v of candidatas) {
+        tirada -= peso(v);
+        if (tirada <= 0) return v;
+      }
+      return candidatas[0];
+    }
     crearPaciente(minutoLlegada, patologia = this.elegirPatologia()) {
+      const edad = this.entre(patologia.id === "trauma" ? 18 : 25, patologia.id === "trauma" ? 45 : 88);
+      const variante = this.elegirVariante(patologia, edad);
+      const horas = this.entre(...variante.horas);
+      const sintomas = variante.sintomas.map((s) => s.replace("{horas}", String(horas)));
       const [estMin, estMax] = patologia.estabilidadInicial;
+      const mediana = (variante.horas[0] + variante.horas[1]) / 2;
+      const castigoTardio = horas > mediana ? -4 : 0;
+      const estabilidad = Math.max(
+        20,
+        Math.min(95, this.entre(estMin, estMax) + (variante.estabilidadDelta ?? 0) + castigoTardio)
+      );
       return {
         id: this.siguienteId++,
         nombre: this.elegirNombre(),
-        edad: this.entre(patologia.id === "trauma" ? 18 : 25, patologia.id === "trauma" ? 45 : 88),
+        edad,
         constantes: this.generarConstantes(patologia),
         patologia,
-        estabilidad: this.entre(estMin, estMax),
+        varianteId: variante.id,
+        sintomas,
+        exploracion: variante.exploracion,
+        horasEvolucion: horas,
+        deterioroPorHora: patologia.deterioroPorHora * (variante.deterioroFactor ?? 1),
+        zonaDolor: variante.zonaDolor,
+        pruebaEsquiva: this.rng() < (variante.pruebaEsquiva ?? 0),
+        informeDudoso: variante.informeDudoso,
+        notasClinicas: [],
+        estabilidad,
         minutoLlegada,
         estado: "espera",
         pruebasRealizadas: [],
@@ -1378,7 +1771,8 @@
       ctx.io.escribir(`
 ${negrita("Parte de guardia:")}`);
       for (const p of ctx.historial) {
-        ctx.io.escribir(`  ${this.iconoDestino(p)} ${p.nombre} — ${p.patologia.nombre} → ${this.destino(p)}`);
+        const atipica = !p.varianteId.startsWith("tipic") ? gris(` [presentación atípica: ${p.varianteId}]`) : "";
+        ctx.io.escribir(`  ${this.iconoDestino(p)} ${p.nombre} — ${p.patologia.nombre} → ${this.destino(p)}${atipica}`);
       }
       ctx.io.escribir(`
 ${negrita("Balance:")}`);
@@ -1649,7 +2043,8 @@ ${negrita("Ronda de planta:")}`);
         pacienteId: paciente.id,
         nombre: paciente.nombre,
         edad: paciente.edad,
-        estabilidad: paciente.estabilidad
+        estabilidad: paciente.estabilidad,
+        zonaDolor: paciente.zonaDolor
       });
       for (; ; ) {
         if (ctx.guardiaTerminada) return new SummaryState();
@@ -1664,18 +2059,33 @@ ${negrita("Ronda de planta:")}`);
             _TriageState.explorados.add(paciente.id);
             this.mostrarAvisos(ctx, ctx.avanzarTiempo(10));
             ctx.io.escribir(`
-${cian("Exploración física:")} ${paciente.patologia.presentacion.exploracion}`);
+${cian("Exploración física:")} ${paciente.exploracion}`);
             break;
           }
           case "prueba": {
             const prueba = PRUEBAS[accion.prueba];
             ctx.io.escribir(gris(`Solicitas ${prueba.nombre}. Esperas el resultado...`));
             this.mostrarAvisos(ctx, ctx.avanzarTiempo(prueba.duracionMin));
+            if (prueba.id === paciente.patologia.pruebaDiana && paciente.pruebaEsquiva) {
+              paciente.pruebaEsquiva = false;
+              paciente.notasClinicas.push(
+                `${prueba.nombre} no concluyente: valora repetirla o decidir por la clínica.`
+              );
+              ctx.io.escribir(
+                `
+${cian(`Resultado de ${prueba.nombre}:`)}
+  ${amarillo(paciente.informeDudoso ?? "Estudio técnicamente limitado, no concluyente. Correlacionar con la clínica o repetir.")}`
+              );
+              break;
+            }
             paciente.pruebasRealizadas.push(prueba.id);
             const informe = this.informeDePrueba(paciente, prueba.id);
             ctx.io.escribir(`
 ${cian(`Resultado de ${prueba.nombre}:`)}
   ${informe}`);
+            if (paciente.diagnosticoConfirmado) {
+              paciente.notasClinicas = paciente.notasClinicas.filter((n) => !n.includes("no concluyente"));
+            }
             break;
           }
           case "alta":
@@ -1736,10 +2146,13 @@ ${cian(`Resultado de ${prueba.nombre}:`)}
       ctx.io.escribir(`  ${negrita(cian(`BOX ${p.id}`))} — ${fichaPaciente(p)}  ${gris(`(llegó a las ${horaGuardia(p.minutoLlegada)})`)}`);
       ctx.io.escribir(lineaSeparadora());
       ctx.io.escribir(`  ${negrita("Anamnesis:")}`);
-      for (const s of p.patologia.presentacion.sintomas) ctx.io.escribir(`   • ${s}`);
+      for (const s of p.sintomas) ctx.io.escribir(`   • ${s}`);
       ctx.io.escribir(`  ${negrita("Constantes:")} ${p.constantes}`);
       if (_TriageState.explorados.has(p.id)) {
-        ctx.io.escribir(`  ${negrita("Exploración:")} ${p.patologia.presentacion.exploracion}`);
+        ctx.io.escribir(`  ${negrita("Exploración:")} ${p.exploracion}`);
+      }
+      for (const nota of p.notasClinicas) {
+        ctx.io.escribir(`  ${amarillo(`⚠ ${nota}`)}`);
       }
       for (const id of p.pruebasRealizadas) {
         ctx.io.escribir(`  ${negrita(`${PRUEBAS[id].nombre}:`)} ${gris(this.informeDePrueba(p, id))}`);
@@ -1959,11 +2372,11 @@ Ingresas a ${p.nombre} en observación. Prudente, aunque podía haberse ido de a
           avisos.push(etiqueta);
         }
         for (const p of this.salaEspera) {
-          p.estabilidad -= p.patologia.deterioroPorHora * (dt / 60);
+          p.estabilidad -= p.deterioroPorHora * (dt / 60);
         }
         for (const p of this.ingresados) {
           if (p.patologia.quirurgica) {
-            p.estabilidad -= p.patologia.deterioroPorHora * 0.6 * (dt / 60);
+            p.estabilidad -= p.deterioroPorHora * 0.6 * (dt / 60);
             if (!p.alertaPlanta && p.estabilidad < 45) {
               p.alertaPlanta = true;
               avisos.push(`⚠ Llaman de planta: ${p.nombre} está empeorando. Vuelve a estar en tus manos.`);
@@ -2039,14 +2452,9 @@ Ingresas a ${p.nombre} en observación. Prudente, aunque podía haberse ido de a
       this.io = io2;
       this.modo = modo2;
       __publicField(this, "ctx");
-      const rng = crearRng(semilla2 ?? Date.now() & 2147483647);
-      this.ctx = new GameContext(rng, io2);
-      const fabrica = new PatientFactory(rng);
-      this.ctx.programarLlegadas(fabrica.generarLlegadasDeGuardia());
-      const inicio1 = 180 + Math.floor(rng() * 300);
-      const inicio2 = 720 + Math.floor(rng() * 300);
-      this.ctx.programarOcupacionExterna(inicio1, inicio1 + 120, "politraumatizado de tráfico");
-      this.ctx.programarOcupacionExterna(inicio2, inicio2 + 90, "fractura abierta de fémur");
+      __publicField(this, "rng");
+      this.rng = crearRng(semilla2 ?? Date.now() & 2147483647);
+      this.ctx = new GameContext(this.rng, io2);
     }
     async iniciar() {
       this.pintarPortada();
@@ -2070,6 +2478,12 @@ Ingresas a ${p.nombre} en observación. Prudente, aunque podía haberse ido de a
           gris("\n  Modo residente: tu adjunto sugerirá pruebas, dudará en voz alta si te") + gris("\n  equivocas de destino y atenderá hasta 3 llamadas en quirófano.")
         );
       }
+      const fabrica = new PatientFactory(this.rng, this.ctx.modoResidente ? 0.5 : 1);
+      this.ctx.programarLlegadas(fabrica.generarLlegadasDeGuardia());
+      const inicio1 = 180 + Math.floor(this.rng() * 300);
+      const inicio2 = 720 + Math.floor(this.rng() * 300);
+      this.ctx.programarOcupacionExterna(inicio1, inicio1 + 120, "politraumatizado de tráfico");
+      this.ctx.programarOcupacionExterna(inicio2, inicio2 + 90, "fractura abierta de fémur");
       await this.io.pausa("Pulsa Intro para fichar y empezar la guardia...");
       await new MaquinaEstados().ejecutar(new TriageState(), this.ctx);
     }
@@ -2170,21 +2584,34 @@ Ingresas a ${p.nombre} en observación. Prudente, aunque podía haberse ido de a
   <rect x="0" y="88" width="360" height="8" rx="4" fill="#0b1422"/>
 </svg>`;
   var ZONAS = {
-    apendicitis: { zona: "fosa ilíaca derecha", puntos: [[46, 108]] },
-    colecistitis: { zona: "hipocondrio derecho", puntos: [[46, 84]] },
-    colico_biliar: { zona: "hipocondrio derecho", puntos: [[46, 84]] },
-    obstruccion: { zona: "mesogastrio, difuso", puntos: [[60, 98]] },
-    diverticulitis: { zona: "fosa ilíaca izquierda", puntos: [[74, 108]] },
-    isquemia: { zona: "periumbilical, desproporcionado", puntos: [[60, 96]] },
-    trauma: { zona: "hipocondrio izquierdo", puntos: [[74, 84]] },
-    ulcus: { zona: "epigastrio, en puñalada", puntos: [[60, 78]] },
-    hernia: { zona: "región inguinal derecha", puntos: [[48, 126]] },
-    pancreatitis: { zona: "epigastrio, en cinturón", puntos: [[60, 80], [46, 86], [74, 86]] },
-    gastroenteritis: { zona: "difuso, tipo retortijón", puntos: [[52, 92], [68, 100], [58, 112]] },
-    colico_renal: { zona: "fosa lumbar derecha", puntos: [[40, 92]] }
+    fid: { zona: "fosa ilíaca derecha", puntos: [[46, 108]] },
+    fii: { zona: "fosa ilíaca izquierda", puntos: [[74, 108]] },
+    hd: { zona: "hipocondrio derecho", puntos: [[46, 84]] },
+    hi: { zona: "hipocondrio izquierdo", puntos: [[74, 84]] },
+    epigastrio: { zona: "epigastrio", puntos: [[60, 78]] },
+    mesogastrio: { zona: "mesogastrio", puntos: [[60, 98]] },
+    "inguinal-der": { zona: "región inguinal derecha", puntos: [[48, 126]] },
+    "lumbar-der": { zona: "fosa lumbar derecha", puntos: [[40, 92]] },
+    cinturon: { zona: "epigastrio, en cinturón", puntos: [[60, 80], [46, 86], [74, 86]] },
+    difuso: { zona: "difuso", puntos: [[52, 92], [68, 100], [58, 112]] }
   };
-  function cuerpoConDolor(patologiaId) {
-    const zona = patologiaId ? ZONAS[patologiaId] : void 0;
+  var ZONA_POR_PATOLOGIA = {
+    apendicitis: "fid",
+    colecistitis: "hd",
+    colico_biliar: "hd",
+    obstruccion: "mesogastrio",
+    diverticulitis: "fii",
+    isquemia: "mesogastrio",
+    trauma: "hi",
+    ulcus: "epigastrio",
+    hernia: "inguinal-der",
+    pancreatitis: "cinturon",
+    gastroenteritis: "difuso",
+    colico_renal: "lumbar-der"
+  };
+  function cuerpoConDolor(zonaDolor, patologiaId) {
+    const clave = zonaDolor ?? (patologiaId ? ZONA_POR_PATOLOGIA[patologiaId] : void 0);
+    const zona = clave ? ZONAS[clave] : void 0;
     if (!zona) return null;
     const focos = zona.puntos.map(
       ([x, y]) => `
@@ -2486,7 +2913,7 @@ Ingresas a ${p.nombre} en observación. Prudente, aunque podía haberse ido de a
           break;
         case "paciente": {
           const retrato = dato ? retratoPaciente(dato) : "";
-          const cuerpo = cuerpoConDolor(dato?.patologiaId) ?? "";
+          const cuerpo = cuerpoConDolor(dato?.zonaDolor, dato?.patologiaId) ?? "";
           if (retrato || cuerpo) {
             this.insertarArte(`<div class="ficha-visual">${retrato}${cuerpo}</div>`, "paciente");
           }

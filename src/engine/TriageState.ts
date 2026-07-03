@@ -100,6 +100,7 @@ export class TriageState implements GameState {
       nombre: paciente.nombre,
       edad: paciente.edad,
       estabilidad: paciente.estabilidad,
+      zonaDolor: paciente.zonaDolor,
     });
     for (;;) {
       if (ctx.guardiaTerminada) return new SummaryState();
@@ -116,7 +117,7 @@ export class TriageState implements GameState {
         case 'explorar': {
           TriageState.explorados.add(paciente.id);
           this.mostrarAvisos(ctx, ctx.avanzarTiempo(10));
-          ctx.io.escribir(`\n${cian('Exploración física:')} ${paciente.patologia.presentacion.exploracion}`);
+          ctx.io.escribir(`\n${cian('Exploración física:')} ${paciente.exploracion}`);
           break;
         }
 
@@ -124,9 +125,26 @@ export class TriageState implements GameState {
           const prueba = PRUEBAS[accion.prueba];
           ctx.io.escribir(gris(`Solicitas ${prueba.nombre}. Esperas el resultado...`));
           this.mostrarAvisos(ctx, ctx.avanzarTiempo(prueba.duracionMin));
+
+          // Variantes difíciles: la prueba diana puede salir dudosa la primera
+          // vez. No confirma, y queda disponible para repetirla.
+          if (prueba.id === paciente.patologia.pruebaDiana && paciente.pruebaEsquiva) {
+            paciente.pruebaEsquiva = false;
+            paciente.notasClinicas.push(
+              `${prueba.nombre} no concluyente: valora repetirla o decidir por la clínica.`,
+            );
+            ctx.io.escribir(
+              `\n${cian(`Resultado de ${prueba.nombre}:`)}\n  ${amarillo(paciente.informeDudoso ?? 'Estudio técnicamente limitado, no concluyente. Correlacionar con la clínica o repetir.')}`,
+            );
+            break;
+          }
+
           paciente.pruebasRealizadas.push(prueba.id);
           const informe = this.informeDePrueba(paciente, prueba.id);
           ctx.io.escribir(`\n${cian(`Resultado de ${prueba.nombre}:`)}\n  ${informe}`);
+          if (paciente.diagnosticoConfirmado) {
+            paciente.notasClinicas = paciente.notasClinicas.filter((n) => !n.includes('no concluyente'));
+          }
           break;
         }
 
@@ -194,10 +212,13 @@ export class TriageState implements GameState {
     ctx.io.escribir(`  ${negrita(cian(`BOX ${p.id}`))} — ${fichaPaciente(p)}  ${gris(`(llegó a las ${horaGuardia(p.minutoLlegada)})`)}`);
     ctx.io.escribir(lineaSeparadora());
     ctx.io.escribir(`  ${negrita('Anamnesis:')}`);
-    for (const s of p.patologia.presentacion.sintomas) ctx.io.escribir(`   • ${s}`);
+    for (const s of p.sintomas) ctx.io.escribir(`   • ${s}`);
     ctx.io.escribir(`  ${negrita('Constantes:')} ${p.constantes}`);
     if (TriageState.explorados.has(p.id)) {
-      ctx.io.escribir(`  ${negrita('Exploración:')} ${p.patologia.presentacion.exploracion}`);
+      ctx.io.escribir(`  ${negrita('Exploración:')} ${p.exploracion}`);
+    }
+    for (const nota of p.notasClinicas) {
+      ctx.io.escribir(`  ${amarillo(`⚠ ${nota}`)}`);
     }
     for (const id of p.pruebasRealizadas) {
       ctx.io.escribir(`  ${negrita(`${PRUEBAS[id].nombre}:`)} ${gris(this.informeDePrueba(p, id))}`);

@@ -153,12 +153,12 @@ export class GameContext {
 
       // ── Deterioro de los pacientes no tratados ──
       for (const p of this.salaEspera) {
-        p.estabilidad -= p.patologia.deterioroPorHora * (dt / 60);
+        p.estabilidad -= p.deterioroPorHora * (dt / 60);
       }
       for (const p of this.ingresados) {
         if (p.patologia.quirurgica) {
           // Ingresar sin operar frena el deterioro, pero no lo detiene.
-          p.estabilidad -= p.patologia.deterioroPorHora * 0.6 * (dt / 60);
+          p.estabilidad -= p.deterioroPorHora * 0.6 * (dt / 60);
           if (!p.alertaPlanta && p.estabilidad < 45) {
             p.alertaPlanta = true;
             avisos.push(`⚠ Llaman de planta: ${p.nombre} está empeorando. Vuelve a estar en tus manos.`);

@@ -28,6 +28,8 @@ export interface EscenaDato {
   nombre?: string;
   edad?: number;
   estabilidad?: number;
+  /** Zona del mapa corporal cuando la variante clínica la cambia. */
+  zonaDolor?: string;
 }
 
 export interface IO {

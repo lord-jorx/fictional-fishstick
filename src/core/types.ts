@@ -39,6 +39,35 @@ export interface PlanQuirurgico {
 
 export type ManejoCorrecto = 'cirugia' | 'conservador' | 'alta';
 
+/**
+ * Variante clínica de presentación: la misma patología puede debutar de
+ * forma típica o esquiva. Las variantes se sortean por peso al generar el
+ * caso; las difíciles pueden atenuar la clínica, cambiar dónde duele,
+ * acelerar el deterioro o hacer que la prueba diana no sea concluyente
+ * al primer intento.
+ */
+export interface VarianteClinica {
+  id: string;
+  peso: number;
+  /** Solo puede tocarle a pacientes de 65 años o más. */
+  soloMayores?: boolean;
+  /** Rango de horas de evolución; se inserta en las plantillas como {horas}. */
+  horas: [number, number];
+  /** Plantillas de anamnesis (admiten {horas}). */
+  sintomas: string[];
+  exploracion: string;
+  /** Zona del mapa corporal si difiere de la típica de la patología. */
+  zonaDolor?: string;
+  /** Probabilidad (0-1) de que la prueba diana salga dudosa la primera vez. */
+  pruebaEsquiva?: number;
+  /** Informe que devuelve la prueba diana cuando sale dudosa. */
+  informeDudoso?: string;
+  /** Multiplicador del deterioro por hora (1 = igual que la típica). */
+  deterioroFactor?: number;
+  /** Ajuste de la estabilidad inicial (negativo = llega peor). */
+  estabilidadDelta?: number;
+}
+
 /** Definición estática de una patología (la "base de datos"). */
 export interface Patologia {
   id: string;
@@ -83,6 +112,21 @@ export interface Paciente {
   /** Constantes vitales generadas proceduralmente para ESTE paciente. */
   constantes: string;
   patologia: Patologia;
+  /** Variante de presentación que le tocó (id, p. ej. 'tipica'). */
+  varianteId: string;
+  /** Anamnesis ya resuelta (plantillas rellenas con las horas de evolución). */
+  sintomas: string[];
+  exploracion: string;
+  horasEvolucion: number;
+  /** Deterioro efectivo por hora (base de la patología × factor de la variante). */
+  deterioroPorHora: number;
+  /** Zona del mapa corporal (si la variante la cambia). */
+  zonaDolor?: string;
+  /** true mientras la prueba diana vaya a salir dudosa al pedirla. */
+  pruebaEsquiva: boolean;
+  informeDudoso?: string;
+  /** Apuntes que la ficha muestra al jugador (p. ej. "eco no concluyente"). */
+  notasClinicas: string[];
   /** 0-100. A 0, el paciente fallece. */
   estabilidad: number;
   /** Minuto de guardia en el que llegó. */
