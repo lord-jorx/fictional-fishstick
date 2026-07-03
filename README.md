@@ -37,6 +37,26 @@ recordado entre partidas): click de interfaz, pitido de monitor cardiaco
 durante la cirugía, sirena de ambulancia en las llegadas, campanilla en los
 aciertos y tono de asistolia en los éxitus.
 
+**Quirófano visual e interactivo**: cada evento intraoperatorio pinta un
+**campo quirúrgico animado** (el sangrado crece y late, la bilis gotea, el
+asa isquémica se amorata, el monitor de anestesia entra en alarma…) y las
+técnicas se eligen en **tarjetas con el icono del instrumental** — clipadora,
+tijeras, gasa, endograpadora, catéter de Fogarty, suero caliente… — para
+decidir también visualmente. Los iconos son neutros: ilustran la técnica sin
+delatar la opción correcta.
+
+**Rail de comandas**: como en un Overcooked de guardia, una banda fija
+muestra a todos los pacientes pendientes (urgencias y planta) con su barra
+de estabilidad menguando por colores; los críticos laten en rojo. La presión
+de la cola se ve de un vistazo… también mientras estás operando.
+
+**Complicaciones imprevistas** (procedurales): además de los eventos propios
+de cada cirugía, un pool de imprevistos —sangrado en sábana por coagulopatía,
+óptica empañada, aviso de anestesia, lesión inadvertida al retraer, fallo de
+la endograpadora— puede colarse en cualquier intervención. La probabilidad
+sube con la variante atípica, el paciente inestable, tu fatiga y la guardia
+negra.
+
 Partida reproducible y selección de modo desde la línea de comandos:
 
 ```bash
@@ -49,6 +69,10 @@ node dist/index.js --adjunto            # modo adjunto (sin red de seguridad)
 ## 🧑‍⚕️ Modos de juego
 
 - **Adjunto** — sin ayudas y con la puntuación completa.
+- **Guardia negra** (`--negra`) — la noche que se cuenta en los cambios de
+  turno: presentaciones atípicas al doble, dos pacientes más, una cama de
+  REA menos, el quirófano más disputado y más complicaciones imprevistas.
+  Puntuación ×1,2.
 - **Residente** — sales de guardia con un adjunto localizable:
   - En cada ficha te sugiere por teléfono la **prueba diana** del cuadro.
   - Si con el diagnóstico confirmado eliges un destino que contradice el

@@ -41,6 +41,10 @@ export class SummaryState implements GameState {
       puntos = Math.round(puntos * 0.85);
       ctx.io.escribir(gris('\n  Guardia tutelada (modo residente): la puntuación se ajusta al 85%.'));
     }
+    if (ctx.modoNegra) {
+      puntos = Math.round(puntos * 1.2);
+      ctx.io.escribir(gris('\n  Guardia negra superada: la puntuación se multiplica por 1,2.'));
+    }
     ctx.io.escribir(`\n${negrita('Puntuación final:')} ${negrita(puntos >= 0 ? verde(String(puntos)) : rojo(String(puntos)))}`);
     ctx.io.escribir(`${negrita('Veredicto del Jefe de Servicio:')} ${this.veredicto(puntos)}\n`);
 

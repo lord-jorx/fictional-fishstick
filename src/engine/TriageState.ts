@@ -35,7 +35,21 @@ export class TriageState implements GameState {
   async run(ctx: GameContext): Promise<GameState | null> {
     if (ctx.guardiaTerminada) return new SummaryState();
 
-    ctx.io.escena?.('triaje');
+    ctx.io.escena?.('triaje', {
+      tablero: [
+        ...ctx.salaEspera.map((p) => ({
+          nombre: p.nombre,
+          estabilidad: p.estabilidad,
+          lugar: 'espera' as const,
+          alerta: p.reingresado || p.alertaPlanta,
+        })),
+        ...ctx.ingresados.map((p) => ({
+          nombre: p.nombre,
+          estabilidad: p.estabilidad,
+          lugar: 'planta' as const,
+        })),
+      ],
+    });
     pintarHUD(ctx);
     const accion = await this.elegirAccionDeSala(ctx);
 

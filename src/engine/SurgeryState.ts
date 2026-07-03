@@ -8,7 +8,8 @@
  */
 import { GameContext } from '../core/GameContext.js';
 import type { GameState } from '../core/StateMachine.js';
-import type { OpcionQuirurgica, Paciente } from '../core/types.js';
+import type { OpcionQuirurgica, Paciente, PasoQuirurgico } from '../core/types.js';
+import { COMPLICACIONES_IMPREVISTAS } from '../data/complicaciones.js';
 import { amarillo, cian, fondoRojo, gris, negrita, rojo, verde } from '../ui/ansi.js';
 import { barra, lineaSeparadora } from '../ui/hud.js';
 
@@ -28,7 +29,24 @@ export class SurgeryState implements GameState {
     if (i >= 0) ctx.salaEspera.splice(i, 1);
     ctx.hospital.quirofanosLibres--;
 
-    ctx.io.escena?.('quirofano', { patologiaId: p.patologia.id, nombre: p.nombre, edad: p.edad });
+    ctx.io.escena?.('quirofano', {
+      patologiaId: p.patologia.id,
+      nombre: p.nombre,
+      edad: p.edad,
+      tablero: [
+        ...ctx.salaEspera.map((x) => ({
+          nombre: x.nombre,
+          estabilidad: x.estabilidad,
+          lugar: 'espera' as const,
+          alerta: x.reingresado || x.alertaPlanta,
+        })),
+        ...ctx.ingresados.map((x) => ({
+          nombre: x.nombre,
+          estabilidad: x.estabilidad,
+          lugar: 'planta' as const,
+        })),
+      ],
+    });
     ctx.io.escribir('\n' + lineaSeparadora());
     ctx.io.escribir(`  ${negrita(cian('🔪 QUIRÓFANO'))} — ${negrita(plan.nombre)}`);
     ctx.io.escribir(`  Paciente: ${p.nombre}, ${p.edad} años. ${gris(p.patologia.nombre)}`);
@@ -44,8 +62,17 @@ export class SurgeryState implements GameState {
 
     let perfecta = true;
 
-    for (const [n, paso] of plan.pasos.entries()) {
-      ctx.io.escribir(`\n${negrita(`PASO ${n + 1}/${plan.pasos.length}: ${paso.titulo}`)}`);
+    // Complicaciones imprevistas procedurales: la variante atípica, el
+    // paciente inestable, tu fatiga y la guardia negra las hacen más probables.
+    const { pasos, imprevistos } = this.montarPasos(ctx, plan.pasos);
+
+    for (const [n, paso] of pasos.entries()) {
+      if (imprevistos.has(paso)) {
+        ctx.io.escribir(`\n${rojo(negrita('⚠ COMPLICACIÓN IMPREVISTA'))}`);
+        ctx.io.escribir(`${negrita(`${paso.titulo}`)}`);
+      } else {
+        ctx.io.escribir(`\n${negrita(`PASO ${n + 1}/${pasos.length}: ${paso.titulo}`)}`);
+      }
       ctx.io.escribir(`  Estabilidad del paciente ${barra(p.estabilidad, false, 12)}   Tu energía ${barra(ctx.cirujano.energia, false, 12)}`);
       ctx.io.escribir(`\n  ${amarillo('EVENTO:')} ${paso.evento}`);
 
@@ -96,6 +123,35 @@ export class SurgeryState implements GameState {
   }
 
   // ────────────────────────────────────────────────────────────
+  /**
+   * Sortea complicaciones imprevistas y las intercala entre los pasos del
+   * plan. La probabilidad sube con la variante atípica, el paciente
+   * inestable, tu fatiga y la guardia negra.
+   */
+  private montarPasos(
+    ctx: GameContext,
+    base: PasoQuirurgico[],
+  ): { pasos: PasoQuirurgico[]; imprevistos: Set<PasoQuirurgico> } {
+    let prob = 0.12;
+    if (!this.paciente.varianteId.startsWith('tipic')) prob += 0.15;
+    if (this.paciente.estabilidad < 50) prob += 0.12;
+    if (ctx.cirujano.energia < 40) prob += 0.08;
+    if (ctx.modoNegra) prob += 0.12;
+
+    const pasos = [...base];
+    const imprevistos = new Set<PasoQuirurgico>();
+    const bolsa = [...COMPLICACIONES_IMPREVISTAS];
+    for (let i = 0; i < 2 && bolsa.length > 0; i++) {
+      if (ctx.rng() < prob) {
+        const elegido = bolsa.splice(Math.floor(ctx.rng() * bolsa.length), 1)[0]!;
+        const posicion = 1 + Math.floor(ctx.rng() * pasos.length);
+        pasos.splice(posicion, 0, elegido);
+        imprevistos.add(elegido);
+      }
+    }
+    return { pasos, imprevistos };
+  }
+
   /**
    * Presenta las técnicas del paso. En modo residente, mientras queden
    * llamadas disponibles, se puede telefonear al adjunto: señala la técnica

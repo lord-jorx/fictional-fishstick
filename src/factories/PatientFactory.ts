@@ -59,6 +59,7 @@ export class PatientFactory {
   constructor(
     private readonly rng: () => number,
     private readonly atipicidad = 1,
+    private readonly pacientesExtra = 0,
     private readonly catalogo: Patologia[] = PATOLOGIAS,
   ) {
     this.nombresRestantes = [...NOMBRES];
@@ -180,7 +181,7 @@ export class PatientFactory {
    */
   generarLlegadasDeGuardia(): LlegadaProgramada[] {
     const llegadas: LlegadaProgramada[] = [];
-    const numPacientes = this.entre(8, 11);
+    const numPacientes = this.entre(8, 11) + this.pacientesExtra;
 
     // El primero llega casi al empezar, para arrancar con ritmo.
     llegadas.push({ minuto: this.entre(2, 10), paciente: this.crearPaciente(5) });

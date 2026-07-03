@@ -95,6 +95,35 @@
   }
   #salida.flash-exitus { animation: flash-exitus .7s ease-out; }
   .linea { animation: aparecer .16s ease-out; }
+  /* ── Rail de comandas (pacientes pendientes, estilo Overcooked) ── */
+  #comandas {
+    display: flex; gap: 8px;
+    background: #0b1119;
+    border: 1px solid var(--borde); border-top: none;
+    padding: 8px 10px;
+    overflow-x: auto;
+    scrollbar-width: thin;
+  }
+  .comanda {
+    flex: none; min-width: 108px;
+    background: #131c28; border: 1px solid var(--borde); border-radius: 8px;
+    padding: 6px 9px; font-size: .82em;
+    animation: aparecer .25s ease-out;
+  }
+  .comanda .c-nombre { font-weight: 700; }
+  .comanda .c-lugar { color: #8ea0b2; font-size: .9em; margin-top: 2px; }
+  .c-barra { height: 6px; background: #0a0f16; border-radius: 4px; margin-top: 5px; overflow: hidden; }
+  .c-nivel { height: 100%; border-radius: 4px; transition: width .6s ease; }
+  .comanda.bien .c-nivel { background: #69db7c; }
+  .comanda.regular .c-nivel { background: #ffd43b; }
+  .comanda.critico .c-nivel { background: #ff6b6b; }
+  .comanda.critico { border-color: #a13a44; animation: pulso-comanda 1s ease-in-out infinite; }
+  .comanda.alerta { border-color: #ffd43b; }
+  @keyframes pulso-comanda {
+    0%, 100% { box-shadow: 0 0 0 rgba(255, 107, 107, 0); }
+    50% { box-shadow: 0 0 12px rgba(255, 107, 107, .5); }
+  }
+
   #menu {
     background: #0f151d;
     border: 1px solid var(--borde);
@@ -104,6 +133,13 @@
     max-height: 45dvh;
     overflow-y: auto;
   }
+  /* Menú quirúrgico: tarjetas visuales con el instrumental */
+  #menu.quirurgico { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 8px; }
+  #menu.quirurgico .menu-titulo { grid-column: 1 / -1; }
+  button.opcion.tarjeta { margin: 0; align-items: center; background: #141d2a; }
+  button.opcion.tarjeta .icono { flex: none; width: 40px; height: 40px; display: block; }
+  button.opcion.tarjeta .icono .icono-svg { width: 40px; height: 40px; }
+  button.opcion.tarjeta:hover .icono-svg g { stroke: var(--acento); }
   .menu-titulo { padding: 4px 2px 8px; font-weight: 700; }
   button.opcion {
     display: flex;
@@ -204,6 +240,18 @@
   }
   .onda2 { animation-delay: .9s; }
   .cuerpo-pie { color: #9fb0c0; font-size: .92em; }
+
+  /* Campo operatorio */
+  .campo-svg { display: block; width: 100%; max-width: 400px; margin: 4px 0; }
+  .sangre { transform-box: fill-box; transform-origin: center; animation: charco 1.6s ease-in-out infinite; }
+  .chorro { animation: pulso-dolor .5s ease-in-out infinite; }
+  .bilis { transform-box: fill-box; transform-origin: center; animation: charco 2.2s ease-in-out infinite; }
+  .gota-bilis { animation: gotear 1.4s ease-in infinite; transform-box: fill-box; transform-origin: center; }
+  .asa-necrotica { transform-box: fill-box; transform-origin: center; animation: pulso-asa 2s ease-in-out infinite; }
+  .traza-alarma { stroke-dasharray: 60 220; animation: latido 1.1s linear infinite; }
+  .alarma-led { animation: pulso-cruz .7s steps(1) infinite; }
+  @keyframes charco { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.12); } }
+  @keyframes pulso-asa { 0%, 100% { opacity: 1; } 50% { opacity: .75; } }
 
   /* Banner de quirófano */
   .q-banner {
@@ -1562,9 +1610,10 @@
      * @param atipicidad multiplicador del peso de las variantes difíciles:
      *   1 = frecuencia completa (modo adjunto), 0.5 = la mitad (residente).
      */
-    constructor(rng, atipicidad = 1, catalogo = PATOLOGIAS) {
+    constructor(rng, atipicidad = 1, pacientesExtra = 0, catalogo = PATOLOGIAS) {
       this.rng = rng;
       this.atipicidad = atipicidad;
+      this.pacientesExtra = pacientesExtra;
       this.catalogo = catalogo;
       __publicField(this, "siguienteId", 1);
       __publicField(this, "nombresRestantes");
@@ -1669,7 +1718,7 @@
      */
     generarLlegadasDeGuardia() {
       const llegadas = [];
-      const numPacientes = this.entre(8, 11);
+      const numPacientes = this.entre(8, 11) + this.pacientesExtra;
       llegadas.push({ minuto: this.entre(2, 10), paciente: this.crearPaciente(5) });
       for (let i = 1; i < numPacientes; i++) {
         const minuto = this.rng() < 0.7 ? this.entre(30, 1080) : this.entre(1080, 1380);
@@ -1788,6 +1837,10 @@ ${negrita("Balance:")}`);
         puntos = Math.round(puntos * 0.85);
         ctx.io.escribir(gris("\n  Guardia tutelada (modo residente): la puntuación se ajusta al 85%."));
       }
+      if (ctx.modoNegra) {
+        puntos = Math.round(puntos * 1.2);
+        ctx.io.escribir(gris("\n  Guardia negra superada: la puntuación se multiplica por 1,2."));
+      }
       ctx.io.escribir(`
 ${negrita("Puntuación final:")} ${negrita(puntos >= 0 ? verde(String(puntos)) : rojo(String(puntos)))}`);
       ctx.io.escribir(`${negrita("Veredicto del Jefe de Servicio:")} ${this.veredicto(puntos)}
@@ -1834,6 +1887,117 @@ ${negrita("Puntuación final:")} ${negrita(puntos >= 0 ? verde(String(puntos)) :
     }
   };
 
+  // src/data/complicaciones.ts
+  var COMPLICACIONES_IMPREVISTAS = [
+    {
+      titulo: "Sangrado en sábana difuso",
+      evento: "El campo empieza a rezumar por todas partes: sangrado difuso en sábana. Anestesia confirma que la coagulación se está deteriorando.",
+      opciones: [
+        {
+          texto: "Compresión con gasas calientes, hemostáticos tópicos y pedir a anestesia que corrija la coagulopatía",
+          correcta: true,
+          resultado: "El campo se seca poco a poco mientras reponen factores. Paciencia y presión: hemostasia de libro.",
+          deltaEstabilidad: -2,
+          deltaEstres: 3
+        },
+        {
+          texto: "Electrocoagulación indiscriminada de toda la superficie que rezuma",
+          correcta: false,
+          resultado: "Quemas tejido sano y el rezumado reaparece al lado. La coagulopatía no se cauteriza: se corrige.",
+          deltaEstabilidad: -10,
+          deltaEstres: 8
+        },
+        {
+          texto: "Seguir con el plan y confiar en que pare solo",
+          correcta: false,
+          resultado: "El goteo constante se convierte en anemia aguda. Anestesia pide sangre cruzada.",
+          deltaEstabilidad: -14,
+          deltaEstres: 10
+        }
+      ]
+    },
+    {
+      titulo: "Pérdida de visión del campo",
+      evento: "La óptica se empaña y una lengüeta de epiplón se interpone: has perdido la visión del campo quirúrgico.",
+      opciones: [
+        {
+          texto: "Extraer y limpiar la óptica, recolocar al paciente y recuperar la exposición antes de seguir",
+          correcta: true,
+          resultado: "Dos minutos bien invertidos: campo limpio y anatomía reconocible de nuevo.",
+          deltaEstabilidad: 0,
+          deltaEstres: -2
+        },
+        {
+          texto: 'Seguir disecando de memoria: "me sé la anatomía"',
+          correcta: false,
+          resultado: "La memoria no sangra; el tejido sí. Pequeña laceración que obliga a hemostasia extra.",
+          deltaEstabilidad: -10,
+          deltaEstres: 8
+        }
+      ]
+    },
+    {
+      titulo: "Aviso de anestesia",
+      evento: "Anestesia interrumpe: desaturación transitoria y tensión lábil. El paciente no está cómodo con el neumoperitoneo.",
+      opciones: [
+        {
+          texto: "Pausa coordinada: bajar la presión del neumo, esperar a que lo estabilicen y repartir el plan",
+          correcta: true,
+          resultado: "En unos minutos el paciente remonta. Trabajar en equipo también es técnica quirúrgica.",
+          deltaEstabilidad: 3,
+          deltaEstres: 2
+        },
+        {
+          texto: 'Seguir a tu ritmo: "casi he terminado este plano"',
+          correcta: false,
+          resultado: "La desaturación se prolonga y anestesia acaba parándote igualmente, con el paciente peor.",
+          deltaEstabilidad: -12,
+          deltaEstres: 9
+        }
+      ]
+    },
+    {
+      titulo: "Lesión inadvertida al retraer",
+      evento: "Al retirar el separador descubres una laceración serosa en un asa de delgado que nadie ha visto producirse.",
+      opciones: [
+        {
+          texto: "Revisar el asa completa y reparar con puntos seromusculares",
+          correcta: true,
+          resultado: "Reparación limpia. Una lesión vista y tratada no es complicación: es cirugía.",
+          deltaEstabilidad: -1,
+          deltaEstres: 2
+        },
+        {
+          texto: "Parece superficial: reintroducirla y no perder tiempo",
+          correcta: false,
+          resultado: 'Las laceraciones "superficiales" no revisadas son las peritonitis de la semana que viene.',
+          deltaEstabilidad: -12,
+          deltaEstres: 8
+        }
+      ]
+    },
+    {
+      titulo: "Fallo de instrumental",
+      evento: "La endograpadora hace un ruido raro y se bloquea a mitad de disparo, mordiendo el tejido.",
+      opciones: [
+        {
+          texto: "No forzar: liberar el dispositivo según fabricante, revisar la línea de grapas y completar con sutura manual",
+          correcta: true,
+          resultado: "Liberas el aparato sin desgarrar y refuerzas la línea. El plan B también hay que sabérselo.",
+          deltaEstabilidad: -2,
+          deltaEstres: 4
+        },
+        {
+          texto: 'Forzar el disparo con más presión: "estas cosas pasan"',
+          correcta: false,
+          resultado: "El tejido se desgarra dentro de la mordaza: defecto mayor que ahora exige reparación compleja.",
+          deltaEstabilidad: -13,
+          deltaEstres: 10
+        }
+      ]
+    }
+  ];
+
   // src/engine/SurgeryState.ts
   var SurgeryState = class {
     constructor(paciente) {
@@ -1846,7 +2010,24 @@ ${negrita("Puntuación final:")} ${negrita(puntos >= 0 ? verde(String(puntos)) :
       const i = ctx.salaEspera.indexOf(p);
       if (i >= 0) ctx.salaEspera.splice(i, 1);
       ctx.hospital.quirofanosLibres--;
-      ctx.io.escena?.("quirofano", { patologiaId: p.patologia.id, nombre: p.nombre, edad: p.edad });
+      ctx.io.escena?.("quirofano", {
+        patologiaId: p.patologia.id,
+        nombre: p.nombre,
+        edad: p.edad,
+        tablero: [
+          ...ctx.salaEspera.map((x) => ({
+            nombre: x.nombre,
+            estabilidad: x.estabilidad,
+            lugar: "espera",
+            alerta: x.reingresado || x.alertaPlanta
+          })),
+          ...ctx.ingresados.map((x) => ({
+            nombre: x.nombre,
+            estabilidad: x.estabilidad,
+            lugar: "planta"
+          }))
+        ]
+      });
       ctx.io.escribir("\n" + lineaSeparadora());
       ctx.io.escribir(`  ${negrita(cian("🔪 QUIRÓFANO"))} — ${negrita(plan.nombre)}`);
       ctx.io.escribir(`  Paciente: ${p.nombre}, ${p.edad} años. ${gris(p.patologia.nombre)}`);
@@ -1859,9 +2040,16 @@ ${negrita("Puntuación final:")} ${negrita(puntos >= 0 ? verde(String(puntos)) :
         );
       }
       let perfecta = true;
-      for (const [n, paso] of plan.pasos.entries()) {
-        ctx.io.escribir(`
-${negrita(`PASO ${n + 1}/${plan.pasos.length}: ${paso.titulo}`)}`);
+      const { pasos, imprevistos } = this.montarPasos(ctx, plan.pasos);
+      for (const [n, paso] of pasos.entries()) {
+        if (imprevistos.has(paso)) {
+          ctx.io.escribir(`
+${rojo(negrita("⚠ COMPLICACIÓN IMPREVISTA"))}`);
+          ctx.io.escribir(`${negrita(`${paso.titulo}`)}`);
+        } else {
+          ctx.io.escribir(`
+${negrita(`PASO ${n + 1}/${pasos.length}: ${paso.titulo}`)}`);
+        }
         ctx.io.escribir(`  Estabilidad del paciente ${barra(p.estabilidad, false, 12)}   Tu energía ${barra(ctx.cirujano.energia, false, 12)}`);
         ctx.io.escribir(`
   ${amarillo("EVENTO:")} ${paso.evento}`);
@@ -1903,6 +2091,30 @@ ${gris(`Perla docente: ${p.patologia.notaDocente}`)}`);
       return new TriageState();
     }
     // ────────────────────────────────────────────────────────────
+    /**
+     * Sortea complicaciones imprevistas y las intercala entre los pasos del
+     * plan. La probabilidad sube con la variante atípica, el paciente
+     * inestable, tu fatiga y la guardia negra.
+     */
+    montarPasos(ctx, base) {
+      let prob = 0.12;
+      if (!this.paciente.varianteId.startsWith("tipic")) prob += 0.15;
+      if (this.paciente.estabilidad < 50) prob += 0.12;
+      if (ctx.cirujano.energia < 40) prob += 0.08;
+      if (ctx.modoNegra) prob += 0.12;
+      const pasos = [...base];
+      const imprevistos = /* @__PURE__ */ new Set();
+      const bolsa = [...COMPLICACIONES_IMPREVISTAS];
+      for (let i = 0; i < 2 && bolsa.length > 0; i++) {
+        if (ctx.rng() < prob) {
+          const elegido = bolsa.splice(Math.floor(ctx.rng() * bolsa.length), 1)[0];
+          const posicion = 1 + Math.floor(ctx.rng() * pasos.length);
+          pasos.splice(posicion, 0, elegido);
+          imprevistos.add(elegido);
+        }
+      }
+      return { pasos, imprevistos };
+    }
     /**
      * Presenta las técnicas del paso. En modo residente, mientras queden
      * llamadas disponibles, se puede telefonear al adjunto: señala la técnica
@@ -1987,7 +2199,21 @@ ${cian("🩺 El adjunto, con voz de dormido:")} ${gris(`«Yo lo tengo claro: ${c
     }
     async run(ctx) {
       if (ctx.guardiaTerminada) return new SummaryState();
-      ctx.io.escena?.("triaje");
+      ctx.io.escena?.("triaje", {
+        tablero: [
+          ...ctx.salaEspera.map((p) => ({
+            nombre: p.nombre,
+            estabilidad: p.estabilidad,
+            lugar: "espera",
+            alerta: p.reingresado || p.alertaPlanta
+          })),
+          ...ctx.ingresados.map((p) => ({
+            nombre: p.nombre,
+            estabilidad: p.estabilidad,
+            lugar: "planta"
+          }))
+        ]
+      });
       pintarHUD(ctx);
       const accion = await this.elegirAccionDeSala(ctx);
       switch (accion.tipo) {
@@ -2293,6 +2519,8 @@ Ingresas a ${p.nombre} en observación. Prudente, aunque podía haberse ido de a
       __publicField(this, "minuto", 0);
       /** Modo residente: un adjunto localizable te tutela durante la guardia. */
       __publicField(this, "modoResidente", false);
+      /** Guardia negra: atípicas al doble, hospital saturado, más complicaciones. */
+      __publicField(this, "modoNegra", false);
       /** Llamadas al adjunto disponibles en quirófano (solo modo residente). */
       __publicField(this, "consultasAdjunto", 3);
       __publicField(this, "cirujano", { energia: 100, estres: 10 });
@@ -2461,29 +2689,47 @@ Ingresas a ${p.nombre} en observación. Prudente, aunque podía haberse ido de a
       if (this.modo === void 0) {
         this.modo = await this.io.elegir("¿Con qué nivel sales a la guardia?", [
           {
+            etiqueta: "Residente",
+            detalle: "un adjunto te da pistas; ideal para aprender (también sin ser sanitario)",
+            valor: "residente"
+          },
+          {
             etiqueta: "Adjunto",
             detalle: "sin red de seguridad, puntuación completa",
             valor: "adjunto"
           },
           {
-            etiqueta: "Residente",
-            detalle: "un adjunto localizable te da pistas; puntuación tutelada",
-            valor: "residente"
+            etiqueta: "Guardia negra",
+            detalle: "atípicas ×2, hospital saturado, más complicaciones; puntuación ×1,2",
+            valor: "negra"
           }
         ]);
       }
       this.ctx.modoResidente = this.modo === "residente";
+      this.ctx.modoNegra = this.modo === "negra";
       if (this.ctx.modoResidente) {
         this.io.escribir(
           gris("\n  Modo residente: tu adjunto sugerirá pruebas, dudará en voz alta si te") + gris("\n  equivocas de destino y atenderá hasta 3 llamadas en quirófano.")
         );
       }
-      const fabrica = new PatientFactory(this.rng, this.ctx.modoResidente ? 0.5 : 1);
+      if (this.ctx.modoNegra) {
+        this.ctx.hospital.camasReaTotales = 2;
+        this.ctx.hospital.camasReaLibres = 2;
+        this.io.escribir(
+          gris("\n  Guardia negra: la noche que se cuenta en el café de los cambios de turno.") + gris("\n  Más pacientes, presentaciones engañosas al doble, una cama de REA menos") + gris("\n  y el quirófano más disputado. Suerte. La necesitarás.")
+        );
+      }
+      const atipicidad = this.ctx.modoResidente ? 0.5 : this.ctx.modoNegra ? 2 : 1;
+      const fabrica = new PatientFactory(this.rng, atipicidad, this.ctx.modoNegra ? 2 : 0);
       this.ctx.programarLlegadas(fabrica.generarLlegadasDeGuardia());
       const inicio1 = 180 + Math.floor(this.rng() * 300);
       const inicio2 = 720 + Math.floor(this.rng() * 300);
       this.ctx.programarOcupacionExterna(inicio1, inicio1 + 120, "politraumatizado de tráfico");
       this.ctx.programarOcupacionExterna(inicio2, inicio2 + 90, "fractura abierta de fémur");
+      if (this.ctx.modoNegra) {
+        const inicio3 = 1080 + Math.floor(this.rng() * 200);
+        this.ctx.programarOcupacionExterna(inicio3, inicio3 + 110, "aneurisma de aorta roto");
+      }
       await this.io.pausa("Pulsa Intro para fichar y empezar la guardia...");
       await new MaquinaEstados().ejecutar(new TriageState(), this.ctx);
     }
@@ -2503,6 +2749,9 @@ Ingresas a ${p.nombre} en observación. Prudente, aunque podía haberse ido de a
    • No todo dolor abdominal se opera: dar el alta también es decidir.
    • Vigila tu ${negrita("energía")} y tu ${negrita("estrés")}: con fatiga, hasta la decisión
      correcta puede salir mal. El café es tu amigo. Dosifícalo.
+
+  ${gris("¿No eres sanitario? Empieza en modo Residente: el adjunto te guía y")}
+  ${gris("cada caso te deja su perla docente. Se aprende operando.")}
 
   ${gris("Sobrevive hasta las 08:00 de mañana. Suerte, doctor/a.")}
 `);
@@ -2629,6 +2878,123 @@ Ingresas a ${p.nombre} en observación. Prudente, aunque podía haberse ido de a
   </svg>
   <div class="cuerpo-pie">Dolor referido: ${zona.zona}</div>
 </div>`;
+  }
+
+  // src/web/quirofano.ts
+  var contadorIds = 0;
+  var I = (cuerpo) => `<svg viewBox="0 0 40 40" class="icono-svg" aria-hidden="true"><g fill="none" stroke="#b9cbdc" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">${cuerpo}</g></svg>`;
+  var ICONOS = {
+    bisturi: I(`<path d="M8 32 L24 16 l6 6 -12 8 z"/><path d="M24 16 L32 8" stroke-width="3"/>`),
+    tijeras: I(`<circle cx="12" cy="30" r="4"/><circle cx="28" cy="30" r="4"/><path d="M14 27 L28 9 M26 27 L12 9"/>`),
+    clipadora: I(`<path d="M8 30 L22 16 M8 24 L20 12"/><path d="M22 16 L32 8 M20 12 L30 6"/><path d="M25 13 l4 4" stroke-width="3.2" stroke="#e8f2fb"/>`),
+    gasa: I(`<rect x="9" y="11" width="22" height="20" rx="3"/><path d="M9 17 h22 M9 24 h22 M15 11 v20 M24 11 v20" stroke-width="1.2" opacity=".8"/>`),
+    suero: I(`<path d="M14 6 h12 v14 a6 6 0 0 1 -12 0 z"/><path d="M20 6 V4 M20 27 v6"/><path d="M20 36 q2 -2.5 0 -4 q-2 1.5 0 4" fill="#9ed7f2" stroke="none"/>`),
+    grapadora: I(`<path d="M8 26 h18 l6 -6"/><path d="M8 20 h16 l6 -6" /><path d="M11 23 v3 M15 23 v3 M19 23 v3" stroke-width="1.4"/>`),
+    sutura: I(`<path d="M28 8 a10 10 0 0 1 -2 18"/><path d="M26 26 q-6 3 -12 0 t-8 3" stroke-width="1.4"/>`),
+    cauterio: I(`<path d="M12 34 L22 24"/><rect x="20" y="12" width="12" height="12" rx="3" transform="rotate(45 26 18)"/><path d="M28 6 l-3 5 h5 l-3 5" stroke="#ffd43b"/>`),
+    aspirador: I(`<path d="M10 32 L26 16"/><path d="M26 16 L32 10 M24 22 l4 4" /><path d="M12 12 q1.5 2 0 3.6 M17 9 q1.5 2 0 3.6" stroke="#9ed7f2" stroke-width="1.4"/>`),
+    bolsa: I(`<path d="M14 8 h12 v6 c6 4 6 14 0 18 h-12 c-6 -4 -6 -14 0 -18 z"/><circle cx="20" cy="20" r="3.4"/>`),
+    cateter: I(`<path d="M6 32 C16 30 22 24 26 16"/><circle cx="29" cy="11" r="4.6"/><circle cx="29" cy="11" r="1.6" fill="#b9cbdc" stroke="none"/>`),
+    mano: I(`<path d="M13 34 V16 a2.4 2.4 0 0 1 4.8 0 V22 M17.8 22 v-9 a2.4 2.4 0 0 1 4.8 0 v9 M22.6 22 v-7 a2.4 2.4 0 0 1 4.8 0 v9 c0 6 -3 10 -8 10 h-2 c-2.5 0 -4.4 -1.6 -4.4 -4"/>`),
+    reloj: I(`<circle cx="20" cy="21" r="12"/><path d="M20 14 v7 l5 4 M15 5 l-4 3 M25 5 l4 3"/>`),
+    telefono: I(`<path d="M10 8 q-3 12 8 21 q6 5 12 3 l1 -5 -6 -3 -3 2 q-6 -4 -8 -10 l3 -2 -2 -7 z"/>`),
+    ojo: I(`<path d="M6 21 q14 -13 28 0 q-14 13 -28 0 z"/><circle cx="20" cy="21" r="4"/>`),
+    optica: I(`<circle cx="17" cy="17" r="9"/><path d="M24 24 L33 33" stroke-width="3"/><path d="M13 15 q3 -3 6 -2" stroke-width="1.4"/>`)
+  };
+  var MAPA_HERRAMIENTAS = [
+    [/llamar al adjunto/i, "telefono"],
+    [/clip/i, "clipadora"],
+    [/grapadora/i, "grapadora"],
+    [/endoloop|anastomosis|sutur|puntos|parche|malla/i, "sutura"],
+    [/gasa|compres|empaquet|packing/i, "gasa"],
+    [/suero caliente|lavado|lavar/i, "suero"],
+    [/aspir/i, "aspirador"],
+    [/tijera|secci[oó]n de|kelotom/i, "tijeras"],
+    [/electro|cauter|coagul/i, "cauterio"],
+    [/fogarty|revasculariz|embolectom|cat[eé]ter|veress/i, "cateter"],
+    [/estoma|colostom|ileostom|hartmann/i, "bolsa"],
+    [/pausa|reevaluar|esperar|second[- ]look|control de da[ñn]os|vacuum/i, "reloj"],
+    [/limpiar la [oó]ptica|recolocar|exposici[oó]n/i, "optica"],
+    [/ignor|dejar|seguir|reintroducir|no resecar|confiar/i, "ojo"],
+    [/sujetar|tirar|tracci[oó]n|reducir|disecci[oó]n roma|envolver|liberar|forzar/i, "mano"],
+    [/resec|antrectom|esplenectom|convertir|abierta|hasson|biopsia|esplenorrafia/i, "bisturi"]
+  ];
+  function iconoHerramienta(textoOpcion) {
+    for (const [re, icono] of MAPA_HERRAMIENTAS) {
+      if (re.test(textoOpcion)) return ICONOS[icono];
+    }
+    return ICONOS["bisturi"];
+  }
+  function campo(overlay) {
+    const id = `campo${contadorIds++}`;
+    return `
+<svg viewBox="0 0 240 132" class="campo-svg" role="img" aria-label="Campo quirúrgico">
+  <defs>
+    <radialGradient id="${id}-tejido" cx=".5" cy=".45" r=".75">
+      <stop offset="0" stop-color="#e8938c"/><stop offset=".55" stop-color="#c96b66"/><stop offset="1" stop-color="#7e3d3c"/>
+    </radialGradient>
+    <clipPath id="${id}-marco"><rect x="4" y="4" width="232" height="124" rx="14"/></clipPath>
+  </defs>
+  <rect width="240" height="132" rx="16" fill="#090d13"/>
+  <g clip-path="url(#${id}-marco)">
+    <rect x="4" y="4" width="232" height="124" fill="url(#${id}-tejido)"/>
+    <ellipse cx="92" cy="58" rx="52" ry="30" fill="#d98079" opacity=".85"/>
+    <ellipse cx="160" cy="84" rx="44" ry="24" fill="#b35a58" opacity=".8"/>
+    <path d="M60 40 q20 -12 44 -4 M120 96 q24 10 48 2" stroke="#eaa59e" stroke-width="3" fill="none" opacity=".6"/>
+    <path d="M0 116 L54 84 l6 8 -50 32 z" fill="#cfd8e2"/>
+    <path d="M54 84 l6 8" stroke="#8fa1b3" stroke-width="2"/>
+    <path d="M240 20 L186 52 l-5 -8 52 -32 z" fill="#cfd8e2"/>
+    ${overlay}
+    <ellipse cx="120" cy="66" rx="150" ry="86" fill="none" stroke="#05070a" stroke-width="42" opacity=".85"/>
+  </g>
+</svg>`;
+  }
+  var OVERLAYS = {
+    sangrado: `
+    <ellipse class="sangre" cx="122" cy="74" rx="26" ry="14" fill="#a41220"/>
+    <ellipse class="sangre" cx="122" cy="74" rx="14" ry="7" fill="#d21f2e" style="animation-delay:.4s"/>
+    <path class="chorro" d="M118 60 q4 -8 9 -3" stroke="#d21f2e" stroke-width="3" fill="none"/>`,
+    adherencias: `
+    <path d="M70 44 C100 60 140 52 176 78 M84 84 C110 66 150 88 180 60 M96 36 C120 58 150 44 172 92"
+      stroke="#f2e3cf" stroke-width="4" fill="none" opacity=".9"/>
+    <path d="M70 44 C100 60 140 52 176 78" stroke="#d9c2a4" stroke-width="1.6" fill="none"/>`,
+    fuga: `
+    <ellipse class="bilis" cx="128" cy="80" rx="30" ry="12" fill="#7a8a1e" opacity=".9"/>
+    <ellipse cx="128" cy="80" rx="16" ry="6" fill="#a3b52b" opacity=".9"/>
+    <circle class="gota-bilis" cx="118" cy="58" r="3" fill="#a3b52b"/>
+    <circle cx="140" cy="72" r="2.2" fill="#e8e4c9"/><circle cx="120" cy="84" r="2.6" fill="#e8e4c9"/><circle cx="134" cy="86" r="1.8" fill="#e8e4c9"/>`,
+    necrosis: `
+    <path class="asa-necrotica" d="M84 62 q10 -16 34 -12 q26 4 30 22 q3 16 -16 20 q-24 5 -40 -6 q-14 -10 -8 -24 z" fill="#4a2a52" stroke="#2e1836" stroke-width="3"/>
+    <path d="M92 64 q12 -10 30 -6 M90 78 q16 10 36 4" stroke="#6b3f77" stroke-width="2.4" fill="none"/>`,
+    monitor: `
+    <g>
+      <rect x="150" y="12" width="78" height="44" rx="6" fill="#0b1420" stroke="#33465f"/>
+      <path class="traza-alarma" d="M156 36 h14 l4 -12 5 22 4 -14 5 8 h12 l4 -10 5 16 4 -10 h9" stroke="#ff5d5d" stroke-width="2" fill="none"/>
+      <circle class="alarma-led" cx="222" cy="20" r="3" fill="#ff5d5d"/>
+    </g>`,
+    friable: `
+    <g opacity=".9">
+      <circle cx="110" cy="64" r="7" fill="#8e3f45"/><circle cx="128" cy="58" r="5" fill="#93474c"/>
+      <circle cx="140" cy="72" r="8" fill="#7e343b"/><circle cx="118" cy="80" r="5" fill="#93474c"/>
+      <path d="M104 58 q18 -8 42 2" stroke="#5e2228" stroke-width="2" fill="none" stroke-dasharray="4 3"/>
+    </g>`,
+    generico: `
+    <circle cx="108" cy="60" r="2" fill="#ffe9e6" opacity=".8"/>
+    <circle cx="146" cy="76" r="2.4" fill="#ffe9e6" opacity=".6"/>`
+  };
+  var MAPA_ESCENAS = [
+    [/sangr|hemoperitoneo|ti[ñn]e|exang/i, "sangrado"],
+    [/adheren|brida/i, "adherencias"],
+    [/bilis|fecaloide|contamin|c[aá]lculos|fuga|perfora|salida de contenido/i, "fuga"],
+    [/viol[aá]ce|necr[oó]|cian[oó]t|viabilidad|isquem|hipocapta/i, "necrosis"],
+    [/anestesia|hipotens|desatur|tr[ií]ada|ph 7|noradrenalina|inestab|desploma|ta \d|coagulaci[oó]n/i, "monitor"],
+    [/friable|edemat|indurad/i, "friable"]
+  ];
+  function escenaCampo(evento) {
+    for (const [re, clave] of MAPA_ESCENAS) {
+      if (re.test(evento)) return campo(OVERLAYS[clave]);
+    }
+    return campo(OVERLAYS["generico"]);
   }
 
   // src/web/retrato.ts
@@ -2877,12 +3243,16 @@ Ingresas a ${p.nombre} en observación. Prudente, aunque podía haberse ido de a
     constructor(raiz) {
       __publicField(this, "salida");
       __publicField(this, "menu");
+      __publicField(this, "comandas");
       __publicField(this, "teclado", null);
       this.salida = document.createElement("div");
       this.salida.id = "salida";
+      this.comandas = document.createElement("div");
+      this.comandas.id = "comandas";
+      this.comandas.hidden = true;
       this.menu = document.createElement("div");
       this.menu.id = "menu";
-      raiz.append(this.salida, this.menu);
+      raiz.append(this.salida, this.comandas, this.menu);
       sonido.conectarBoton(document.getElementById("silencio"));
     }
     escribir(texto = "") {
@@ -2892,6 +3262,9 @@ Ingresas a ${p.nombre} en observación. Prudente, aunque podía haberse ido de a
         div.innerHTML = ansiAHtml(linea) || "&nbsp;";
         this.salida.appendChild(div);
         const plano = sinAnsi(linea);
+        if (plano.includes("EVENTO:")) {
+          this.insertarArte(escenaCampo(plano), "campo");
+        }
         if (plano.includes("🚑") || plano.includes("AMBULANCIA")) {
           this.animarAmbulancia();
           sonido.sirena();
@@ -2921,16 +3294,19 @@ Ingresas a ${p.nombre} en observación. Prudente, aunque podía haberse ido de a
         }
         case "quirofano":
           document.body.classList.add("en-quirofano");
+          if (dato?.tablero) this.pintarComandas(dato.tablero);
           this.insertarArte(BANNER_QUIROFANO, "quirofano");
           sonido.empezarLatido(640);
           break;
         case "triaje":
           document.body.classList.remove("en-quirofano");
           sonido.pararLatido();
+          this.pintarComandas(dato?.tablero ?? []);
           break;
         case "fin":
           document.body.classList.remove("en-quirofano");
           sonido.pararLatido();
+          this.pintarComandas([]);
           this.insertarArte(ARTE_AMANECER, "fin");
           break;
       }
@@ -2938,6 +3314,8 @@ Ingresas a ${p.nombre} en observación. Prudente, aunque podía haberse ido de a
     elegir(titulo, opciones) {
       return new Promise((resolver) => {
         this.limpiarMenu();
+        const visual = document.body.classList.contains("en-quirofano") && titulo.includes("Cómo procedes");
+        if (visual) this.menu.classList.add("quirurgico");
         const cabecera = document.createElement("div");
         cabecera.className = "menu-titulo";
         cabecera.innerHTML = ansiAHtml(titulo);
@@ -2945,9 +3323,10 @@ Ingresas a ${p.nombre} en observación. Prudente, aunque podía haberse ido de a
         const botones = [];
         opciones.forEach((op, i) => {
           const boton = document.createElement("button");
-          boton.className = "opcion";
+          boton.className = visual ? "opcion tarjeta" : "opcion";
           const detalle = op.detalle ? `<span class="detalle">(${escaparHtml(op.detalle)})</span>` : "";
-          boton.innerHTML = `<span class="num">${i + 1}</span><span class="texto">${ansiAHtml(op.etiqueta)} ${detalle}</span>`;
+          const icono = visual ? `<span class="icono">${iconoHerramienta(sinAnsi(op.etiqueta))}</span>` : "";
+          boton.innerHTML = `${icono}<span class="num">${i + 1}</span><span class="texto">${ansiAHtml(op.etiqueta)} ${detalle}</span>`;
           boton.addEventListener("click", () => {
             sonido.click();
             this.escribir(`\x1B[90m> ${i + 1}. ${sinAnsi(op.etiqueta)}\x1B[39m`);
@@ -2982,6 +3361,21 @@ Ingresas a ${p.nombre} en observación. Prudente, aunque podía haberse ido de a
       this.desplazarAlFinal();
     }
     // ────────────────────────────────────────────────────────────
+    /** El rail de "comandas": cada paciente pendiente con su reloj vital. */
+    pintarComandas(tablero) {
+      this.comandas.hidden = tablero.length === 0;
+      this.comandas.replaceChildren();
+      for (const c of tablero) {
+        const nivel = c.estabilidad >= 60 ? "bien" : c.estabilidad >= 35 ? "regular" : "critico";
+        const tarjeta = document.createElement("div");
+        tarjeta.className = `comanda ${nivel}${c.alerta ? " alerta" : ""}`;
+        tarjeta.innerHTML = `
+        <div class="c-nombre">${escaparHtml(c.nombre.split(" ")[0] ?? c.nombre)}</div>
+        <div class="c-barra"><div class="c-nivel" style="width:${Math.max(0, Math.min(100, Math.round(c.estabilidad)))}%"></div></div>
+        <div class="c-lugar">${c.lugar === "espera" ? "🚪 urgencias" : "🛏 planta"}${c.alerta ? " ⚠" : ""}</div>`;
+        this.comandas.appendChild(tarjeta);
+      }
+    }
     insertarArte(html, clase) {
       const figura = document.createElement("figure");
       figura.className = `escena escena-${clase}`;
@@ -3010,6 +3404,7 @@ Ingresas a ${p.nombre} en observación. Prudente, aunque podía haberse ido de a
         document.removeEventListener("keydown", this.teclado);
         this.teclado = null;
       }
+      this.menu.classList.remove("quirurgico");
       this.menu.replaceChildren();
     }
     desplazarAlFinal() {

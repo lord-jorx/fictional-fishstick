@@ -21,8 +21,18 @@ export interface Opcion<T> {
 /** Momentos visuales del juego, para adaptadores que sepan ilustrarlos. */
 export type EscenaId = 'portada' | 'triaje' | 'paciente' | 'quirofano' | 'fin';
 
+/** Una "comanda" del tablero de urgencias: paciente pendiente y su reloj vital. */
+export interface ComandaPaciente {
+  nombre: string;
+  estabilidad: number;
+  lugar: 'espera' | 'planta';
+  alerta?: boolean;
+}
+
 /** Contexto de una escena (todo opcional: cada adaptador usa lo que sabe pintar). */
 export interface EscenaDato {
+  /** Estado del tablero de pacientes (para adaptadores tipo "comandas"). */
+  tablero?: ComandaPaciente[];
   patologiaId?: string;
   pacienteId?: number;
   nombre?: string;

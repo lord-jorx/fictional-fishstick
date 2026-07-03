@@ -50,6 +50,8 @@ export class GameContext {
 
   /** Modo residente: un adjunto localizable te tutela durante la guardia. */
   modoResidente = false;
+  /** Guardia negra: atípicas al doble, hospital saturado, más complicaciones. */
+  modoNegra = false;
   /** Llamadas al adjunto disponibles en quirófano (solo modo residente). */
   consultasAdjunto = 3;
 

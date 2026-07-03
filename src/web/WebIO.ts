@@ -6,8 +6,9 @@
  * convierten a <span> con clases CSS. También se puede elegir opción
  * con las teclas 1-9.
  */
-import type { EscenaDato, EscenaId, IO, Opcion } from '../core/io.js';
+import type { ComandaPaciente, EscenaDato, EscenaId, IO, Opcion } from '../core/io.js';
 import { ARTE_AMANECER, ARTE_PORTADA, BANNER_QUIROFANO, cuerpoConDolor, SVG_AMBULANCIA } from './arte.js';
+import { escenaCampo, iconoHerramienta } from './quirofano.js';
 import { retratoPaciente } from './retrato.js';
 import { sonido } from './sonido.js';
 
@@ -59,14 +60,18 @@ function sinAnsi(texto: string): string {
 export class WebIO implements IO {
   private readonly salida: HTMLElement;
   private readonly menu: HTMLElement;
+  private readonly comandas: HTMLElement;
   private teclado: ((ev: KeyboardEvent) => void) | null = null;
 
   constructor(raiz: HTMLElement) {
     this.salida = document.createElement('div');
     this.salida.id = 'salida';
+    this.comandas = document.createElement('div');
+    this.comandas.id = 'comandas';
+    this.comandas.hidden = true;
     this.menu = document.createElement('div');
     this.menu.id = 'menu';
-    raiz.append(this.salida, this.menu);
+    raiz.append(this.salida, this.comandas, this.menu);
     sonido.conectarBoton(document.getElementById('silencio'));
   }
 
@@ -78,6 +83,9 @@ export class WebIO implements IO {
       this.salida.appendChild(div);
 
       const plano = sinAnsi(linea);
+      if (plano.includes('EVENTO:')) {
+        this.insertarArte(escenaCampo(plano), 'campo');
+      }
       if (plano.includes('🚑') || plano.includes('AMBULANCIA')) {
         this.animarAmbulancia();
         sonido.sirena();
@@ -108,16 +116,19 @@ export class WebIO implements IO {
       }
       case 'quirofano':
         document.body.classList.add('en-quirofano');
+        if (dato?.tablero) this.pintarComandas(dato.tablero);
         this.insertarArte(BANNER_QUIROFANO, 'quirofano');
         sonido.empezarLatido(640);
         break;
       case 'triaje':
         document.body.classList.remove('en-quirofano');
         sonido.pararLatido();
+        this.pintarComandas(dato?.tablero ?? []);
         break;
       case 'fin':
         document.body.classList.remove('en-quirofano');
         sonido.pararLatido();
+        this.pintarComandas([]);
         this.insertarArte(ARTE_AMANECER, 'fin');
         break;
     }
@@ -127,6 +138,12 @@ export class WebIO implements IO {
     return new Promise((resolver) => {
       this.limpiarMenu();
 
+      // En quirófano, las técnicas se eligen visualmente: tarjetas con el
+      // icono del instrumental o la maniobra que describen.
+      const visual =
+        document.body.classList.contains('en-quirofano') && titulo.includes('Cómo procedes');
+      if (visual) this.menu.classList.add('quirurgico');
+
       const cabecera = document.createElement('div');
       cabecera.className = 'menu-titulo';
       cabecera.innerHTML = ansiAHtml(titulo);
@@ -135,9 +152,10 @@ export class WebIO implements IO {
       const botones: HTMLButtonElement[] = [];
       opciones.forEach((op, i) => {
         const boton = document.createElement('button');
-        boton.className = 'opcion';
+        boton.className = visual ? 'opcion tarjeta' : 'opcion';
         const detalle = op.detalle ? `<span class="detalle">(${escaparHtml(op.detalle)})</span>` : '';
-        boton.innerHTML = `<span class="num">${i + 1}</span><span class="texto">${ansiAHtml(op.etiqueta)} ${detalle}</span>`;
+        const icono = visual ? `<span class="icono">${iconoHerramienta(sinAnsi(op.etiqueta))}</span>` : '';
+        boton.innerHTML = `${icono}<span class="num">${i + 1}</span><span class="texto">${ansiAHtml(op.etiqueta)} ${detalle}</span>`;
         boton.addEventListener('click', () => {
           sonido.click();
           this.escribir(`\x1b[90m> ${i + 1}. ${sinAnsi(op.etiqueta)}\x1b[39m`);
@@ -179,6 +197,22 @@ export class WebIO implements IO {
   }
 
   // ────────────────────────────────────────────────────────────
+  /** El rail de "comandas": cada paciente pendiente con su reloj vital. */
+  private pintarComandas(tablero: ComandaPaciente[]): void {
+    this.comandas.hidden = tablero.length === 0;
+    this.comandas.replaceChildren();
+    for (const c of tablero) {
+      const nivel = c.estabilidad >= 60 ? 'bien' : c.estabilidad >= 35 ? 'regular' : 'critico';
+      const tarjeta = document.createElement('div');
+      tarjeta.className = `comanda ${nivel}${c.alerta ? ' alerta' : ''}`;
+      tarjeta.innerHTML = `
+        <div class="c-nombre">${escaparHtml(c.nombre.split(' ')[0] ?? c.nombre)}</div>
+        <div class="c-barra"><div class="c-nivel" style="width:${Math.max(0, Math.min(100, Math.round(c.estabilidad)))}%"></div></div>
+        <div class="c-lugar">${c.lugar === 'espera' ? '🚪 urgencias' : '🛏 planta'}${c.alerta ? ' ⚠' : ''}</div>`;
+      this.comandas.appendChild(tarjeta);
+    }
+  }
+
   private insertarArte(html: string, clase: string): void {
     const figura = document.createElement('figure');
     figura.className = `escena escena-${clase}`;
@@ -210,6 +244,7 @@ export class WebIO implements IO {
       document.removeEventListener('keydown', this.teclado);
       this.teclado = null;
     }
+    this.menu.classList.remove('quirurgico');
     this.menu.replaceChildren();
   }
 

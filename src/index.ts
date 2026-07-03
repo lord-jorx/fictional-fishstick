@@ -21,6 +21,7 @@ function leerSemilla(argv: string[]): number | undefined {
 function leerModo(argv: string[]): ModoJuego | undefined {
   if (argv.includes('--residente')) return 'residente';
   if (argv.includes('--adjunto')) return 'adjunto';
+  if (argv.includes('--negra')) return 'negra';
   return undefined;
 }
 

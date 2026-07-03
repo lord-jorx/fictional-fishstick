@@ -95,6 +95,35 @@
   }
   #salida.flash-exitus { animation: flash-exitus .7s ease-out; }
   .linea { animation: aparecer .16s ease-out; }
+  /* ── Rail de comandas (pacientes pendientes, estilo Overcooked) ── */
+  #comandas {
+    display: flex; gap: 8px;
+    background: #0b1119;
+    border: 1px solid var(--borde); border-top: none;
+    padding: 8px 10px;
+    overflow-x: auto;
+    scrollbar-width: thin;
+  }
+  .comanda {
+    flex: none; min-width: 108px;
+    background: #131c28; border: 1px solid var(--borde); border-radius: 8px;
+    padding: 6px 9px; font-size: .82em;
+    animation: aparecer .25s ease-out;
+  }
+  .comanda .c-nombre { font-weight: 700; }
+  .comanda .c-lugar { color: #8ea0b2; font-size: .9em; margin-top: 2px; }
+  .c-barra { height: 6px; background: #0a0f16; border-radius: 4px; margin-top: 5px; overflow: hidden; }
+  .c-nivel { height: 100%; border-radius: 4px; transition: width .6s ease; }
+  .comanda.bien .c-nivel { background: #69db7c; }
+  .comanda.regular .c-nivel { background: #ffd43b; }
+  .comanda.critico .c-nivel { background: #ff6b6b; }
+  .comanda.critico { border-color: #a13a44; animation: pulso-comanda 1s ease-in-out infinite; }
+  .comanda.alerta { border-color: #ffd43b; }
+  @keyframes pulso-comanda {
+    0%, 100% { box-shadow: 0 0 0 rgba(255, 107, 107, 0); }
+    50% { box-shadow: 0 0 12px rgba(255, 107, 107, .5); }
+  }
+
   #menu {
     background: #0f151d;
     border: 1px solid var(--borde);
@@ -104,6 +133,13 @@
     max-height: 45dvh;
     overflow-y: auto;
   }
+  /* Menú quirúrgico: tarjetas visuales con el instrumental */
+  #menu.quirurgico { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 8px; }
+  #menu.quirurgico .menu-titulo { grid-column: 1 / -1; }
+  button.opcion.tarjeta { margin: 0; align-items: center; background: #141d2a; }
+  button.opcion.tarjeta .icono { flex: none; width: 40px; height: 40px; display: block; }
+  button.opcion.tarjeta .icono .icono-svg { width: 40px; height: 40px; }
+  button.opcion.tarjeta:hover .icono-svg g { stroke: var(--acento); }
   .menu-titulo { padding: 4px 2px 8px; font-weight: 700; }
   button.opcion {
     display: flex;
@@ -204,6 +240,18 @@
   }
   .onda2 { animation-delay: .9s; }
   .cuerpo-pie { color: #9fb0c0; font-size: .92em; }
+
+  /* Campo operatorio */
+  .campo-svg { display: block; width: 100%; max-width: 400px; margin: 4px 0; }
+  .sangre { transform-box: fill-box; transform-origin: center; animation: charco 1.6s ease-in-out infinite; }
+  .chorro { animation: pulso-dolor .5s ease-in-out infinite; }
+  .bilis { transform-box: fill-box; transform-origin: center; animation: charco 2.2s ease-in-out infinite; }
+  .gota-bilis { animation: gotear 1.4s ease-in infinite; transform-box: fill-box; transform-origin: center; }
+  .asa-necrotica { transform-box: fill-box; transform-origin: center; animation: pulso-asa 2s ease-in-out infinite; }
+  .traza-alarma { stroke-dasharray: 60 220; animation: latido 1.1s linear infinite; }
+  .alarma-led { animation: pulso-cruz .7s steps(1) infinite; }
+  @keyframes charco { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.12); } }
+  @keyframes pulso-asa { 0%, 100% { opacity: 1; } 50% { opacity: .75; } }
 
   /* Banner de quirófano */
   .q-banner {

@@ -14,7 +14,7 @@ import type { IO } from './io.js';
 import { crearRng, GameContext } from './GameContext.js';
 import { MaquinaEstados } from './StateMachine.js';
 
-export type ModoJuego = 'adjunto' | 'residente';
+export type ModoJuego = 'adjunto' | 'residente' | 'negra';
 
 export class ShiftEngine {
   private readonly ctx: GameContext;
@@ -35,35 +35,55 @@ export class ShiftEngine {
     if (this.modo === undefined) {
       this.modo = await this.io.elegir<ModoJuego>('¿Con qué nivel sales a la guardia?', [
         {
+          etiqueta: 'Residente',
+          detalle: 'un adjunto te da pistas; ideal para aprender (también sin ser sanitario)',
+          valor: 'residente',
+        },
+        {
           etiqueta: 'Adjunto',
           detalle: 'sin red de seguridad, puntuación completa',
           valor: 'adjunto',
         },
         {
-          etiqueta: 'Residente',
-          detalle: 'un adjunto localizable te da pistas; puntuación tutelada',
-          valor: 'residente',
+          etiqueta: 'Guardia negra',
+          detalle: 'atípicas ×2, hospital saturado, más complicaciones; puntuación ×1,2',
+          valor: 'negra',
         },
       ]);
     }
     this.ctx.modoResidente = this.modo === 'residente';
+    this.ctx.modoNegra = this.modo === 'negra';
     if (this.ctx.modoResidente) {
       this.io.escribir(
         gris('\n  Modo residente: tu adjunto sugerirá pruebas, dudará en voz alta si te') +
           gris('\n  equivocas de destino y atenderá hasta 3 llamadas en quirófano.'),
       );
     }
+    if (this.ctx.modoNegra) {
+      this.ctx.hospital.camasReaTotales = 2;
+      this.ctx.hospital.camasReaLibres = 2;
+      this.io.escribir(
+        gris('\n  Guardia negra: la noche que se cuenta en el café de los cambios de turno.') +
+          gris('\n  Más pacientes, presentaciones engañosas al doble, una cama de REA menos') +
+          gris('\n  y el quirófano más disputado. Suerte. La necesitarás.'),
+      );
+    }
 
-    // La guardia se genera tras elegir modo: en residente, las presentaciones
-    // atípicas son la mitad de frecuentes.
-    const fabrica = new PatientFactory(this.rng, this.ctx.modoResidente ? 0.5 : 1);
+    // La guardia se genera tras elegir modo: en residente las atípicas bajan a
+    // la mitad; en guardia negra se duplican y llegan más pacientes.
+    const atipicidad = this.ctx.modoResidente ? 0.5 : this.ctx.modoNegra ? 2 : 1;
+    const fabrica = new PatientFactory(this.rng, atipicidad, this.ctx.modoNegra ? 2 : 0);
     this.ctx.programarLlegadas(fabrica.generarLlegadasDeGuardia());
 
-    // El otro equipo también opera: dos franjas en las que roban quirófano.
+    // El otro equipo también opera: franjas en las que roban quirófano.
     const inicio1 = 180 + Math.floor(this.rng() * 300);
     const inicio2 = 720 + Math.floor(this.rng() * 300);
     this.ctx.programarOcupacionExterna(inicio1, inicio1 + 120, 'politraumatizado de tráfico');
     this.ctx.programarOcupacionExterna(inicio2, inicio2 + 90, 'fractura abierta de fémur');
+    if (this.ctx.modoNegra) {
+      const inicio3 = 1080 + Math.floor(this.rng() * 200);
+      this.ctx.programarOcupacionExterna(inicio3, inicio3 + 110, 'aneurisma de aorta roto');
+    }
 
     await this.io.pausa('Pulsa Intro para fichar y empezar la guardia...');
     await new MaquinaEstados().ejecutar(new TriageState(), this.ctx);
@@ -85,6 +105,9 @@ export class ShiftEngine {
    • No todo dolor abdominal se opera: dar el alta también es decidir.
    • Vigila tu ${negrita('energía')} y tu ${negrita('estrés')}: con fatiga, hasta la decisión
      correcta puede salir mal. El café es tu amigo. Dosifícalo.
+
+  ${gris('¿No eres sanitario? Empieza en modo Residente: el adjunto te guía y')}
+  ${gris('cada caso te deja su perla docente. Se aprende operando.')}
 
   ${gris('Sobrevive hasta las 08:00 de mañana. Suerte, doctor/a.')}
 `);
