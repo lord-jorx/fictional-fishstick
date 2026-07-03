@@ -16,6 +16,7 @@ export class SummaryState implements GameState {
   async run(ctx: GameContext): Promise<GameState | null> {
     const s = ctx.stats;
 
+    ctx.io.escena?.('fin');
     ctx.io.escribir('\n\n' + lineaSeparadora());
     ctx.io.escribir(negrita(cian('  ☀ 08:00 — FIN DE LA GUARDIA. Llega el relevo con cara de dormido.')));
     ctx.io.escribir(lineaSeparadora());

@@ -4,6 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Surgeon's Night — El Turno de Guardia</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Crect width='24' height='24' rx='5' fill='%230d1117'/%3E%3Cpath d='M9 4h6v5h5v6h-5v5H9v-5H4V9h5z' fill='%23ff5d5d'/%3E%3C/svg%3E">
 <style>
   :root {
     --fondo: #0d1117;
@@ -11,6 +12,8 @@
     --tinta: #d8e1ea;
     --borde: #2a3542;
     --acento: #66d9e8;
+    --latido: #2ecc71;
+    --alarma: #ff6b6b;
   }
   * { box-sizing: border-box; }
   html, body { height: 100%; }
@@ -21,14 +24,57 @@
     font-family: "Cascadia Mono", "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
     font-size: 14px;
     line-height: 1.45;
+    display: flex;
+    flex-direction: column;
   }
+
+  /* ── Cabecera: monitor de constantes ─────────────────────── */
+  #cabecera {
+    max-width: 780px;
+    width: 100%;
+    margin: 0 auto;
+    padding: 10px 10px 0;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  #cabecera .cruz {
+    width: 22px; height: 22px; flex: none;
+    fill: var(--alarma);
+    filter: drop-shadow(0 0 5px var(--alarma));
+    animation: pulso-cruz 1.4s ease-in-out infinite;
+  }
+  #cabecera .titulo-cab {
+    font-weight: 700;
+    letter-spacing: 2px;
+    color: var(--acento);
+    white-space: nowrap;
+    text-shadow: 0 0 12px rgba(102, 217, 232, .35);
+  }
+  .ecg { flex: 1; height: 30px; min-width: 60px; }
+  .ecg path {
+    fill: none;
+    stroke: var(--latido);
+    stroke-width: 2;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    stroke-dasharray: 190 660;
+    animation: latido 3.2s linear infinite;
+    filter: drop-shadow(0 0 4px var(--latido));
+  }
+  body.en-quirofano .ecg path { stroke: var(--alarma); filter: drop-shadow(0 0 4px var(--alarma)); animation-duration: 1.7s; }
+
+  /* ── Terminal + menú ─────────────────────────────────────── */
   #app {
     max-width: 780px;
-    height: 100dvh;
+    width: 100%;
+    flex: 1;
+    min-height: 0;
     margin: 0 auto;
     display: flex;
     flex-direction: column;
-    padding: 10px;
+    padding: 8px 10px 10px;
+    position: relative;
   }
   #salida {
     flex: 1;
@@ -41,7 +87,14 @@
     word-break: break-word;
     scrollbar-width: thin;
     scrollbar-color: var(--borde) transparent;
+    transition: border-color .4s, box-shadow .4s;
   }
+  body.en-quirofano #salida {
+    border-color: #7d2b35;
+    box-shadow: inset 0 0 40px rgba(201, 42, 42, .08);
+  }
+  #salida.flash-exitus { animation: flash-exitus .7s ease-out; }
+  .linea { animation: aparecer .16s ease-out; }
   #menu {
     background: #0f151d;
     border: 1px solid var(--borde);
@@ -68,6 +121,7 @@
     cursor: pointer;
     transition: background .12s, border-color .12s, transform .05s;
     touch-action: manipulation;
+    animation: aparecer .18s ease-out both;
   }
   button.opcion:hover, button.opcion:focus-visible {
     background: #1d2938;
@@ -75,15 +129,11 @@
     outline: none;
   }
   button.opcion:active { transform: scale(.995); }
-  button.opcion .num {
-    color: #ffd43b;
-    min-width: 1.4em;
-    flex: none;
-  }
+  button.opcion .num { color: #ffd43b; min-width: 1.4em; flex: none; }
   button.opcion .detalle { color: #868e96; font-size: .9em; }
   button.reinicio { justify-content: center; color: var(--acento); font-weight: 700; }
 
-  /* Estilos que emite el conversor ANSI → HTML */
+  /* ── Estilos que emite el conversor ANSI → HTML ──────────── */
   .ansi-b { font-weight: 700; }
   .ansi-d { opacity: .65; }
   .ansi-i { font-style: italic; }
@@ -98,13 +148,95 @@
   .ansi-gris { color: #868e96; }
   .ansi-fondo-rojo { background: #c92a2a; color: #fff; }
 
+  /* ── Escenas ilustradas ──────────────────────────────────── */
+  figure.escena { margin: 10px 0; animation: aparecer .4s ease-out; }
+  .dibujo { display: block; width: 100%; max-width: 460px; height: auto; margin: 0 auto; }
+  .estrella { fill: #cfe6ff; animation: titilar 3s ease-in-out infinite; }
+  .ventana { fill: #ffd54a; opacity: .85; animation: ventana 7s steps(1) infinite; }
+  .neon { fill: #ff5d5d; filter: drop-shadow(0 0 6px #ff5d5d); animation: pulso-cruz 2s ease-in-out infinite; }
+  .baliza { fill: #ff6b6b; animation: baliza .8s steps(1) infinite; }
+  .sol { fill: #ffd54a; filter: drop-shadow(0 0 14px rgba(255, 213, 74, .8)); animation: amanecer 3s ease-out forwards; }
+
+  /* Mapa corporal del dolor */
+  .ficha-cuerpo {
+    display: flex; align-items: center; gap: 14px;
+    background: #10161f; border: 1px solid var(--borde); border-radius: 10px;
+    padding: 10px 14px; max-width: 340px;
+  }
+  .cuerpo { width: 92px; height: auto; flex: none; }
+  .silueta { fill: #1b2634; stroke: #3b4c63; stroke-width: 1.5; }
+  .guias { fill: none; stroke: #2a3949; stroke-width: .8; stroke-dasharray: 3 3; }
+  .dolor {
+    fill: var(--alarma);
+    filter: drop-shadow(0 0 5px var(--alarma));
+    animation: pulso-dolor 1.2s ease-in-out infinite;
+  }
+  .onda {
+    fill: none; stroke: var(--alarma); stroke-width: 1.5;
+    transform-box: fill-box; transform-origin: center;
+    animation: onda 1.8s ease-out infinite;
+  }
+  .onda2 { animation-delay: .9s; }
+  .cuerpo-pie { color: #9fb0c0; font-size: .92em; }
+
+  /* Banner de quirófano */
+  .q-banner {
+    display: flex; align-items: center; gap: 14px;
+    background: linear-gradient(90deg, #2b1216, #1a1013);
+    border: 1px solid #7d2b35; border-radius: 10px;
+    padding: 8px 16px; max-width: 460px; margin: 0 auto;
+  }
+  .q-lampara { width: 34px; height: auto; flex: none; filter: drop-shadow(0 0 10px rgba(255, 234, 169, .5)); }
+  .q-texto { font-weight: 700; letter-spacing: 2px; color: #ffb3b3; white-space: nowrap; display: flex; align-items: center; gap: 8px; }
+  .punto-rec { width: 9px; height: 9px; border-radius: 50%; background: var(--alarma); animation: baliza 1s steps(1) infinite; box-shadow: 0 0 8px var(--alarma); }
+  .ecg-mini { height: 22px; flex: 1; min-width: 40px; }
+  .ecg-mini path { stroke: var(--alarma); stroke-dasharray: 80 300; animation-duration: 1.7s; filter: drop-shadow(0 0 3px var(--alarma)); }
+
+  /* Ambulancia que cruza la pantalla */
+  .ambulancia-capa {
+    position: absolute; left: 0; right: 0; bottom: 55%;
+    pointer-events: none; overflow: hidden; height: 60px; z-index: 5;
+  }
+  .ambulancia-capa .ambulancia-svg {
+    width: 110px; height: auto;
+    animation: conducir 2.6s cubic-bezier(.3, .1, .6, .9) forwards;
+    filter: drop-shadow(0 4px 8px rgba(0, 0, 0, .45));
+  }
+
+  /* ── Keyframes ───────────────────────────────────────────── */
+  @keyframes latido { from { stroke-dashoffset: 850; } to { stroke-dashoffset: 0; } }
+  @keyframes pulso-cruz { 0%, 100% { opacity: 1; } 50% { opacity: .45; } }
+  @keyframes titilar { 0%, 100% { opacity: 1; } 50% { opacity: .15; } }
+  @keyframes ventana { 0%, 82%, 100% { opacity: .85; } 84%, 96% { opacity: .12; } }
+  @keyframes baliza { 0%, 100% { fill: #ff6b6b; background: #ff6b6b; } 50% { fill: #74c0fc; background: #74c0fc; } }
+  @keyframes pulso-dolor { 0%, 100% { opacity: .9; } 50% { opacity: .35; } }
+  @keyframes onda { from { transform: scale(.35); opacity: .9; } to { transform: scale(2.1); opacity: 0; } }
+  @keyframes amanecer { from { transform: translateY(0); } to { transform: translateY(-26px); } }
+  @keyframes conducir { from { transform: translateX(-130px); } to { transform: translateX(min(100vw, 800px)); } }
+  @keyframes aparecer { from { opacity: 0; transform: translateY(3px); } to { opacity: 1; transform: none; } }
+  @keyframes flash-exitus {
+    0% { box-shadow: inset 0 0 0 rgba(201, 42, 42, 0); }
+    25% { box-shadow: inset 0 0 120px rgba(201, 42, 42, .45); }
+    100% { box-shadow: inset 0 0 0 rgba(201, 42, 42, 0); }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after { animation-duration: .01ms !important; animation-iteration-count: 1 !important; }
+  }
   @media (max-width: 480px) {
     body { font-size: 13px; }
-    #app { padding: 6px; }
+    #app, #cabecera { padding-left: 6px; padding-right: 6px; }
+    #cabecera .titulo-cab { font-size: .85em; letter-spacing: 1px; }
   }
 </style>
 </head>
 <body>
+<header id="cabecera">
+  <svg class="cruz" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 3h6v6h6v6h-6v6H9v-6H3V9h6z"/></svg>
+  <span class="titulo-cab">SURGEON'S NIGHT</span>
+  <svg class="ecg" viewBox="0 0 300 36" preserveAspectRatio="none" aria-hidden="true">
+    <path d="M0 18 h56 l6 0 4 -11 6 22 4 -11 h50 l6 0 4 -11 6 22 4 -11 h50 l6 0 4 -11 6 22 4 -11 H300"/>
+  </svg>
+</header>
 <div id="app"></div>
 <script>
 "use strict";
@@ -1175,6 +1307,7 @@
     }
     async run(ctx) {
       const s = ctx.stats;
+      ctx.io.escena?.("fin");
       ctx.io.escribir("\n\n" + lineaSeparadora());
       ctx.io.escribir(negrita(cian("  ☀ 08:00 — FIN DE LA GUARDIA. Llega el relevo con cara de dormido.")));
       ctx.io.escribir(lineaSeparadora());
@@ -1255,6 +1388,7 @@ ${negrita("Puntuación final:")} ${negrita(puntos >= 0 ? verde(String(puntos)) :
       const i = ctx.salaEspera.indexOf(p);
       if (i >= 0) ctx.salaEspera.splice(i, 1);
       ctx.hospital.quirofanosLibres--;
+      ctx.io.escena?.("quirofano", p.patologia.id);
       ctx.io.escribir("\n" + lineaSeparadora());
       ctx.io.escribir(`  ${negrita(cian("🔪 QUIRÓFANO"))} — ${negrita(plan.nombre)}`);
       ctx.io.escribir(`  Paciente: ${p.nombre}, ${p.edad} años. ${gris(p.patologia.nombre)}`);
@@ -1395,6 +1529,7 @@ ${cian("🩺 El adjunto, con voz de dormido:")} ${gris(`«Yo lo tengo claro: ${c
     }
     async run(ctx) {
       if (ctx.guardiaTerminada) return new SummaryState();
+      ctx.io.escena?.("triaje");
       pintarHUD(ctx);
       const accion = await this.elegirAccionDeSala(ctx);
       switch (accion.tipo) {
@@ -1445,6 +1580,7 @@ ${negrita("Ronda de planta:")}`);
     }
     // ────────────────────────────────────────────────────────────
     async atenderPaciente(ctx, paciente) {
+      ctx.io.escena?.("paciente", paciente.patologia.id);
       for (; ; ) {
         if (ctx.guardiaTerminada) return new SummaryState();
         if (paciente.estado === "exitus") return this;
@@ -1868,6 +2004,7 @@ Ingresas a ${p.nombre} en observación. Prudente, aunque podía haberse ido de a
       await new MaquinaEstados().ejecutar(new TriageState(), this.ctx);
     }
     pintarPortada() {
+      this.io.escena?.("portada");
       this.io.escribir(lineaSeparadora());
       this.io.escribir(negrita(cian("   SURGEON'S NIGHT — El Turno de Guardia")));
       this.io.escribir(lineaSeparadora());
@@ -1887,6 +2024,115 @@ Ingresas a ${p.nombre} en observación. Prudente, aunque podía haberse ido de a
 `);
     }
   };
+
+  // src/web/arte.ts
+  var SVG_AMBULANCIA = `
+<svg viewBox="0 0 96 46" width="96" height="46" class="ambulancia-svg" aria-hidden="true">
+  <rect x="14" y="7" width="9" height="7" rx="2" class="baliza"/>
+  <rect x="4" y="13" width="58" height="22" rx="3" fill="#f4f7fa"/>
+  <path d="M62 17 h13 l11 9 v9 h-24 z" fill="#f4f7fa"/>
+  <rect x="65" y="20" width="10" height="8" rx="1.5" fill="#9cc3e5"/>
+  <rect x="4" y="29" width="82" height="4" fill="#e03131"/>
+  <path d="M29 16 h7 v5 h5 v7 h-5 v5 h-7 v-5 h-5 v-7 h5 z" fill="#e03131"/>
+  <circle cx="21" cy="37" r="6.5" fill="#1a1e24"/><circle cx="21" cy="37" r="2.6" fill="#5c6672"/>
+  <circle cx="72" cy="37" r="6.5" fill="#1a1e24"/><circle cx="72" cy="37" r="2.6" fill="#5c6672"/>
+</svg>`;
+  var ARTE_PORTADA = `
+<svg viewBox="0 0 360 152" class="dibujo" role="img" aria-label="Hospital de noche">
+  <defs>
+    <linearGradient id="g-cielo" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#0a1730"/><stop offset="1" stop-color="#15304f"/>
+    </linearGradient>
+  </defs>
+  <rect width="360" height="152" rx="10" fill="url(#g-cielo)"/>
+  <circle class="estrella" cx="34" cy="26" r="1.4"/>
+  <circle class="estrella" cx="72" cy="14" r="1.1" style="animation-delay:.7s"/>
+  <circle class="estrella" cx="102" cy="38" r="1.5" style="animation-delay:1.3s"/>
+  <circle class="estrella" cx="252" cy="18" r="1.2" style="animation-delay:.4s"/>
+  <circle class="estrella" cx="286" cy="52" r="1.3" style="animation-delay:1.9s"/>
+  <circle class="estrella" cx="330" cy="76" r="1.1" style="animation-delay:1s"/>
+  <circle class="estrella" cx="140" cy="20" r="1.2" style="animation-delay:2.4s"/>
+  <circle cx="312" cy="34" r="15" fill="#f3eed6"/>
+  <circle cx="306" cy="30" r="3.6" fill="#ddd6b4"/>
+  <circle cx="317" cy="40" r="2.6" fill="#ddd6b4"/>
+  <rect x="112" y="60" width="136" height="82" rx="3" fill="#1c2a3e" stroke="#33465f"/>
+  ${ventanas(126, 70, 4, 3)}
+  <rect x="162" y="38" width="36" height="28" rx="5" fill="#0f1c2d" stroke="#33465f"/>
+  <path class="neon" d="M176 44 h8 v7 h7 v8 h-7 v7 h-8 v-7 h-7 v-8 h7 z"/>
+  <rect x="170" y="120" width="20" height="22" rx="1.5" fill="#0d1725"/>
+  <rect x="150" y="106" width="60" height="10" rx="2" fill="#0f1c2d"/>
+  <text x="180" y="114" text-anchor="middle" font-size="7.5" fill="#7fd1e0" font-family="inherit" letter-spacing="2">URGENCIAS</text>
+  <rect x="0" y="142" width="360" height="10" rx="5" fill="#091120"/>
+  <g transform="translate(12 100) scale(.9)">${SVG_AMBULANCIA}</g>
+</svg>`;
+  function ventanas(x0, y0, columnas, filas) {
+    let svg = "";
+    for (let f = 0; f < filas; f++) {
+      for (let c = 0; c < columnas; c++) {
+        const retardo = (f * columnas + c) * 0.9 % 5;
+        svg += `<rect class="ventana" x="${x0 + c * 30}" y="${y0 + f * 22}" width="16" height="11" rx="1.5" style="animation-delay:${retardo}s"/>`;
+      }
+    }
+    return svg;
+  }
+  var BANNER_QUIROFANO = `
+<div class="q-banner">
+  <svg viewBox="0 0 44 40" class="q-lampara" aria-hidden="true">
+    <path d="M22 4 v6" stroke="#5c6a7a" stroke-width="2.5"/>
+    <circle cx="22" cy="21" r="11" fill="#ffeaa9"/>
+    <circle cx="22" cy="21" r="5.5" fill="#fff7dd"/>
+  </svg>
+  <div class="q-texto"><span class="punto-rec"></span>INTERVENCIÓN EN CURSO</div>
+  <svg viewBox="0 0 130 26" class="ecg ecg-mini" preserveAspectRatio="none" aria-hidden="true">
+    <path d="M0 13 h28 l4 0 3 -8 4 16 3 -8 h30 l4 0 3 -8 4 16 3 -8 h30 l4 0 3 -8"/>
+  </svg>
+</div>`;
+  var ARTE_AMANECER = `
+<svg viewBox="0 0 360 96" class="dibujo" role="img" aria-label="Amanecer sobre la ciudad">
+  <defs>
+    <linearGradient id="g-alba" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#28436b"/><stop offset=".62" stop-color="#b96a4b"/><stop offset="1" stop-color="#f2a65a"/>
+    </linearGradient>
+  </defs>
+  <rect width="360" height="96" rx="10" fill="url(#g-alba)"/>
+  <circle class="sol" cx="180" cy="108" r="20"/>
+  <path d="M0 82 h34 v-18 h20 v10 h26 v-26 h22 v18 h30 v-10 h24 v16 h30 v-24 h22 v18 h26 v-8 h22 v14 h34 v-10 h30 v18 h40 v18 H0 Z" fill="#101c2d"/>
+  <rect x="0" y="88" width="360" height="8" rx="4" fill="#0b1422"/>
+</svg>`;
+  var ZONAS = {
+    apendicitis: { zona: "fosa ilíaca derecha", puntos: [[46, 108]] },
+    colecistitis: { zona: "hipocondrio derecho", puntos: [[46, 84]] },
+    colico_biliar: { zona: "hipocondrio derecho", puntos: [[46, 84]] },
+    obstruccion: { zona: "mesogastrio, difuso", puntos: [[60, 98]] },
+    diverticulitis: { zona: "fosa ilíaca izquierda", puntos: [[74, 108]] },
+    isquemia: { zona: "periumbilical, desproporcionado", puntos: [[60, 96]] },
+    trauma: { zona: "hipocondrio izquierdo", puntos: [[74, 84]] },
+    ulcus: { zona: "epigastrio, en puñalada", puntos: [[60, 78]] },
+    hernia: { zona: "región inguinal derecha", puntos: [[48, 126]] },
+    pancreatitis: { zona: "epigastrio, en cinturón", puntos: [[60, 80], [46, 86], [74, 86]] },
+    gastroenteritis: { zona: "difuso, tipo retortijón", puntos: [[52, 92], [68, 100], [58, 112]] },
+    colico_renal: { zona: "fosa lumbar derecha", puntos: [[40, 92]] }
+  };
+  function cuerpoConDolor(patologiaId) {
+    const zona = patologiaId ? ZONAS[patologiaId] : void 0;
+    if (!zona) return null;
+    const focos = zona.puntos.map(
+      ([x, y]) => `
+    <circle class="onda" cx="${x}" cy="${y}" r="9"/>
+    <circle class="onda onda2" cx="${x}" cy="${y}" r="9"/>
+    <circle class="dolor" cx="${x}" cy="${y}" r="4.5"/>`
+    ).join("");
+    return `
+<div class="ficha-cuerpo">
+  <svg viewBox="0 0 120 170" class="cuerpo" role="img" aria-label="Localización del dolor">
+    <circle cx="60" cy="16" r="11" class="silueta"/>
+    <path class="silueta" d="M60 30 C46 30 38 36 36 47 L31 78 C30 93 30 106 33 120 L37 150 C38 159 46 163 60 163 C74 163 82 159 83 150 L87 120 C90 106 90 93 89 78 L84 47 C82 36 74 30 60 30 Z"/>
+    <path class="guias" d="M36 76 H84 M34 118 H86 M60 58 V152"/>
+    ${focos}
+  </svg>
+  <div class="cuerpo-pie">Dolor referido: ${zona.zona}</div>
+</div>`;
+  }
 
   // src/web/WebIO.ts
   var ESTILOS_ABRE = {
@@ -1953,8 +2199,34 @@ Ingresas a ${p.nombre} en observación. Prudente, aunque podía haberse ido de a
         div.className = "linea";
         div.innerHTML = ansiAHtml(linea) || "&nbsp;";
         this.salida.appendChild(div);
+        const plano = sinAnsi(linea);
+        if (plano.includes("🚑") || plano.includes("AMBULANCIA")) this.animarAmbulancia();
+        if (plano.includes("✝")) this.flashExitus();
       }
       this.desplazarAlFinal();
+    }
+    escena(escena, dato) {
+      switch (escena) {
+        case "portada":
+          this.insertarArte(ARTE_PORTADA, "portada");
+          break;
+        case "paciente": {
+          const cuerpo = cuerpoConDolor(dato);
+          if (cuerpo) this.insertarArte(cuerpo, "paciente");
+          break;
+        }
+        case "quirofano":
+          document.body.classList.add("en-quirofano");
+          this.insertarArte(BANNER_QUIROFANO, "quirofano");
+          break;
+        case "triaje":
+          document.body.classList.remove("en-quirofano");
+          break;
+        case "fin":
+          document.body.classList.remove("en-quirofano");
+          this.insertarArte(ARTE_AMANECER, "fin");
+          break;
+      }
     }
     elegir(titulo, opciones) {
       return new Promise((resolver) => {
@@ -2001,6 +2273,29 @@ Ingresas a ${p.nombre} en observación. Prudente, aunque podía haberse ido de a
       this.desplazarAlFinal();
     }
     // ────────────────────────────────────────────────────────────
+    insertarArte(html, clase) {
+      const figura = document.createElement("figure");
+      figura.className = `escena escena-${clase}`;
+      figura.innerHTML = html;
+      this.salida.appendChild(figura);
+      this.desplazarAlFinal();
+    }
+    /** La ambulancia cruza la pantalla como capa superpuesta (no altera el log). */
+    animarAmbulancia() {
+      const capa = document.createElement("div");
+      capa.className = "ambulancia-capa";
+      capa.innerHTML = SVG_AMBULANCIA;
+      document.getElementById("app")?.appendChild(capa);
+      const svg = capa.firstElementChild;
+      svg?.addEventListener("animationend", () => capa.remove());
+      setTimeout(() => capa.remove(), 4e3);
+    }
+    /** Destello rojo del terminal cuando fallece un paciente. */
+    flashExitus() {
+      this.salida.classList.remove("flash-exitus");
+      void this.salida.offsetWidth;
+      this.salida.classList.add("flash-exitus");
+    }
     limpiarMenu() {
       if (this.teclado) {
         document.removeEventListener("keydown", this.teclado);

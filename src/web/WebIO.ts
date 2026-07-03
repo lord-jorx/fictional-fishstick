@@ -6,7 +6,8 @@
  * convierten a <span> con clases CSS. También se puede elegir opción
  * con las teclas 1-9.
  */
-import type { IO, Opcion } from '../core/io.js';
+import type { EscenaId, IO, Opcion } from '../core/io.js';
+import { ARTE_AMANECER, ARTE_PORTADA, BANNER_QUIROFANO, cuerpoConDolor, SVG_AMBULANCIA } from './arte.js';
 
 const ESTILOS_ABRE: Record<number, string> = {
   1: 'b', 2: 'd', 3: 'i', 4: 'u', 7: 'inv',
@@ -72,8 +73,36 @@ export class WebIO implements IO {
       div.className = 'linea';
       div.innerHTML = ansiAHtml(linea) || '&nbsp;';
       this.salida.appendChild(div);
+
+      const plano = sinAnsi(linea);
+      if (plano.includes('🚑') || plano.includes('AMBULANCIA')) this.animarAmbulancia();
+      if (plano.includes('✝')) this.flashExitus();
     }
     this.desplazarAlFinal();
+  }
+
+  escena(escena: EscenaId, dato?: string): void {
+    switch (escena) {
+      case 'portada':
+        this.insertarArte(ARTE_PORTADA, 'portada');
+        break;
+      case 'paciente': {
+        const cuerpo = cuerpoConDolor(dato);
+        if (cuerpo) this.insertarArte(cuerpo, 'paciente');
+        break;
+      }
+      case 'quirofano':
+        document.body.classList.add('en-quirofano');
+        this.insertarArte(BANNER_QUIROFANO, 'quirofano');
+        break;
+      case 'triaje':
+        document.body.classList.remove('en-quirofano');
+        break;
+      case 'fin':
+        document.body.classList.remove('en-quirofano');
+        this.insertarArte(ARTE_AMANECER, 'fin');
+        break;
+    }
   }
 
   elegir<T>(titulo: string, opciones: Opcion<T>[]): Promise<T> {
@@ -130,6 +159,32 @@ export class WebIO implements IO {
   }
 
   // ────────────────────────────────────────────────────────────
+  private insertarArte(html: string, clase: string): void {
+    const figura = document.createElement('figure');
+    figura.className = `escena escena-${clase}`;
+    figura.innerHTML = html;
+    this.salida.appendChild(figura);
+    this.desplazarAlFinal();
+  }
+
+  /** La ambulancia cruza la pantalla como capa superpuesta (no altera el log). */
+  private animarAmbulancia(): void {
+    const capa = document.createElement('div');
+    capa.className = 'ambulancia-capa';
+    capa.innerHTML = SVG_AMBULANCIA;
+    document.getElementById('app')?.appendChild(capa);
+    const svg = capa.firstElementChild as SVGElement | null;
+    svg?.addEventListener('animationend', () => capa.remove());
+    setTimeout(() => capa.remove(), 4000); // red de seguridad
+  }
+
+  /** Destello rojo del terminal cuando fallece un paciente. */
+  private flashExitus(): void {
+    this.salida.classList.remove('flash-exitus');
+    void this.salida.offsetWidth; // reinicia la animación
+    this.salida.classList.add('flash-exitus');
+  }
+
   private limpiarMenu(): void {
     if (this.teclado) {
       document.removeEventListener('keydown', this.teclado);

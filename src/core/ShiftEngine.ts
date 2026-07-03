@@ -67,6 +67,7 @@ export class ShiftEngine {
   }
 
   private pintarPortada(): void {
+    this.io.escena?.('portada');
     this.io.escribir(lineaSeparadora());
     this.io.escribir(negrita(cian("   SURGEON'S NIGHT — El Turno de Guardia")));
     this.io.escribir(lineaSeparadora());

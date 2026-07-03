@@ -35,6 +35,7 @@ export class TriageState implements GameState {
   async run(ctx: GameContext): Promise<GameState | null> {
     if (ctx.guardiaTerminada) return new SummaryState();
 
+    ctx.io.escena?.('triaje');
     pintarHUD(ctx);
     const accion = await this.elegirAccionDeSala(ctx);
 
@@ -93,6 +94,7 @@ export class TriageState implements GameState {
 
   // ────────────────────────────────────────────────────────────
   private async atenderPaciente(ctx: GameContext, paciente: Paciente): Promise<GameState> {
+    ctx.io.escena?.('paciente', paciente.patologia.id);
     for (;;) {
       if (ctx.guardiaTerminada) return new SummaryState();
       if (paciente.estado === 'exitus') return this; // falleció mientras decidías

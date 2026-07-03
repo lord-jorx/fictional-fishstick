@@ -21,6 +21,14 @@ En navegador: abre `web/index.html` directamente (es autocontenido). Admite
 `?seed=42` y `?modo=residente` / `?modo=adjunto` en la URL. Para regenerarlo
 tras tocar el código: `npm run build:web`.
 
+La versión web está **ilustrada y animada** (todo SVG inline + CSS, sin
+bitmaps ni red): monitor ECG en la cabecera (se acelera y enrojece en
+quirófano), portada con el hospital de noche, **mapa corporal con el foco de
+dolor pulsando** al atender a cada paciente, ambulancia que cruza la pantalla
+con cada llegada, banner de «intervención en curso», destello rojo en los
+éxitus y amanecer al terminar la guardia. El motor solo emite eventos
+semánticos (`io.escena(...)`); la terminal los ignora y la web los pinta.
+
 Partida reproducible y selección de modo desde la línea de comandos:
 
 ```bash
@@ -108,9 +116,10 @@ src/
 │   ├── ConsoleIO.ts          # Adaptador IO terminal (readline nativo)
 │   └── hud.ts                # HUD, barras de estado, reloj de guardia
 └── web/
-    ├── WebIO.ts              # Adaptador IO navegador (DOM + ANSI→HTML)
+    ├── WebIO.ts              # Adaptador IO navegador (DOM + ANSI→HTML + escenas)
+    ├── arte.ts               # Ilustraciones SVG (portada, mapa de dolor, quirófano…)
     ├── main.ts               # Bootstrap web (?seed, ?modo)
-    └── template.html         # Plantilla del index.html autocontenido
+    └── template.html         # Plantilla del index.html autocontenido (CSS + animaciones)
 scripts/build-web.mjs         # esbuild → web/index.html (un solo archivo)
 web/index.html                # Versión jugable en navegador (generada)
 ```

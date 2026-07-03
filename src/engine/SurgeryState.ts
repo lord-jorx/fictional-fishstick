@@ -28,6 +28,7 @@ export class SurgeryState implements GameState {
     if (i >= 0) ctx.salaEspera.splice(i, 1);
     ctx.hospital.quirofanosLibres--;
 
+    ctx.io.escena?.('quirofano', p.patologia.id);
     ctx.io.escribir('\n' + lineaSeparadora());
     ctx.io.escribir(`  ${negrita(cian('🔪 QUIRÓFANO'))} — ${negrita(plan.nombre)}`);
     ctx.io.escribir(`  Paciente: ${p.nombre}, ${p.edad} años. ${gris(p.patologia.nombre)}`);
