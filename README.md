@@ -21,13 +21,21 @@ En navegador: abre `web/index.html` directamente (es autocontenido). Admite
 `?seed=42` y `?modo=residente` / `?modo=adjunto` en la URL. Para regenerarlo
 tras tocar el código: `npm run build:web`.
 
-La versión web está **ilustrada y animada** (todo SVG inline + CSS, sin
-bitmaps ni red): monitor ECG en la cabecera (se acelera y enrojece en
-quirófano), portada con el hospital de noche, **mapa corporal con el foco de
-dolor pulsando** al atender a cada paciente, ambulancia que cruza la pantalla
-con cada llegada, banner de «intervención en curso», destello rojo en los
-éxitus y amanecer al terminar la guardia. El motor solo emite eventos
-semánticos (`io.escena(...)`); la terminal los ignora y la web los pinta.
+La versión web está **ilustrada, animada y sonorizada** (todo SVG inline +
+CSS + Web Audio API: ni bitmaps, ni ficheros de audio, ni red): monitor ECG
+en la cabecera (se acelera y enrojece en quirófano), portada con el hospital
+de noche, **retrato procedural de cada paciente** (cara única y reproducible
+por semilla: piel, peinado, canas, gafas, expresión de dolor y sudor según su
+estabilidad), **mapa corporal con el foco de dolor pulsando**, ambulancia que
+cruza la pantalla con cada llegada, banner de «intervención en curso»,
+destello rojo en los éxitus y amanecer al terminar la guardia. El motor solo
+emite eventos semánticos (`io.escena(...)`); la terminal los ignora y la web
+los pinta.
+
+**Sonido** (sintetizado con osciladores, silenciable con el botón 🔊 y
+recordado entre partidas): click de interfaz, pitido de monitor cardiaco
+durante la cirugía, sirena de ambulancia en las llegadas, campanilla en los
+aciertos y tono de asistolia en los éxitus.
 
 Partida reproducible y selección de modo desde la línea de comandos:
 
@@ -90,6 +98,13 @@ node dist/index.js --adjunto            # modo adjunto (sin red de seguridad)
 
 Cada caso termina con una **perla docente** basada en el manejo estándar.
 
+**¿Cómo de procedurales son los casos?** Las patologías (síntomas, pruebas,
+planes quirúrgicos, perlas) son contenido clínico curado a mano; cada *caso*
+se ensambla proceduralmente a partir de ellas: patología por sorteo ponderado,
+nombre, edad, estabilidad inicial, hora de llegada y **constantes vitales
+generadas por rangos clínicos de cada cuadro** (con alertas automáticas de
+hipotensión/taquicardia), todo determinista por semilla.
+
 ## 🏗 Arquitectura
 
 ```
@@ -118,6 +133,8 @@ src/
 └── web/
     ├── WebIO.ts              # Adaptador IO navegador (DOM + ANSI→HTML + escenas)
     ├── arte.ts               # Ilustraciones SVG (portada, mapa de dolor, quirófano…)
+    ├── retrato.ts            # Retratos procedurales de pacientes (SVG paramétrico)
+    ├── sonido.ts             # Sonido sintetizado con Web Audio API (sin ficheros)
     ├── main.ts               # Bootstrap web (?seed, ?modo)
     └── template.html         # Plantilla del index.html autocontenido (CSS + animaciones)
 scripts/build-web.mjs         # esbuild → web/index.html (un solo archivo)

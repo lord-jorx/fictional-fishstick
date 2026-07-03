@@ -157,6 +157,32 @@
   .baliza { fill: #ff6b6b; animation: baliza .8s steps(1) infinite; }
   .sol { fill: #ffd54a; filter: drop-shadow(0 0 14px rgba(255, 213, 74, .8)); animation: amanecer 3s ease-out forwards; }
 
+  #silencio {
+    flex: none;
+    background: transparent;
+    border: 1px solid var(--borde);
+    border-radius: 8px;
+    font-size: 15px;
+    line-height: 1;
+    padding: 5px 8px;
+    cursor: pointer;
+    transition: border-color .12s;
+  }
+  #silencio:hover { border-color: var(--acento); }
+
+  /* Ficha visual del paciente: retrato + mapa corporal */
+  .ficha-visual {
+    display: flex; align-items: stretch; gap: 12px; flex-wrap: wrap;
+    max-width: 480px;
+  }
+  .retrato {
+    width: 118px; height: 118px; flex: none;
+    border: 1px solid var(--borde); border-radius: 10px;
+    background: #10161f;
+  }
+  .gota { animation: gotear 1.6s ease-in infinite; transform-box: fill-box; transform-origin: center; }
+  .gota2 { animation-delay: .8s; }
+
   /* Mapa corporal del dolor */
   .ficha-cuerpo {
     display: flex; align-items: center; gap: 14px;
@@ -214,6 +240,12 @@
   @keyframes amanecer { from { transform: translateY(0); } to { transform: translateY(-26px); } }
   @keyframes conducir { from { transform: translateX(-130px); } to { transform: translateX(min(100vw, 800px)); } }
   @keyframes aparecer { from { opacity: 0; transform: translateY(3px); } to { opacity: 1; transform: none; } }
+  @keyframes gotear {
+    0% { transform: translateY(0); opacity: 0; }
+    25% { opacity: 1; }
+    80% { transform: translateY(9px); opacity: .9; }
+    100% { transform: translateY(12px); opacity: 0; }
+  }
   @keyframes flash-exitus {
     0% { box-shadow: inset 0 0 0 rgba(201, 42, 42, 0); }
     25% { box-shadow: inset 0 0 120px rgba(201, 42, 42, .45); }
@@ -236,6 +268,7 @@
   <svg class="ecg" viewBox="0 0 300 36" preserveAspectRatio="none" aria-hidden="true">
     <path d="M0 18 h56 l6 0 4 -11 6 22 4 -11 h50 l6 0 4 -11 6 22 4 -11 h50 l6 0 4 -11 6 22 4 -11 H300"/>
   </svg>
+  <button id="silencio" type="button" aria-label="Sonido">🔊</button>
 </header>
 <div id="app"></div>
 <script>
@@ -1142,6 +1175,20 @@
   ];
 
   // src/factories/PatientFactory.ts
+  var VITALES = {
+    apendicitis: { tas: [115, 135], tad: [70, 85], fc: [85, 100], sat: [97, 99], temp: [37.4, 38.2] },
+    colecistitis: { tas: [120, 140], tad: [75, 88], fc: [90, 105], sat: [96, 99], temp: [38, 38.9] },
+    obstruccion: { tas: [100, 120], tad: [62, 78], fc: [100, 115], sat: [95, 98], temp: [37.2, 38] },
+    diverticulitis: { tas: [86, 105], tad: [55, 68], fc: [110, 126], sat: [94, 97], temp: [38.5, 39.4] },
+    isquemia: { tas: [95, 115], tad: [60, 72], fc: [115, 132], sat: [95, 98], temp: [36.5, 37.2], irregular: true },
+    trauma: { tas: [78, 95], tad: [48, 60], fc: [118, 136], sat: [93, 96], temp: [35.8, 36.5] },
+    ulcus: { tas: [105, 125], tad: [68, 80], fc: [95, 112], sat: [96, 98], temp: [37.1, 37.9] },
+    hernia: { tas: [112, 130], tad: [70, 84], fc: [95, 110], sat: [96, 99], temp: [37.4, 38.3] },
+    pancreatitis: { tas: [108, 128], tad: [65, 80], fc: [92, 108], sat: [94, 97], temp: [37.1, 38] },
+    gastroenteritis: { tas: [110, 125], tad: [70, 82], fc: [80, 95], sat: [98, 99], temp: [36.9, 37.6] },
+    colico_biliar: { tas: [115, 130], tad: [72, 85], fc: [70, 85], sat: [98, 99], temp: [36.5, 37] },
+    colico_renal: { tas: [125, 145], tad: [78, 90], fc: [85, 100], sat: [98, 99], temp: [36.5, 37.1] }
+  };
   var NOMBRES = [
     "Manuel Ortega",
     "Carmen Ruiz",
@@ -1190,12 +1237,29 @@
       const i = Math.floor(this.rng() * this.nombresRestantes.length);
       return this.nombresRestantes.splice(i, 1)[0];
     }
+    /** Genera constantes vitales propias del paciente a partir del perfil del cuadro. */
+    generarConstantes(patologia) {
+      const perfil = VITALES[patologia.id];
+      if (!perfil) return patologia.presentacion.constantes;
+      const tas = this.entre(...perfil.tas);
+      const tad = this.entre(...perfil.tad);
+      const fc = this.entre(...perfil.fc);
+      const sat = this.entre(...perfil.sat);
+      const temp = (perfil.temp[0] + this.rng() * (perfil.temp[1] - perfil.temp[0])).toFixed(1).replace(".", ",");
+      const alertas = [];
+      if (tas < 90) alertas.push("hipotenso");
+      if (fc > 120) alertas.push("taquicárdico");
+      const nota = alertas.length > 0 ? ` — ¡${alertas.join(" y ")}!` : "";
+      const ritmo = perfil.irregular ? " irregular" : "";
+      return `TA ${tas}/${tad}, FC ${fc}${ritmo}, Sat ${sat}%, Tª ${temp} °C${nota}`;
+    }
     crearPaciente(minutoLlegada, patologia = this.elegirPatologia()) {
       const [estMin, estMax] = patologia.estabilidadInicial;
       return {
         id: this.siguienteId++,
         nombre: this.elegirNombre(),
         edad: this.entre(patologia.id === "trauma" ? 18 : 25, patologia.id === "trauma" ? 45 : 88),
+        constantes: this.generarConstantes(patologia),
         patologia,
         estabilidad: this.entre(estMin, estMax),
         minutoLlegada,
@@ -1388,7 +1452,7 @@ ${negrita("Puntuación final:")} ${negrita(puntos >= 0 ? verde(String(puntos)) :
       const i = ctx.salaEspera.indexOf(p);
       if (i >= 0) ctx.salaEspera.splice(i, 1);
       ctx.hospital.quirofanosLibres--;
-      ctx.io.escena?.("quirofano", p.patologia.id);
+      ctx.io.escena?.("quirofano", { patologiaId: p.patologia.id, nombre: p.nombre, edad: p.edad });
       ctx.io.escribir("\n" + lineaSeparadora());
       ctx.io.escribir(`  ${negrita(cian("🔪 QUIRÓFANO"))} — ${negrita(plan.nombre)}`);
       ctx.io.escribir(`  Paciente: ${p.nombre}, ${p.edad} años. ${gris(p.patologia.nombre)}`);
@@ -1580,7 +1644,13 @@ ${negrita("Ronda de planta:")}`);
     }
     // ────────────────────────────────────────────────────────────
     async atenderPaciente(ctx, paciente) {
-      ctx.io.escena?.("paciente", paciente.patologia.id);
+      ctx.io.escena?.("paciente", {
+        patologiaId: paciente.patologia.id,
+        pacienteId: paciente.id,
+        nombre: paciente.nombre,
+        edad: paciente.edad,
+        estabilidad: paciente.estabilidad
+      });
       for (; ; ) {
         if (ctx.guardiaTerminada) return new SummaryState();
         if (paciente.estado === "exitus") return this;
@@ -1667,7 +1737,7 @@ ${cian(`Resultado de ${prueba.nombre}:`)}
       ctx.io.escribir(lineaSeparadora());
       ctx.io.escribir(`  ${negrita("Anamnesis:")}`);
       for (const s of p.patologia.presentacion.sintomas) ctx.io.escribir(`   • ${s}`);
-      ctx.io.escribir(`  ${negrita("Constantes:")} ${p.patologia.presentacion.constantes}`);
+      ctx.io.escribir(`  ${negrita("Constantes:")} ${p.constantes}`);
       if (_TriageState.explorados.has(p.id)) {
         ctx.io.escribir(`  ${negrita("Exploración:")} ${p.patologia.presentacion.exploracion}`);
       }
@@ -2134,6 +2204,200 @@ Ingresas a ${p.nombre} en observación. Prudente, aunque podía haberse ido de a
 </div>`;
   }
 
+  // src/web/retrato.ts
+  function semillaDe(texto) {
+    let h = 2166136261;
+    for (let i = 0; i < texto.length; i++) {
+      h ^= texto.charCodeAt(i);
+      h = Math.imul(h, 16777619);
+    }
+    return h >>> 0;
+  }
+  function mulberry32(a) {
+    return () => {
+      a |= 0;
+      a = a + 1831565813 | 0;
+      let t = Math.imul(a ^ a >>> 15, 1 | a);
+      t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t;
+      return ((t ^ t >>> 14) >>> 0) / 4294967296;
+    };
+  }
+  var PIELES = ["#f2c9a0", "#e8b98c", "#d9a271", "#c68d5e", "#a06a42", "#8d5a3a"];
+  var PELOS_JOVEN = ["#1d1a17", "#2f2318", "#4a3220", "#6e4a2a", "#8c3b2e", "#3d3d3d"];
+  var PELOS_MAYOR = ["#d7dce2", "#b9c0c9", "#98a1ab", "#e8e8e4"];
+  var FONDOS = ["#1b2a3a", "#22303f", "#252c40", "#1e3336", "#2c2838"];
+  var NOMBRES_FEMENINOS = /* @__PURE__ */ new Set([
+    "carmen",
+    "lucía",
+    "pilar",
+    "elena",
+    "dolores",
+    "marta",
+    "isabel",
+    "rosa",
+    "beatriz",
+    "nuria"
+  ]);
+  function retratoPaciente(dato) {
+    const nombre = dato.nombre ?? "Paciente";
+    const edad = dato.edad ?? 50;
+    const estabilidad = dato.estabilidad ?? 80;
+    const rng = mulberry32(semillaDe(`${nombre}#${dato.pacienteId ?? 0}`));
+    const elegir = (lista) => lista[Math.floor(rng() * lista.length)];
+    const propio = nombre.split(" ")[0].toLowerCase();
+    const femenino = NOMBRES_FEMENINOS.has(propio) || propio.endsWith("a");
+    const mayor = edad >= 62;
+    const piel = elegir(PIELES);
+    const pelo = mayor ? elegir(PELOS_MAYOR) : elegir(PELOS_JOVEN);
+    const fondo = elegir(FONDOS);
+    const calvo = !femenino && (mayor ? rng() < 0.45 : rng() < 0.12);
+    const melena = femenino ? rng() < 0.75 : rng() < 0.08;
+    const barba = !femenino && rng() < 0.45;
+    const gafas = rng() < (mayor ? 0.55 : 0.22);
+    const grave = estabilidad < 45;
+    const dolorido = estabilidad < 70;
+    const partes = [];
+    partes.push(`<circle cx="50" cy="50" r="46" fill="${fondo}"/>`);
+    partes.push(`<path d="M18 96 C22 76 34 70 50 70 C66 70 78 76 82 96 Z" fill="#7fa8c9"/>
+  <path d="M40 74 L50 86 L60 74" fill="none" stroke="#5d84a3" stroke-width="2.5"/>`);
+    partes.push(`<rect x="43" y="58" width="14" height="14" rx="5" fill="${piel}"/>`);
+    partes.push(`<ellipse cx="50" cy="42" rx="20" ry="23" fill="${piel}"/>`);
+    partes.push(`<circle cx="29.5" cy="44" r="4" fill="${piel}"/><circle cx="70.5" cy="44" r="4" fill="${piel}"/>`);
+    if (melena) {
+      partes.push(`<path d="M27 66 C22 40 28 18 50 18 C72 18 78 40 73 66 L66 62 C70 44 66 30 50 28 C34 30 30 44 34 62 Z" fill="${pelo}"/>`);
+    } else if (!calvo) {
+      const flequillo = rng() < 0.5 ? "M30 38 C30 22 40 16 50 16 C60 16 70 22 70 38 C62 30 56 28 50 28 C44 28 38 30 30 38 Z" : "M30 36 C28 20 42 14 52 15 C64 16 71 24 70 36 C64 26 54 26 46 27 C38 28 33 30 30 36 Z";
+      partes.push(`<path d="${flequillo}" fill="${pelo}"/>`);
+    } else {
+      partes.push(`<path d="M30 38 C31 32 33 28 36 26 M64 26 C67 28 69 32 70 38" stroke="${pelo}" stroke-width="3" fill="none" stroke-linecap="round"/>`);
+    }
+    const cejaY = dolorido ? 33 : 34.5;
+    const angulo = dolorido ? 3 : 0;
+    partes.push(`<path d="M36 ${cejaY + angulo} L45 ${cejaY}" stroke="${pelo}" stroke-width="2.4" stroke-linecap="round"/>
+  <path d="M55 ${cejaY} L64 ${cejaY + angulo}" stroke="${pelo}" stroke-width="2.4" stroke-linecap="round"/>`);
+    partes.push(
+      grave ? `<path d="M37 41 q3.5 2.6 7 0 M56 41 q3.5 2.6 7 0" stroke="#1a1a1a" stroke-width="2" fill="none" stroke-linecap="round"/>` : `<circle cx="40.5" cy="41" r="2.4" fill="#1a1a1a"/><circle cx="59.5" cy="41" r="2.4" fill="#1a1a1a"/>`
+    );
+    if (gafas) {
+      partes.push(`<g stroke="#3c4753" stroke-width="1.8" fill="none">
+    <rect x="33.5" y="36" width="13.5" height="10" rx="4"/>
+    <rect x="53" y="36" width="13.5" height="10" rx="4"/>
+    <path d="M47 40.5 h6 M33.5 40 h-4 M66.5 40 h4"/></g>`);
+    }
+    partes.push(`<path d="M50 44 L48 51 q2 1.6 4 0 Z" fill="none" stroke="#00000033" stroke-width="1.6" stroke-linecap="round"/>`);
+    if (barba) {
+      partes.push(`<path d="M32 48 C33 62 40 66 50 66 C60 66 67 62 68 48 C66 60 60 61 50 61 C40 61 34 60 32 48 Z" fill="${pelo}" opacity=".9"/>`);
+    }
+    partes.push(
+      grave ? `<path d="M42 57 q8 -4 16 0" stroke="#8c3b3b" stroke-width="2.2" fill="none" stroke-linecap="round"/>` : dolorido ? `<path d="M43 56.5 q7 1.6 14 0" stroke="#8c3b3b" stroke-width="2.2" fill="none" stroke-linecap="round"/>` : `<path d="M43 55.5 q7 3.4 14 0" stroke="#8c3b3b" stroke-width="2.2" fill="none" stroke-linecap="round"/>`
+    );
+    if (mayor) {
+      partes.push(`<path d="M35 50 q2 1.6 4 0 M61 50 q2 1.6 4 0 M44 30 h12" stroke="#00000026" stroke-width="1.4" fill="none" stroke-linecap="round"/>`);
+    }
+    if (dolorido) {
+      partes.push(`<path class="gota" d="M69 30 q3 4.5 0 7 q-3 -2.5 0 -7 Z" fill="#9ed7f2"/>`);
+      if (grave) partes.push(`<path class="gota gota2" d="M31.5 27 q3 4.5 0 7 q-3 -2.5 0 -7 Z" fill="#9ed7f2"/>`);
+    }
+    return `<svg viewBox="0 0 100 100" class="retrato" role="img" aria-label="Retrato de ${nombre}">${partes.join("")}</svg>`;
+  }
+
+  // src/web/sonido.ts
+  var CLAVE_SILENCIO = "surgeons-night-silencio";
+  var MotorSonido = class {
+    constructor() {
+      __publicField(this, "ctx", null);
+      __publicField(this, "latidoTimer", null);
+      __publicField(this, "activo", true);
+      try {
+        this.activo = localStorage.getItem(CLAVE_SILENCIO) !== "1";
+      } catch {
+      }
+    }
+    /** Conecta el botón de la cabecera para silenciar/activar. */
+    conectarBoton(boton) {
+      if (!boton) return;
+      const pintar = () => {
+        boton.textContent = this.activo ? "🔊" : "🔇";
+        boton.title = this.activo ? "Silenciar" : "Activar sonido";
+      };
+      pintar();
+      boton.addEventListener("click", () => {
+        this.activo = !this.activo;
+        try {
+          localStorage.setItem(CLAVE_SILENCIO, this.activo ? "0" : "1");
+        } catch {
+        }
+        if (!this.activo) this.pararLatido();
+        pintar();
+      });
+    }
+    // ── Sonidos ─────────────────────────────────────────────────
+    click() {
+      this.tono({ freq: 1250, dur: 0.035, gain: 0.045, tipo: "square" });
+    }
+    /** Un bip de monitor. */
+    bip() {
+      this.tono({ freq: 880, dur: 0.07, gain: 0.05 });
+    }
+    /** Bucle de monitor cardiaco (rápido = paciente en quirófano sufriendo). */
+    empezarLatido(periodoMs = 950) {
+      this.pararLatido();
+      if (!this.activo) return;
+      this.bip();
+      this.latidoTimer = window.setInterval(() => {
+        if (document.visibilityState === "visible") this.bip();
+      }, periodoMs);
+    }
+    pararLatido() {
+      if (this.latidoTimer !== null) {
+        clearInterval(this.latidoTimer);
+        this.latidoTimer = null;
+      }
+    }
+    /** Sirena bitonal de ambulancia. */
+    sirena() {
+      for (let i = 0; i < 4; i++) {
+        this.tono({ freq: 700, dur: 0.2, gain: 0.035, retraso: i * 0.4, tipo: "triangle" });
+        this.tono({ freq: 470, dur: 0.2, gain: 0.035, retraso: i * 0.4 + 0.2, tipo: "triangle" });
+      }
+    }
+    /** Arpegio de acierto. */
+    campanilla() {
+      [523.25, 659.25, 783.99].forEach(
+        (f, i) => this.tono({ freq: f, dur: 0.16, gain: 0.05, retraso: i * 0.09 })
+      );
+    }
+    /** Asistolia: el tono continuo del monitor. */
+    asistolia() {
+      this.pararLatido();
+      this.tono({ freq: 940, dur: 1.4, gain: 0.05 });
+    }
+    // ── Utilería ────────────────────────────────────────────────
+    asegurarContexto() {
+      if (!this.activo) return null;
+      if (typeof AudioContext === "undefined") return null;
+      this.ctx ?? (this.ctx = new AudioContext());
+      if (this.ctx.state === "suspended") void this.ctx.resume();
+      return this.ctx;
+    }
+    tono(opts) {
+      const ctx = this.asegurarContexto();
+      if (!ctx) return;
+      const t0 = ctx.currentTime + (opts.retraso ?? 0);
+      const osc = ctx.createOscillator();
+      const gan = ctx.createGain();
+      osc.type = opts.tipo ?? "sine";
+      osc.frequency.setValueAtTime(opts.freq, t0);
+      gan.gain.setValueAtTime(0, t0);
+      gan.gain.linearRampToValueAtTime(opts.gain, t0 + 8e-3);
+      gan.gain.exponentialRampToValueAtTime(1e-4, t0 + opts.dur);
+      osc.connect(gan).connect(ctx.destination);
+      osc.start(t0);
+      osc.stop(t0 + opts.dur + 0.05);
+    }
+  };
+  var sonido = new MotorSonido();
+
   // src/web/WebIO.ts
   var ESTILOS_ABRE = {
     1: "b",
@@ -2192,6 +2456,7 @@ Ingresas a ${p.nombre} en observación. Prudente, aunque podía haberse ido de a
       this.menu = document.createElement("div");
       this.menu.id = "menu";
       raiz.append(this.salida, this.menu);
+      sonido.conectarBoton(document.getElementById("silencio"));
     }
     escribir(texto = "") {
       for (const linea of texto.split("\n")) {
@@ -2200,8 +2465,17 @@ Ingresas a ${p.nombre} en observación. Prudente, aunque podía haberse ido de a
         div.innerHTML = ansiAHtml(linea) || "&nbsp;";
         this.salida.appendChild(div);
         const plano = sinAnsi(linea);
-        if (plano.includes("🚑") || plano.includes("AMBULANCIA")) this.animarAmbulancia();
-        if (plano.includes("✝")) this.flashExitus();
+        if (plano.includes("🚑") || plano.includes("AMBULANCIA")) {
+          this.animarAmbulancia();
+          sonido.sirena();
+        }
+        if (plano.includes("✝")) {
+          this.flashExitus();
+          sonido.asistolia();
+        }
+        if (plano.includes("✔ Alta correcta") || plano.includes("✔ Ingreso correcto") || plano.includes("impecable")) {
+          sonido.campanilla();
+        }
       }
       this.desplazarAlFinal();
     }
@@ -2211,19 +2485,25 @@ Ingresas a ${p.nombre} en observación. Prudente, aunque podía haberse ido de a
           this.insertarArte(ARTE_PORTADA, "portada");
           break;
         case "paciente": {
-          const cuerpo = cuerpoConDolor(dato);
-          if (cuerpo) this.insertarArte(cuerpo, "paciente");
+          const retrato = dato ? retratoPaciente(dato) : "";
+          const cuerpo = cuerpoConDolor(dato?.patologiaId) ?? "";
+          if (retrato || cuerpo) {
+            this.insertarArte(`<div class="ficha-visual">${retrato}${cuerpo}</div>`, "paciente");
+          }
           break;
         }
         case "quirofano":
           document.body.classList.add("en-quirofano");
           this.insertarArte(BANNER_QUIROFANO, "quirofano");
+          sonido.empezarLatido(640);
           break;
         case "triaje":
           document.body.classList.remove("en-quirofano");
+          sonido.pararLatido();
           break;
         case "fin":
           document.body.classList.remove("en-quirofano");
+          sonido.pararLatido();
           this.insertarArte(ARTE_AMANECER, "fin");
           break;
       }
@@ -2242,6 +2522,7 @@ Ingresas a ${p.nombre} en observación. Prudente, aunque podía haberse ido de a
           const detalle = op.detalle ? `<span class="detalle">(${escaparHtml(op.detalle)})</span>` : "";
           boton.innerHTML = `<span class="num">${i + 1}</span><span class="texto">${ansiAHtml(op.etiqueta)} ${detalle}</span>`;
           boton.addEventListener("click", () => {
+            sonido.click();
             this.escribir(`\x1B[90m> ${i + 1}. ${sinAnsi(op.etiqueta)}\x1B[39m`);
             this.limpiarMenu();
             resolver(op.valor);
@@ -2264,6 +2545,7 @@ Ingresas a ${p.nombre} en observación. Prudente, aunque podía haberse ido de a
       return this.elegir(" ", [{ etiqueta, valor: void 0 }]);
     }
     cerrar() {
+      sonido.pararLatido();
       this.limpiarMenu();
       const boton = document.createElement("button");
       boton.className = "opcion reinicio";

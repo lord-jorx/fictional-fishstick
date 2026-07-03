@@ -21,6 +21,15 @@ export interface Opcion<T> {
 /** Momentos visuales del juego, para adaptadores que sepan ilustrarlos. */
 export type EscenaId = 'portada' | 'triaje' | 'paciente' | 'quirofano' | 'fin';
 
+/** Contexto de una escena (todo opcional: cada adaptador usa lo que sabe pintar). */
+export interface EscenaDato {
+  patologiaId?: string;
+  pacienteId?: number;
+  nombre?: string;
+  edad?: number;
+  estabilidad?: number;
+}
+
 export interface IO {
   /** Escribe una línea (admite '\n' embebidos y códigos ANSI). */
   escribir(texto?: string): void;
@@ -32,8 +41,8 @@ export interface IO {
   cerrar(): void;
   /**
    * Evento semántico opcional: "estamos en esta escena".
-   * `dato` lleva contexto extra (p. ej. el id de la patología del paciente).
+   * `dato` lleva contexto extra (paciente, patología...).
    * Los adaptadores de texto puro lo ignoran; el web pinta ilustraciones.
    */
-  escena?(escena: EscenaId, dato?: string): void;
+  escena?(escena: EscenaId, dato?: EscenaDato): void;
 }

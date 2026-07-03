@@ -94,7 +94,13 @@ export class TriageState implements GameState {
 
   // ────────────────────────────────────────────────────────────
   private async atenderPaciente(ctx: GameContext, paciente: Paciente): Promise<GameState> {
-    ctx.io.escena?.('paciente', paciente.patologia.id);
+    ctx.io.escena?.('paciente', {
+      patologiaId: paciente.patologia.id,
+      pacienteId: paciente.id,
+      nombre: paciente.nombre,
+      edad: paciente.edad,
+      estabilidad: paciente.estabilidad,
+    });
     for (;;) {
       if (ctx.guardiaTerminada) return new SummaryState();
       if (paciente.estado === 'exitus') return this; // falleció mientras decidías
@@ -189,7 +195,7 @@ export class TriageState implements GameState {
     ctx.io.escribir(lineaSeparadora());
     ctx.io.escribir(`  ${negrita('Anamnesis:')}`);
     for (const s of p.patologia.presentacion.sintomas) ctx.io.escribir(`   • ${s}`);
-    ctx.io.escribir(`  ${negrita('Constantes:')} ${p.patologia.presentacion.constantes}`);
+    ctx.io.escribir(`  ${negrita('Constantes:')} ${p.constantes}`);
     if (TriageState.explorados.has(p.id)) {
       ctx.io.escribir(`  ${negrita('Exploración:')} ${p.patologia.presentacion.exploracion}`);
     }

@@ -6,8 +6,10 @@
  * convierten a <span> con clases CSS. También se puede elegir opción
  * con las teclas 1-9.
  */
-import type { EscenaId, IO, Opcion } from '../core/io.js';
+import type { EscenaDato, EscenaId, IO, Opcion } from '../core/io.js';
 import { ARTE_AMANECER, ARTE_PORTADA, BANNER_QUIROFANO, cuerpoConDolor, SVG_AMBULANCIA } from './arte.js';
+import { retratoPaciente } from './retrato.js';
+import { sonido } from './sonido.js';
 
 const ESTILOS_ABRE: Record<number, string> = {
   1: 'b', 2: 'd', 3: 'i', 4: 'u', 7: 'inv',
@@ -65,6 +67,7 @@ export class WebIO implements IO {
     this.menu = document.createElement('div');
     this.menu.id = 'menu';
     raiz.append(this.salida, this.menu);
+    sonido.conectarBoton(document.getElementById('silencio'));
   }
 
   escribir(texto = ''): void {
@@ -75,31 +78,46 @@ export class WebIO implements IO {
       this.salida.appendChild(div);
 
       const plano = sinAnsi(linea);
-      if (plano.includes('🚑') || plano.includes('AMBULANCIA')) this.animarAmbulancia();
-      if (plano.includes('✝')) this.flashExitus();
+      if (plano.includes('🚑') || plano.includes('AMBULANCIA')) {
+        this.animarAmbulancia();
+        sonido.sirena();
+      }
+      if (plano.includes('✝')) {
+        this.flashExitus();
+        sonido.asistolia();
+      }
+      if (plano.includes('✔ Alta correcta') || plano.includes('✔ Ingreso correcto') || plano.includes('impecable')) {
+        sonido.campanilla();
+      }
     }
     this.desplazarAlFinal();
   }
 
-  escena(escena: EscenaId, dato?: string): void {
+  escena(escena: EscenaId, dato?: EscenaDato): void {
     switch (escena) {
       case 'portada':
         this.insertarArte(ARTE_PORTADA, 'portada');
         break;
       case 'paciente': {
-        const cuerpo = cuerpoConDolor(dato);
-        if (cuerpo) this.insertarArte(cuerpo, 'paciente');
+        const retrato = dato ? retratoPaciente(dato) : '';
+        const cuerpo = cuerpoConDolor(dato?.patologiaId) ?? '';
+        if (retrato || cuerpo) {
+          this.insertarArte(`<div class="ficha-visual">${retrato}${cuerpo}</div>`, 'paciente');
+        }
         break;
       }
       case 'quirofano':
         document.body.classList.add('en-quirofano');
         this.insertarArte(BANNER_QUIROFANO, 'quirofano');
+        sonido.empezarLatido(640);
         break;
       case 'triaje':
         document.body.classList.remove('en-quirofano');
+        sonido.pararLatido();
         break;
       case 'fin':
         document.body.classList.remove('en-quirofano');
+        sonido.pararLatido();
         this.insertarArte(ARTE_AMANECER, 'fin');
         break;
     }
@@ -121,6 +139,7 @@ export class WebIO implements IO {
         const detalle = op.detalle ? `<span class="detalle">(${escaparHtml(op.detalle)})</span>` : '';
         boton.innerHTML = `<span class="num">${i + 1}</span><span class="texto">${ansiAHtml(op.etiqueta)} ${detalle}</span>`;
         boton.addEventListener('click', () => {
+          sonido.click();
           this.escribir(`\x1b[90m> ${i + 1}. ${sinAnsi(op.etiqueta)}\x1b[39m`);
           this.limpiarMenu();
           resolver(op.valor);
@@ -149,6 +168,7 @@ export class WebIO implements IO {
   }
 
   cerrar(): void {
+    sonido.pararLatido();
     this.limpiarMenu();
     const boton = document.createElement('button');
     boton.className = 'opcion reinicio';

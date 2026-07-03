@@ -80,6 +80,8 @@ export interface Paciente {
   id: number;
   nombre: string;
   edad: number;
+  /** Constantes vitales generadas proceduralmente para ESTE paciente. */
+  constantes: string;
   patologia: Patologia;
   /** 0-100. A 0, el paciente fallece. */
   estabilidad: number;

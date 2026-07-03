@@ -10,6 +10,35 @@ import type { LlegadaProgramada } from '../core/GameContext.js';
 import type { Paciente, Patologia } from '../core/types.js';
 import { PATOLOGIAS } from '../data/pathologies.js';
 
+/**
+ * Rangos de constantes vitales por patología. Cada paciente recibe unos
+ * valores propios dentro del rango clínicamente plausible de su cuadro;
+ * si salen fuera de umbral, se añade la alerta correspondiente.
+ */
+interface PerfilVitales {
+  tas: [number, number];
+  tad: [number, number];
+  fc: [number, number];
+  sat: [number, number];
+  temp: [number, number];
+  irregular?: boolean;
+}
+
+const VITALES: Record<string, PerfilVitales> = {
+  apendicitis:     { tas: [115, 135], tad: [70, 85], fc: [85, 100],  sat: [97, 99], temp: [37.4, 38.2] },
+  colecistitis:    { tas: [120, 140], tad: [75, 88], fc: [90, 105],  sat: [96, 99], temp: [38.0, 38.9] },
+  obstruccion:     { tas: [100, 120], tad: [62, 78], fc: [100, 115], sat: [95, 98], temp: [37.2, 38.0] },
+  diverticulitis:  { tas: [86, 105],  tad: [55, 68], fc: [110, 126], sat: [94, 97], temp: [38.5, 39.4] },
+  isquemia:        { tas: [95, 115],  tad: [60, 72], fc: [115, 132], sat: [95, 98], temp: [36.5, 37.2], irregular: true },
+  trauma:          { tas: [78, 95],   tad: [48, 60], fc: [118, 136], sat: [93, 96], temp: [35.8, 36.5] },
+  ulcus:           { tas: [105, 125], tad: [68, 80], fc: [95, 112],  sat: [96, 98], temp: [37.1, 37.9] },
+  hernia:          { tas: [112, 130], tad: [70, 84], fc: [95, 110],  sat: [96, 99], temp: [37.4, 38.3] },
+  pancreatitis:    { tas: [108, 128], tad: [65, 80], fc: [92, 108],  sat: [94, 97], temp: [37.1, 38.0] },
+  gastroenteritis: { tas: [110, 125], tad: [70, 82], fc: [80, 95],   sat: [98, 99], temp: [36.9, 37.6] },
+  colico_biliar:   { tas: [115, 130], tad: [72, 85], fc: [70, 85],   sat: [98, 99], temp: [36.5, 37.0] },
+  colico_renal:    { tas: [125, 145], tad: [78, 90], fc: [85, 100],  sat: [98, 99], temp: [36.5, 37.1] },
+};
+
 const NOMBRES = [
   'Manuel Ortega', 'Carmen Ruiz', 'Antonio Vidal', 'Lucía Ferrer',
   'José Andrade', 'Pilar Navarro', 'Ramón Castillo', 'Elena Sanz',
@@ -50,12 +79,35 @@ export class PatientFactory {
     return this.nombresRestantes.splice(i, 1)[0]!;
   }
 
+  /** Genera constantes vitales propias del paciente a partir del perfil del cuadro. */
+  private generarConstantes(patologia: Patologia): string {
+    const perfil = VITALES[patologia.id];
+    if (!perfil) return patologia.presentacion.constantes;
+
+    const tas = this.entre(...perfil.tas);
+    const tad = this.entre(...perfil.tad);
+    const fc = this.entre(...perfil.fc);
+    const sat = this.entre(...perfil.sat);
+    const temp = (perfil.temp[0] + this.rng() * (perfil.temp[1] - perfil.temp[0]))
+      .toFixed(1)
+      .replace('.', ',');
+
+    const alertas: string[] = [];
+    if (tas < 90) alertas.push('hipotenso');
+    if (fc > 120) alertas.push('taquicárdico');
+    const nota = alertas.length > 0 ? ` — ¡${alertas.join(' y ')}!` : '';
+    const ritmo = perfil.irregular ? ' irregular' : '';
+
+    return `TA ${tas}/${tad}, FC ${fc}${ritmo}, Sat ${sat}%, Tª ${temp} °C${nota}`;
+  }
+
   crearPaciente(minutoLlegada: number, patologia: Patologia = this.elegirPatologia()): Paciente {
     const [estMin, estMax] = patologia.estabilidadInicial;
     return {
       id: this.siguienteId++,
       nombre: this.elegirNombre(),
       edad: this.entre(patologia.id === 'trauma' ? 18 : 25, patologia.id === 'trauma' ? 45 : 88),
+      constantes: this.generarConstantes(patologia),
       patologia,
       estabilidad: this.entre(estMin, estMax),
       minutoLlegada,

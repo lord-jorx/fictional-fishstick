@@ -157,6 +157,32 @@
   .baliza { fill: #ff6b6b; animation: baliza .8s steps(1) infinite; }
   .sol { fill: #ffd54a; filter: drop-shadow(0 0 14px rgba(255, 213, 74, .8)); animation: amanecer 3s ease-out forwards; }
 
+  #silencio {
+    flex: none;
+    background: transparent;
+    border: 1px solid var(--borde);
+    border-radius: 8px;
+    font-size: 15px;
+    line-height: 1;
+    padding: 5px 8px;
+    cursor: pointer;
+    transition: border-color .12s;
+  }
+  #silencio:hover { border-color: var(--acento); }
+
+  /* Ficha visual del paciente: retrato + mapa corporal */
+  .ficha-visual {
+    display: flex; align-items: stretch; gap: 12px; flex-wrap: wrap;
+    max-width: 480px;
+  }
+  .retrato {
+    width: 118px; height: 118px; flex: none;
+    border: 1px solid var(--borde); border-radius: 10px;
+    background: #10161f;
+  }
+  .gota { animation: gotear 1.6s ease-in infinite; transform-box: fill-box; transform-origin: center; }
+  .gota2 { animation-delay: .8s; }
+
   /* Mapa corporal del dolor */
   .ficha-cuerpo {
     display: flex; align-items: center; gap: 14px;
@@ -214,6 +240,12 @@
   @keyframes amanecer { from { transform: translateY(0); } to { transform: translateY(-26px); } }
   @keyframes conducir { from { transform: translateX(-130px); } to { transform: translateX(min(100vw, 800px)); } }
   @keyframes aparecer { from { opacity: 0; transform: translateY(3px); } to { opacity: 1; transform: none; } }
+  @keyframes gotear {
+    0% { transform: translateY(0); opacity: 0; }
+    25% { opacity: 1; }
+    80% { transform: translateY(9px); opacity: .9; }
+    100% { transform: translateY(12px); opacity: 0; }
+  }
   @keyframes flash-exitus {
     0% { box-shadow: inset 0 0 0 rgba(201, 42, 42, 0); }
     25% { box-shadow: inset 0 0 120px rgba(201, 42, 42, .45); }
@@ -236,6 +268,7 @@
   <svg class="ecg" viewBox="0 0 300 36" preserveAspectRatio="none" aria-hidden="true">
     <path d="M0 18 h56 l6 0 4 -11 6 22 4 -11 h50 l6 0 4 -11 6 22 4 -11 h50 l6 0 4 -11 6 22 4 -11 H300"/>
   </svg>
+  <button id="silencio" type="button" aria-label="Sonido">🔊</button>
 </header>
 <div id="app"></div>
 <script>
