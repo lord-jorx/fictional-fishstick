@@ -54,8 +54,21 @@ export class SurgeryState implements GameState {
     // paciente inestable, tu fatiga y la guardia negra las hacen más probables.
     const { pasos, imprevistos } = this.montarPasos(ctx, plan.pasos);
 
+    const totalEtapas = plan.pasos.length;
+    let etapa = 0;
+
     for (const [n, paso] of pasos.entries()) {
-      if (imprevistos.has(paso)) {
+      const esImprevisto = imprevistos.has(paso);
+      if (!esImprevisto) etapa++;
+      ctx.io.escena?.('paso', {
+        patologiaId: p.patologia.id,
+        etapa,
+        totalEtapas,
+        evento: paso.evento,
+        imprevisto: esImprevisto,
+      });
+
+      if (esImprevisto) {
         ctx.io.escribir(`\n${rojo(negrita('⚠ COMPLICACIÓN IMPREVISTA'))}`);
         ctx.io.escribir(`${negrita(`${paso.titulo}`)}`);
       } else {

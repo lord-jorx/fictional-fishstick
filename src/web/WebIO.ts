@@ -8,8 +8,9 @@
  */
 import type { ComandaPaciente, EscenaDato, EscenaId, IO, LatidoTiempoReal, Opcion } from '../core/io.js';
 import { horaGuardia } from '../ui/hud.js';
+import { esquemaQuirurgico } from './anatomia.js';
 import { ARTE_AMANECER, ARTE_PORTADA, BANNER_QUIROFANO, cuerpoConDolor, SVG_AMBULANCIA } from './arte.js';
-import { escenaCampo, iconoHerramienta } from './quirofano.js';
+import { iconoHerramienta } from './quirofano.js';
 import { retratoPaciente } from './retrato.js';
 import { sonido } from './sonido.js';
 
@@ -87,9 +88,6 @@ export class WebIO implements IO {
       this.salida.appendChild(div);
 
       const plano = sinAnsi(linea);
-      if (plano.includes('EVENTO:')) {
-        this.insertarArte(escenaCampo(plano), 'campo');
-      }
       if (plano.includes('🚑') || plano.includes('AMBULANCIA')) {
         this.animarAmbulancia();
         sonido.sirena();
@@ -107,9 +105,36 @@ export class WebIO implements IO {
 
   escena(escena: EscenaId, dato?: EscenaDato): void {
     switch (escena) {
-      case 'portada':
+      case 'portada': {
         this.insertarArte(ARTE_PORTADA, 'portada');
+        const carrera = this.leerCarrera();
+        if (carrera && carrera.guardias > 0) {
+          this.insertarArte(
+            `<div class="carrera">
+               <div class="carrera-titulo">EXPEDIENTE DEL CIRUJANO</div>
+               <div class="carrera-datos">
+                 <span>${carrera.guardias} guardia${carrera.guardias === 1 ? '' : 's'}</span>
+                 <span>mejor: ${carrera.mejor}</span>
+                 <span>${carrera.xp} XP</span>
+                 <span class="carrera-rango">${this.rango(carrera.xp)}</span>
+               </div>
+             </div>`,
+            'carrera',
+          );
+        }
         break;
+      }
+      case 'paso': {
+        const esquema = esquemaQuirurgico(
+          dato?.patologiaId,
+          dato?.etapa ?? 1,
+          dato?.totalEtapas ?? 3,
+          dato?.evento,
+          dato?.imprevisto,
+        );
+        if (esquema) this.insertarArte(esquema, 'anatomia');
+        break;
+      }
       case 'paciente': {
         const retrato = dato ? retratoPaciente(dato) : '';
         const cuerpo = cuerpoConDolor(dato?.zonaDolor, dato?.patologiaId) ?? '';
@@ -132,8 +157,13 @@ export class WebIO implements IO {
       case 'fin':
         document.body.classList.remove('en-quirofano');
         sonido.pararLatido();
-        this.pintarComandas([]);
-        this.insertarArte(ARTE_AMANECER, 'fin');
+        if (dato?.puntos !== undefined) {
+          // Segundo aviso de fin: llega la puntuación → expediente del cirujano.
+          this.guardarCarrera(dato.puntos);
+        } else {
+          this.pintarComandas([]);
+          this.insertarArte(ARTE_AMANECER, 'fin');
+        }
         break;
     }
   }
@@ -245,6 +275,39 @@ export class WebIO implements IO {
   }
 
   // ────────────────────────────────────────────────────────────
+  /** Expediente persistente del cirujano (XP, rango, mejor guardia). */
+  private leerCarrera(): { guardias: number; mejor: number; xp: number } | null {
+    try {
+      const crudo = localStorage.getItem('surgeons-night-carrera');
+      return crudo ? JSON.parse(crudo) : null;
+    } catch {
+      return null;
+    }
+  }
+
+  private guardarCarrera(puntos: number): void {
+    try {
+      const c = this.leerCarrera() ?? { guardias: 0, mejor: -Infinity, xp: 0 };
+      c.guardias += 1;
+      c.mejor = Math.max(c.mejor, puntos);
+      c.xp += Math.max(0, puntos);
+      localStorage.setItem('surgeons-night-carrera', JSON.stringify(c));
+      this.escribir(
+        `\x1b[90mExpediente actualizado: guardia nº ${c.guardias} · ${c.xp} XP · rango ${sinAnsi(this.rango(c.xp))}\x1b[39m`,
+      );
+    } catch { /* sin almacenamiento: la carrera no persiste, el juego sigue */ }
+  }
+
+  private rango(xp: number): string {
+    if (xp >= 6000) return 'Leyenda de la guardia';
+    if (xp >= 4000) return 'Jefe de Servicio';
+    if (xp >= 2500) return 'Adjunto senior';
+    if (xp >= 1500) return 'Adjunto';
+    if (xp >= 800) return 'R5';
+    if (xp >= 300) return 'R3';
+    return 'R1 con vocación';
+  }
+
   /** El rail de "comandas": cada paciente pendiente con su reloj vital. */
   private pintarComandas(tablero: ComandaPaciente[]): void {
     this.comandas.hidden = tablero.length === 0;

@@ -254,6 +254,38 @@ Decisiones de diseño:
 - **RNG determinista** (mulberry32) inyectado por constructor: partidas
   reproducibles con `--seed`, y motor testeable.
 
+## 🫀 Simulación quirúrgica paso a paso
+
+Cada cirugía se sigue sobre un **esquema anatómico** estilizado (apto +12,
+sin gore: diagramas flat con etiquetas — hígado, a. cística, colédoco, AMS,
+hilio esplénico…). Un anillo dorado señala dónde se trabaja en la etapa
+actual, las etapas completadas quedan marcadas con su check, la barra de
+progreso avanza etapa a etapa y las complicaciones se dibujan sobre el
+esquema en su sitio anatómico: el sangrado de la cística sangra *en* la
+cística. Los imprevistos aparecen sellados como ⚠ IMPREVISTO sin avanzar
+la etapa. Ocho intervenciones con su diagrama propio.
+
+## 🎖 El expediente del cirujano (progresión)
+
+La web guarda tu carrera entre guardias: número de guardias, mejor
+puntuación, XP acumulada y rango — de *R1 con vocación* a *Leyenda de la
+guardia*. Aparece al fichar, como todo expediente que se respete.
+
+## 🤝 Cooperativo (diseño planteado)
+
+El modo a dos cirujanos está diseñado y pendiente de implementación:
+
+1. **Local, "pásame el bisturí"** (misma pantalla): dos perfiles se reparten
+   los pacientes; uno lleva urgencias mientras el otro opera, y el parte
+   final desglosa expedientes y estrellas por cirujano. No necesita servidor:
+   entra en la arquitectura actual como un estado más y un campo `cirujano`
+   en el paciente.
+2. **Online** (el Overcooked real): un jugador en triaje decidiendo destinos
+   y otro en quirófano resolviendo pasos, compartiendo recursos y reloj en
+   tiempo real. Requiere servidor (WebSocket) y el motor ya lo permite: todo
+   el estado vive en `GameContext` y toda la E/S pasa por el puerto `IO`,
+   así que un adaptador de red es el mismo patrón que `WebIO`.
+
 ## 📦 Plataformas y portabilidad
 
 Hoy el juego corre en **terminal** (Windows/macOS/Linux con Node ≥ 18) y en

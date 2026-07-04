@@ -34,7 +34,7 @@ export interface LatidoTiempoReal {
 }
 
 /** Momentos visuales del juego, para adaptadores que sepan ilustrarlos. */
-export type EscenaId = 'portada' | 'triaje' | 'paciente' | 'quirofano' | 'fin';
+export type EscenaId = 'portada' | 'triaje' | 'paciente' | 'quirofano' | 'paso' | 'fin';
 
 /** Una "comanda" del tablero de urgencias: paciente pendiente y su reloj vital. */
 export interface ComandaPaciente {
@@ -55,6 +55,15 @@ export interface EscenaDato {
   estabilidad?: number;
   /** Zona del mapa corporal cuando la variante clínica la cambia. */
   zonaDolor?: string;
+  /** Escena 'paso': etapa anatómica de la cirugía (1-based, sin contar imprevistos). */
+  etapa?: number;
+  totalEtapas?: number;
+  /** Texto del evento del paso (para dibujar la complicación sobre el esquema). */
+  evento?: string;
+  /** true si el paso es una complicación imprevista (no avanza la etapa). */
+  imprevisto?: boolean;
+  /** Escena 'fin': puntuación final (para el expediente persistente del cirujano). */
+  puntos?: number;
 }
 
 export interface IO {

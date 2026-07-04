@@ -50,6 +50,10 @@ export class SummaryState implements GameState {
     ctx.io.escribir(`\n${negrita('Puntuación final:')} ${negrita(puntos >= 0 ? verde(String(puntos)) : rojo(String(puntos)))}`);
     ctx.io.escribir(`${negrita('Veredicto del Jefe de Servicio:')} ${this.veredicto(puntos)}\n`);
 
+    // Segundo aviso de fin, ya con la puntuación: los adaptadores con memoria
+    // (web) actualizan aquí el expediente persistente del cirujano.
+    ctx.io.escena?.('fin', { puntos });
+
     ctx.io.cerrar();
     return null;
   }

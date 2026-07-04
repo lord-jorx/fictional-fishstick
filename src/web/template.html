@@ -287,6 +287,25 @@
   @keyframes charco { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.12); } }
   @keyframes pulso-asa { 0%, 100% { opacity: 1; } 50% { opacity: .75; } }
 
+  /* Esquema anatómico paso a paso */
+  .anatomia-svg { display: block; width: 100%; max-width: 440px; margin: 6px auto; }
+  .objetivo-anillo {
+    transform-box: fill-box; transform-origin: center;
+    animation: objetivo 1.6s ease-in-out infinite;
+    filter: drop-shadow(0 0 5px rgba(207, 162, 87, .6));
+  }
+  @keyframes objetivo { 0%, 100% { transform: scale(1); opacity: 1; } 50% { transform: scale(1.25); opacity: .55; } }
+
+  /* Expediente del cirujano (carrera persistente) */
+  .carrera {
+    max-width: 460px; margin: 4px auto;
+    background: var(--papel); border: 1px solid var(--borde); border-radius: 4px;
+    padding: 8px 14px;
+  }
+  .carrera-titulo { font-family: Georgia, serif; letter-spacing: 3px; font-size: .8em; color: var(--acento); }
+  .carrera-datos { display: flex; gap: 14px; flex-wrap: wrap; margin-top: 4px; color: #a99b7f; font-size: .9em; }
+  .carrera-rango { color: var(--acento); font-weight: 700; }
+
   /* Banner de quirófano */
   .q-banner {
     display: flex; align-items: center; gap: 14px;
