@@ -66,6 +66,18 @@ node dist/index.js --residente          # modo residente (adjunto de apoyo)
 node dist/index.js --adjunto            # modo adjunto (sin red de seguridad)
 ```
 
+## ⏱ Ritmo de juego (solo web)
+
+Al arrancar eliges cómo vivir la guardia (o con `?ritmo=` en la URL):
+
+- **Por turnos** — clásico: el tiempo solo corre cuando actúas.
+- **Tiempo real** (`?ritmo=real`) — arcade estilo *Overcooked*: **1 segundo
+  = 1 minuto de guardia**. El reloj vivo de la cabecera avanza solo (y se
+  pone rojo en las últimas 2 horas), los pacientes se deterioran mientras
+  dudas, las ambulancias llegan sin esperarte, el rail de comandas se
+  actualiza cada segundo y los menús se refrescan solos cuando pasa algo.
+  Ocultar la pestaña pausa el reloj. La terminal siempre juega por turnos.
+
 ## 🧑‍⚕️ Modos de juego
 
 - **Adjunto** — sin ayudas y con la puntuación completa.
