@@ -165,6 +165,8 @@ export class PatientFactory {
       pruebaEsquiva: this.rng() < (variante.pruebaEsquiva ?? 0),
       informeDudoso: variante.informeDudoso,
       notasClinicas: [],
+      interrogado: false,
+      descuentoPrueba: 0,
       estabilidad,
       minutoLlegada,
       estado: 'espera',

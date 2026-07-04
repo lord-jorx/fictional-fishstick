@@ -1,5 +1,28 @@
 # 🏥 Surgeon's Night: El Turno de Guardia
 
+> *Llueve sobre la ciudad y el busca acaba de sonar. Los pacientes mienten —
+> por miedo, por vergüenza o por sus nietos. Tu trabajo es notarlo.*
+
+Un **noir de hospital**: detective procedural de los 40 donde el crimen es
+la patología, el interrogatorio es la anamnesis y el veredicto se firma con
+bisturí.
+
+## 🕵️ El interrogatorio clínico
+
+Cada paciente **declara algo** al llegar («¿Alcohol? Una copita en las
+comidas»). Tú eliges: **Creerle**, **Dudar** o **Acusarle de mentir** — y
+una acusación solo se sostiene si llevas encima la prueba que lo desmonta
+(enséñale la vesícula en la eco y verás caer lo de los torreznos). Acertar
+te da la historia real y acelera la siguiente prueba; fallar cierra al
+paciente en banda y te cuesta tiempo y estrés. Ojo: algunos dicen la verdad,
+y dudar de todos también es una forma de fallar.
+
+Al cerrar cada caso, el expediente recibe su **calificación de 1 a 5
+estrellas**: operar sin diagnóstico, pedir pruebas a voleo, tropezar en el
+interrogatorio, complicarte en quirófano o mandar a casa a quien no debías
+bajan la nota. El parte de las 08:00 lista todos los expedientes con sus
+estrellas.
+
 Juego de texto para terminal que simula **24 horas de guardia de un cirujano
 general** en un hospital público. Triaje en urgencias, decisiones clínicas,
 cirugías por pasos con complicaciones, y la gestión de tu propia fatiga.
@@ -32,10 +55,14 @@ destello rojo en los éxitus y amanecer al terminar la guardia. El motor solo
 emite eventos semánticos (`io.escena(...)`); la terminal los ignora y la web
 los pinta.
 
+**Estética noir**: grano de película 35 mm, viñeteado, paleta humo-y-whisky,
+tipografía de máquina de escribir con titulares serif, ilustraciones viradas
+a sepia y retratos en blanco y negro tipo ficha policial.
+
 **Sonido** (sintetizado con osciladores, silenciable con el botón 🔊 y
-recordado entre partidas): click de interfaz, pitido de monitor cardiaco
-durante la cirugía, sirena de ambulancia en las llegadas, campanilla en los
-aciertos y tono de asistolia en los éxitus.
+recordado entre partidas): **lluvia noir de fondo**, click de interfaz,
+pitido de monitor cardiaco durante la cirugía, sirena de ambulancia en las
+llegadas, campanilla en los aciertos y tono de asistolia en los éxitus.
 
 **Quirófano visual e interactivo**: cada evento intraoperatorio pinta un
 **campo quirúrgico animado** (el sangrado crece y late, la bilis gotea, el

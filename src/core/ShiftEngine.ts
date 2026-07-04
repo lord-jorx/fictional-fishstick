@@ -129,21 +129,24 @@ export class ShiftEngine {
     this.io.escribir(negrita(cian("   SURGEON'S NIGHT — El Turno de Guardia")));
     this.io.escribir(lineaSeparadora());
     this.io.escribir(`
-  Son las ${negrita('08:00')}. Empiezan tus ${negrita('24 horas')} como cirujano general
-  de guardia en un hospital público. Tienes ${negrita('2 quirófanos')}, ${negrita('3 camas de REA')}
-  y un busca que no va a dejar de sonar.
+  ${gris('Llueve sobre la ciudad y el busca acaba de sonar por primera vez.')}
+  ${gris('Van a ser veinticuatro horas largas.')}
 
-  ${negrita('Reglas de supervivencia:')}
-   • Todo cuesta tiempo, y los pacientes no tratados se deterioran.
-   • La prueba adecuada confirma el diagnóstico; operar a ciegas se paga.
-   • No todo dolor abdominal se opera: dar el alta también es decidir.
-   • Vigila tu ${negrita('energía')} y tu ${negrita('estrés')}: con fatiga, hasta la decisión
-     correcta puede salir mal. El café es tu amigo. Dosifícalo.
+  Este hospital te da ${negrita('2 quirófanos')}, ${negrita('3 camas de REA')} y una cafetera
+  que hace un ruido raro. Con eso tienes que llegar vivo — tú y ellos —
+  a las ${negrita('08:00')} de mañana.
 
-  ${gris('¿No eres sanitario? Empieza en modo Residente: el adjunto te guía y')}
-  ${gris('cada caso te deja su perla docente. Se aprende operando.')}
+  ${negrita('Lo que aprendí en mi primera guardia, y nadie me contó:')}
+   • Aquí todo cuesta tiempo, y el tiempo lo pagan los que esperan.
+   • Los pacientes no mienten por maldad. Mienten por miedo, por
+     vergüenza o por sus nietos. Tu trabajo es notarlo.
+   • La prueba correcta cierra el caso. Operar a ciegas también,
+     pero de otra manera.
+   • No todo vientre se abre. Firmar un alta es un acto quirúrgico.
+   • Y vigila tu ${negrita('energía')}: a las cinco de la mañana las manos
+     son de otro. El café ayuda. Hasta que deja de ayudar.
 
-  ${gris('Sobrevive hasta las 08:00 de mañana. Suerte, doctor/a.')}
+  ${gris('¿Sin bata? Entra de Residente: alguien con canas te irá soplando.')}
 `);
   }
 }

@@ -7,8 +7,10 @@
  */
 import { GameContext } from '../core/GameContext.js';
 import type { GameState } from '../core/StateMachine.js';
-import type { ManejoCorrecto, Paciente, PruebaId } from '../core/types.js';
+import type { ManejoCorrecto, Paciente, PruebaId, RespuestaInterrogatorio } from '../core/types.js';
+import { INTERROGATORIOS } from '../data/interrogatorios.js';
 import { INFORME_INESPECIFICO, PRUEBAS } from '../data/pruebas.js';
+import { calificarCaso, pintarEstrellas } from './calificacion.js';
 import { amarillo, cian, gris, negrita, rojo, verde } from '../ui/ansi.js';
 import { fichaPaciente, horaGuardia, lineaSeparadora, pintarHUD } from '../ui/hud.js';
 import type { Opcion } from '../core/io.js';
@@ -24,6 +26,7 @@ type AccionSala =
 
 type AccionPaciente =
   | { tipo: 'explorar' }
+  | { tipo: 'interrogar' }
   | { tipo: 'prueba'; prueba: PruebaId }
   | { tipo: 'alta' }
   | { tipo: 'ingreso' }
@@ -136,10 +139,20 @@ export class TriageState implements GameState {
           break;
         }
 
+        case 'interrogar':
+          await this.interrogar(ctx, paciente);
+          break;
+
         case 'prueba': {
           const prueba = PRUEBAS[accion.prueba];
-          ctx.io.escribir(gris(`Solicitas ${prueba.nombre}. Esperas el resultado...`));
-          this.mostrarAvisos(ctx, ctx.avanzarTiempo(prueba.duracionMin));
+          const duracion = Math.max(5, prueba.duracionMin - paciente.descuentoPrueba);
+          if (paciente.descuentoPrueba > 0) {
+            ctx.io.escribir(gris(`Sabes exactamente qué buscar: ${prueba.nombre} priorizada (${duracion} min).`));
+            paciente.descuentoPrueba = 0;
+          } else {
+            ctx.io.escribir(gris(`Solicitas ${prueba.nombre}. Esperas el resultado...`));
+          }
+          this.mostrarAvisos(ctx, ctx.avanzarTiempo(duracion));
 
           // Variantes difíciles: la prueba diana puede salir dudosa la primera
           // vez. No confirma, y queda disponible para repetirla.
@@ -201,6 +214,13 @@ export class TriageState implements GameState {
 
     if (!TriageState.explorados.has(paciente.id)) {
       opciones.push({ etiqueta: 'Explorar al paciente', detalle: '10 min', valor: { tipo: 'explorar' } });
+    }
+    if (!paciente.interrogado && INTERROGATORIOS[paciente.patologia.id]) {
+      opciones.push({
+        etiqueta: cian('Apretar en la anamnesis: algo no encaja'),
+        detalle: '5 min',
+        valor: { tipo: 'interrogar' },
+      });
     }
     for (const prueba of Object.values(PRUEBAS)) {
       if (!paciente.pruebasRealizadas.includes(prueba.id)) {
@@ -287,6 +307,64 @@ export class TriageState implements GameState {
   }
 
   // ────────────────────────────────────────────────────────────
+  /**
+   * El interrogatorio: el paciente jura algo y tú decides si tragártelo.
+   * Acusar de mentir sin la prueba que lo desmonta no sirve de nada — como
+   * en toda buena sala de interrogatorios.
+   */
+  private async interrogar(ctx: GameContext, p: Paciente): Promise<void> {
+    const dossier = INTERROGATORIOS[p.patologia.id]!;
+    this.mostrarAvisos(ctx, ctx.avanzarTiempo(5));
+
+    ctx.io.escribir(`\n${cian('Le sostienes la mirada y repasas su historia. El paciente declara:')}`);
+    ctx.io.escribir(`  ${negrita(dossier.afirmacion)}`);
+
+    const respuesta = await ctx.io.elegir<RespuestaInterrogatorio>('¿Qué le dices?', [
+      { etiqueta: verde('Creerle'), detalle: 'su historia se sostiene', valor: 'creer' },
+      { etiqueta: amarillo('Dudar'), detalle: 'presiónale: hay huecos en el relato', valor: 'dudar' },
+      { etiqueta: rojo('Acusarle de mentir'), detalle: 'necesitarás una prueba que lo desmonte', valor: 'mentira' },
+    ]);
+
+    // Acusación correcta pero sin la prueba encima: se enroca, puedes volver.
+    if (
+      respuesta === 'mentira' &&
+      dossier.correcta === 'mentira' &&
+      dossier.pruebaClave &&
+      !p.pruebasRealizadas.includes(dossier.pruebaClave)
+    ) {
+      ctx.cirujano.estres = Math.min(100, ctx.cirujano.estres + 3);
+      ctx.io.escribir(
+        amarillo('\nAciertas... pero sin nada en la mano. «Demuéstremelo», dice. Y tiene razón: vuelve cuando tengas la prueba.'),
+      );
+      p.notasClinicas.push(`Sospechas que miente: la ${PRUEBAS[dossier.pruebaClave].nombre.toLowerCase()} lo desmontaría.`);
+      return; // no queda zanjado: se puede reintentar
+    }
+
+    p.interrogado = true;
+    if (respuesta === dossier.correcta) {
+      p.interrogatorioAcertado = true;
+      p.descuentoPrueba = 15;
+      ctx.cirujano.estres = Math.max(0, ctx.cirujano.estres - 4);
+      ctx.io.escribir(verde(`\n${dossier.revelacion}`));
+      ctx.io.escribir(gris('  La historia real acelera el caso: tu próxima prueba irá 15 minutos más rápida (ya sabes qué buscar).'));
+      p.notasClinicas.push('Anamnesis real conseguida: el relato inicial no era todo.');
+    } else {
+      p.interrogatorioAcertado = false;
+      ctx.cirujano.estres = Math.min(100, ctx.cirujano.estres + 6);
+      this.mostrarAvisos(ctx, ctx.avanzarTiempo(10));
+      ctx.io.escribir(rojo(`\n${dossier.cerrojo}`));
+      ctx.io.escribir(gris('  El paciente se cierra en banda. Diez minutos perdidos en reconstruir la confianza.'));
+    }
+  }
+
+  /** Cierra el expediente: calcula y anuncia las estrellas del caso. */
+  private calificar(ctx: GameContext, p: Paciente): void {
+    p.estrellas = calificarCaso(p);
+    ctx.io.escribir(
+      `\n  ${negrita('EXPEDIENTE CERRADO')} — Calificación del caso: ${amarillo(pintarEstrellas(p.estrellas))}`,
+    );
+  }
+
   private resolverAlta(ctx: GameContext, p: Paciente): void {
     this.sacarDeEspera(ctx, p);
     ctx.stats.atendidos++;
@@ -297,6 +375,7 @@ export class TriageState implements GameState {
       ctx.cirujano.estres = Math.max(0, ctx.cirujano.estres - 4);
       ctx.io.escribir(verde(`\n✔ Alta correcta: ${p.patologia.nombre} no precisaba ingreso ni cirugía.`));
       ctx.io.escribir(gris(`  Perla docente: ${p.patologia.notaDocente}`));
+      this.calificar(ctx, p);
       return;
     }
 
@@ -311,6 +390,7 @@ export class TriageState implements GameState {
       ctx.cirujano.estres = Math.min(100, ctx.cirujano.estres + 25);
       ctx.io.escribir(rojo(negrita(`\n✝ ${p.nombre} fallece en su domicilio horas después del alta (${p.patologia.nombre}).`)));
       ctx.io.escribir(gris(`  ${p.patologia.notaDocente}`));
+      this.calificar(ctx, p);
       return;
     }
 
@@ -336,9 +416,11 @@ export class TriageState implements GameState {
       ctx.stats.ingresosCorrectos++;
       ctx.io.escribir(verde(`\n✔ Ingreso correcto: ${p.patologia.nombre} se trata con medidas conservadoras, no con bisturí.`));
       ctx.io.escribir(gris(`  Perla docente: ${p.patologia.notaDocente}`));
+      this.calificar(ctx, p);
     } else {
       ctx.stats.ingresosCorrectos++;
       ctx.io.escribir(verde(`\nIngresas a ${p.nombre} en observación. Prudente, aunque podía haberse ido de alta.`));
+      this.calificar(ctx, p);
     }
   }
 

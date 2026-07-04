@@ -17,6 +17,7 @@ const CLAVE_SILENCIO = 'surgeons-night-silencio';
 class MotorSonido {
   private ctx: AudioContext | null = null;
   private latidoTimer: number | null = null;
+  private lluvia: { fuente: AudioBufferSourceNode; ganancia: GainNode } | null = null;
   activo = true;
 
   constructor() {
@@ -40,7 +41,12 @@ class MotorSonido {
       try {
         localStorage.setItem(CLAVE_SILENCIO, this.activo ? '0' : '1');
       } catch { /* sin persistencia, no pasa nada */ }
-      if (!this.activo) this.pararLatido();
+      if (!this.activo) {
+        this.pararLatido();
+        this.pararLluvia();
+      } else {
+        this.empezarLluvia();
+      }
       pintar();
     });
   }
@@ -48,6 +54,40 @@ class MotorSonido {
   // ── Sonidos ─────────────────────────────────────────────────
   click(): void {
     this.tono({ freq: 1250, dur: 0.035, gain: 0.045, tipo: 'square' });
+    this.empezarLluvia(); // el ambiente arranca con el primer gesto del jugador
+  }
+
+  /** Lluvia noir de fondo: ruido blanco filtrado en bucle, muy bajito. */
+  private empezarLluvia(): void {
+    if (this.lluvia) return;
+    const ctx = this.asegurarContexto();
+    if (!ctx) return;
+
+    const duracion = 3;
+    const buffer = ctx.createBuffer(1, ctx.sampleRate * duracion, ctx.sampleRate);
+    const datos = buffer.getChannelData(0);
+    for (let i = 0; i < datos.length; i++) datos[i] = Math.random() * 2 - 1;
+
+    const fuente = ctx.createBufferSource();
+    fuente.buffer = buffer;
+    fuente.loop = true;
+    const filtro = ctx.createBiquadFilter();
+    filtro.type = 'lowpass';
+    filtro.frequency.value = 900;
+    const ganancia = ctx.createGain();
+    ganancia.gain.setValueAtTime(0, ctx.currentTime);
+    ganancia.gain.linearRampToValueAtTime(0.014, ctx.currentTime + 2.5);
+    fuente.connect(filtro).connect(ganancia).connect(ctx.destination);
+    fuente.start();
+    this.lluvia = { fuente, ganancia };
+  }
+
+  private pararLluvia(): void {
+    if (!this.lluvia) return;
+    try {
+      this.lluvia.fuente.stop();
+    } catch { /* ya parada */ }
+    this.lluvia = null;
   }
 
   /** Un bip de monitor. */

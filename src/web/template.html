@@ -4,29 +4,44 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Surgeon's Night — El Turno de Guardia</title>
-<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Crect width='24' height='24' rx='5' fill='%230d1117'/%3E%3Cpath d='M9 4h6v5h5v6h-5v5H9v-5H4V9h5z' fill='%23ff5d5d'/%3E%3C/svg%3E">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Crect width='24' height='24' rx='5' fill='%230b0906'/%3E%3Cpath d='M9 4h6v5h5v6h-5v5H9v-5H4V9h5z' fill='%23ff5d5d'/%3E%3C/svg%3E">
 <style>
   :root {
-    --fondo: #0d1117;
-    --panel: #131a23;
-    --tinta: #d8e1ea;
-    --borde: #2a3542;
-    --acento: #66d9e8;
-    --latido: #2ecc71;
-    --alarma: #ff6b6b;
+    --fondo: #0b0906;
+    --panel: #151109;
+    --tinta: #d3c7ae;
+    --borde: #3b3223;
+    --acento: #cfa257;
+    --latido: #cfa257;
+    --alarma: #c0544a;
+    --papel: #1c1610;
   }
   * { box-sizing: border-box; }
   html, body { height: 100%; }
   body {
     margin: 0;
-    background: radial-gradient(1200px 600px at 50% -10%, #16212e 0%, var(--fondo) 60%);
+    background: radial-gradient(1100px 620px at 50% -10%, #1d1508 0%, var(--fondo) 62%);
     color: var(--tinta);
-    font-family: "Cascadia Mono", "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
-    font-size: 14px;
-    line-height: 1.45;
+    font-family: "Courier Prime", "Courier New", Courier, ui-monospace, monospace;
+    font-size: 14.5px;
+    line-height: 1.5;
     display: flex;
     flex-direction: column;
   }
+  /* Grano de película y viñeteado: la guardia se rueda en 35 mm */
+  body::before {
+    content: "";
+    position: fixed; inset: 0; z-index: 40; pointer-events: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2'/%3E%3C/filter%3E%3Crect width='140' height='140' filter='url(%23n)' opacity='0.5'/%3E%3C/svg%3E");
+    opacity: .07;
+    animation: parpadeo-cine 1.1s steps(3) infinite;
+  }
+  body::after {
+    content: "";
+    position: fixed; inset: 0; z-index: 39; pointer-events: none;
+    background: radial-gradient(ellipse at center, transparent 55%, rgba(0, 0, 0, .5) 100%);
+  }
+  @keyframes parpadeo-cine { 0%, 100% { opacity: .07; } 50% { opacity: .055; } }
 
   /* ── Cabecera: monitor de constantes ─────────────────────── */
   #cabecera {
@@ -45,11 +60,12 @@
     animation: pulso-cruz 1.4s ease-in-out infinite;
   }
   #cabecera .titulo-cab {
+    font-family: Georgia, "Times New Roman", serif;
     font-weight: 700;
-    letter-spacing: 2px;
+    letter-spacing: 5px;
     color: var(--acento);
     white-space: nowrap;
-    text-shadow: 0 0 12px rgba(102, 217, 232, .35);
+    text-shadow: 0 1px 0 #000, 0 0 18px rgba(207, 162, 87, .3);
   }
   .ecg { flex: 1; height: 30px; min-width: 60px; }
   .ecg path {
@@ -81,7 +97,7 @@
     overflow-y: auto;
     background: var(--panel);
     border: 1px solid var(--borde);
-    border-radius: 10px 10px 0 0;
+    border-radius: 4px 4px 0 0;
     padding: 14px 16px;
     white-space: pre-wrap;
     word-break: break-word;
@@ -98,7 +114,7 @@
   /* ── Rail de comandas (pacientes pendientes, estilo Overcooked) ── */
   #comandas {
     display: flex; gap: 8px;
-    background: #0b1119;
+    background: #0d0a06;
     border: 1px solid var(--borde); border-top: none;
     padding: 8px 10px;
     overflow-x: auto;
@@ -106,29 +122,29 @@
   }
   .comanda {
     flex: none; min-width: 108px;
-    background: #131c28; border: 1px solid var(--borde); border-radius: 8px;
+    background: #1c1610; border: 1px solid var(--borde); border-radius: 8px;
     padding: 6px 9px; font-size: .82em;
     animation: aparecer .25s ease-out;
   }
   .comanda .c-nombre { font-weight: 700; }
-  .comanda .c-lugar { color: #8ea0b2; font-size: .9em; margin-top: 2px; }
-  .c-barra { height: 6px; background: #0a0f16; border-radius: 4px; margin-top: 5px; overflow: hidden; }
+  .comanda .c-lugar { color: #8a7f6a; font-size: .9em; margin-top: 2px; }
+  .c-barra { height: 6px; background: #0a0805; border-radius: 4px; margin-top: 5px; overflow: hidden; }
   .c-nivel { height: 100%; border-radius: 4px; transition: width .6s ease; }
-  .comanda.bien .c-nivel { background: #69db7c; }
-  .comanda.regular .c-nivel { background: #ffd43b; }
-  .comanda.critico .c-nivel { background: #ff6b6b; }
+  .comanda.bien .c-nivel { background: #97b077; }
+  .comanda.regular .c-nivel { background: #d9b36a; }
+  .comanda.critico .c-nivel { background: #c9645a; }
   .comanda.critico { border-color: #a13a44; animation: pulso-comanda 1s ease-in-out infinite; }
-  .comanda.alerta { border-color: #ffd43b; }
+  .comanda.alerta { border-color: #d9b36a; }
   @keyframes pulso-comanda {
     0%, 100% { box-shadow: 0 0 0 rgba(255, 107, 107, 0); }
     50% { box-shadow: 0 0 12px rgba(255, 107, 107, .5); }
   }
 
   #menu {
-    background: #0f151d;
+    background: #120d08;
     border: 1px solid var(--borde);
     border-top: none;
-    border-radius: 0 0 10px 10px;
+    border-radius: 0 0 4px 4px;
     padding: 10px 12px 12px;
     max-height: 45dvh;
     overflow-y: auto;
@@ -136,11 +152,16 @@
   /* Menú quirúrgico: tarjetas visuales con el instrumental */
   #menu.quirurgico { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 8px; }
   #menu.quirurgico .menu-titulo { grid-column: 1 / -1; }
-  button.opcion.tarjeta { margin: 0; align-items: center; background: #141d2a; }
+  button.opcion.tarjeta { margin: 0; align-items: center; background: var(--papel); }
   button.opcion.tarjeta .icono { flex: none; width: 40px; height: 40px; display: block; }
   button.opcion.tarjeta .icono .icono-svg { width: 40px; height: 40px; }
   button.opcion.tarjeta:hover .icono-svg g { stroke: var(--acento); }
-  .menu-titulo { padding: 4px 2px 8px; font-weight: 700; }
+  .menu-titulo {
+    padding: 4px 2px 8px;
+    font-family: Georgia, "Times New Roman", serif;
+    font-weight: 700;
+    letter-spacing: 1px;
+  }
   button.opcion {
     display: flex;
     align-items: baseline;
@@ -149,10 +170,10 @@
     text-align: left;
     margin: 4px 0;
     padding: 9px 12px;
-    background: #17202b;
+    background: var(--papel);
     color: var(--tinta);
     border: 1px solid var(--borde);
-    border-radius: 8px;
+    border-radius: 3px;
     font: inherit;
     cursor: pointer;
     transition: background .12s, border-color .12s, transform .05s;
@@ -160,33 +181,36 @@
     animation: aparecer .18s ease-out both;
   }
   button.opcion:hover, button.opcion:focus-visible {
-    background: #1d2938;
+    background: #241c12;
     border-color: var(--acento);
     outline: none;
   }
   button.opcion:active { transform: scale(.995); }
-  button.opcion .num { color: #ffd43b; min-width: 1.4em; flex: none; }
-  button.opcion .detalle { color: #868e96; font-size: .9em; }
+  button.opcion .num { color: var(--acento); min-width: 1.4em; flex: none; }
+  button.opcion .detalle { color: #8a7f6a; font-size: .9em; }
   button.reinicio { justify-content: center; color: var(--acento); font-weight: 700; }
 
-  /* ── Estilos que emite el conversor ANSI → HTML ──────────── */
+  /* ── Estilos que emite el conversor ANSI → HTML (paleta noir) ── */
   .ansi-b { font-weight: 700; }
   .ansi-d { opacity: .65; }
   .ansi-i { font-style: italic; }
   .ansi-u { text-decoration: underline; }
   .ansi-inv { background: var(--tinta); color: var(--fondo); }
-  .ansi-rojo { color: #ff6b6b; }
-  .ansi-verde { color: #69db7c; }
-  .ansi-amarillo { color: #ffd43b; }
-  .ansi-azul { color: #74c0fc; }
-  .ansi-magenta { color: #f783ac; }
-  .ansi-cian { color: #66d9e8; }
-  .ansi-gris { color: #868e96; }
-  .ansi-fondo-rojo { background: #c92a2a; color: #fff; }
+  .ansi-rojo { color: #c9645a; }
+  .ansi-verde { color: #97b077; }
+  .ansi-amarillo { color: #d9b36a; }
+  .ansi-azul { color: #8ba3b8; }
+  .ansi-magenta { color: #b58a9e; }
+  .ansi-cian { color: #cfa257; }
+  .ansi-gris { color: #8a7f6a; }
+  .ansi-fondo-rojo { background: #74241e; color: #efe4d0; }
 
-  /* ── Escenas ilustradas ──────────────────────────────────── */
+  /* ── Escenas ilustradas (viradas a sepia: cine de los 40) ── */
   figure.escena { margin: 10px 0; animation: aparecer .4s ease-out; }
-  .dibujo { display: block; width: 100%; max-width: 460px; height: auto; margin: 0 auto; }
+  .dibujo { display: block; width: 100%; max-width: 460px; height: auto; margin: 0 auto; filter: sepia(.4) saturate(.75) contrast(1.02); }
+  .campo-svg { filter: sepia(.3) saturate(.8); }
+  .retrato { filter: grayscale(.88) sepia(.25) contrast(1.08); }
+  .cuerpo { filter: sepia(.3) saturate(.85); }
   .estrella { fill: #cfe6ff; animation: titilar 3s ease-in-out infinite; }
   .ventana { fill: #ffd54a; opacity: .85; animation: ventana 7s steps(1) infinite; }
   .neon { fill: #ff5d5d; filter: drop-shadow(0 0 6px #ff5d5d); animation: pulso-cruz 2s ease-in-out infinite; }
@@ -224,7 +248,7 @@
   .retrato {
     width: 118px; height: 118px; flex: none;
     border: 1px solid var(--borde); border-radius: 10px;
-    background: #10161f;
+    background: var(--papel);
   }
   .gota { animation: gotear 1.6s ease-in infinite; transform-box: fill-box; transform-origin: center; }
   .gota2 { animation-delay: .8s; }
@@ -232,7 +256,7 @@
   /* Mapa corporal del dolor */
   .ficha-cuerpo {
     display: flex; align-items: center; gap: 14px;
-    background: #10161f; border: 1px solid var(--borde); border-radius: 10px;
+    background: var(--papel); border: 1px solid var(--borde); border-radius: 10px;
     padding: 10px 14px; max-width: 340px;
   }
   .cuerpo { width: 92px; height: auto; flex: none; }

@@ -8,6 +8,7 @@ import type { GameState } from '../core/StateMachine.js';
 import type { Paciente } from '../core/types.js';
 import { amarillo, cian, gris, negrita, rojo, verde } from '../ui/ansi.js';
 import { lineaSeparadora } from '../ui/hud.js';
+import { pintarEstrellas } from './calificacion.js';
 
 
 export class SummaryState implements GameState {
@@ -24,7 +25,8 @@ export class SummaryState implements GameState {
     ctx.io.escribir(`\n${negrita('Parte de guardia:')}`);
     for (const p of ctx.historial) {
       const atipica = !p.varianteId.startsWith('tipic') ? gris(` [presentación atípica: ${p.varianteId}]`) : '';
-      ctx.io.escribir(`  ${this.iconoDestino(p)} ${p.nombre} — ${p.patologia.nombre} → ${this.destino(p)}${atipica}`);
+      const estrellas = p.estrellas !== undefined ? ` ${amarillo(pintarEstrellas(p.estrellas))}` : '';
+      ctx.io.escribir(`  ${this.iconoDestino(p)} ${p.nombre} — ${p.patologia.nombre} → ${this.destino(p)}${estrellas}${atipica}`);
     }
 
     ctx.io.escribir(`\n${negrita('Balance:')}`);

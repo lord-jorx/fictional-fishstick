@@ -4,29 +4,44 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Surgeon's Night — El Turno de Guardia</title>
-<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Crect width='24' height='24' rx='5' fill='%230d1117'/%3E%3Cpath d='M9 4h6v5h5v6h-5v5H9v-5H4V9h5z' fill='%23ff5d5d'/%3E%3C/svg%3E">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Crect width='24' height='24' rx='5' fill='%230b0906'/%3E%3Cpath d='M9 4h6v5h5v6h-5v5H9v-5H4V9h5z' fill='%23ff5d5d'/%3E%3C/svg%3E">
 <style>
   :root {
-    --fondo: #0d1117;
-    --panel: #131a23;
-    --tinta: #d8e1ea;
-    --borde: #2a3542;
-    --acento: #66d9e8;
-    --latido: #2ecc71;
-    --alarma: #ff6b6b;
+    --fondo: #0b0906;
+    --panel: #151109;
+    --tinta: #d3c7ae;
+    --borde: #3b3223;
+    --acento: #cfa257;
+    --latido: #cfa257;
+    --alarma: #c0544a;
+    --papel: #1c1610;
   }
   * { box-sizing: border-box; }
   html, body { height: 100%; }
   body {
     margin: 0;
-    background: radial-gradient(1200px 600px at 50% -10%, #16212e 0%, var(--fondo) 60%);
+    background: radial-gradient(1100px 620px at 50% -10%, #1d1508 0%, var(--fondo) 62%);
     color: var(--tinta);
-    font-family: "Cascadia Mono", "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
-    font-size: 14px;
-    line-height: 1.45;
+    font-family: "Courier Prime", "Courier New", Courier, ui-monospace, monospace;
+    font-size: 14.5px;
+    line-height: 1.5;
     display: flex;
     flex-direction: column;
   }
+  /* Grano de película y viñeteado: la guardia se rueda en 35 mm */
+  body::before {
+    content: "";
+    position: fixed; inset: 0; z-index: 40; pointer-events: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2'/%3E%3C/filter%3E%3Crect width='140' height='140' filter='url(%23n)' opacity='0.5'/%3E%3C/svg%3E");
+    opacity: .07;
+    animation: parpadeo-cine 1.1s steps(3) infinite;
+  }
+  body::after {
+    content: "";
+    position: fixed; inset: 0; z-index: 39; pointer-events: none;
+    background: radial-gradient(ellipse at center, transparent 55%, rgba(0, 0, 0, .5) 100%);
+  }
+  @keyframes parpadeo-cine { 0%, 100% { opacity: .07; } 50% { opacity: .055; } }
 
   /* ── Cabecera: monitor de constantes ─────────────────────── */
   #cabecera {
@@ -45,11 +60,12 @@
     animation: pulso-cruz 1.4s ease-in-out infinite;
   }
   #cabecera .titulo-cab {
+    font-family: Georgia, "Times New Roman", serif;
     font-weight: 700;
-    letter-spacing: 2px;
+    letter-spacing: 5px;
     color: var(--acento);
     white-space: nowrap;
-    text-shadow: 0 0 12px rgba(102, 217, 232, .35);
+    text-shadow: 0 1px 0 #000, 0 0 18px rgba(207, 162, 87, .3);
   }
   .ecg { flex: 1; height: 30px; min-width: 60px; }
   .ecg path {
@@ -81,7 +97,7 @@
     overflow-y: auto;
     background: var(--panel);
     border: 1px solid var(--borde);
-    border-radius: 10px 10px 0 0;
+    border-radius: 4px 4px 0 0;
     padding: 14px 16px;
     white-space: pre-wrap;
     word-break: break-word;
@@ -98,7 +114,7 @@
   /* ── Rail de comandas (pacientes pendientes, estilo Overcooked) ── */
   #comandas {
     display: flex; gap: 8px;
-    background: #0b1119;
+    background: #0d0a06;
     border: 1px solid var(--borde); border-top: none;
     padding: 8px 10px;
     overflow-x: auto;
@@ -106,29 +122,29 @@
   }
   .comanda {
     flex: none; min-width: 108px;
-    background: #131c28; border: 1px solid var(--borde); border-radius: 8px;
+    background: #1c1610; border: 1px solid var(--borde); border-radius: 8px;
     padding: 6px 9px; font-size: .82em;
     animation: aparecer .25s ease-out;
   }
   .comanda .c-nombre { font-weight: 700; }
-  .comanda .c-lugar { color: #8ea0b2; font-size: .9em; margin-top: 2px; }
-  .c-barra { height: 6px; background: #0a0f16; border-radius: 4px; margin-top: 5px; overflow: hidden; }
+  .comanda .c-lugar { color: #8a7f6a; font-size: .9em; margin-top: 2px; }
+  .c-barra { height: 6px; background: #0a0805; border-radius: 4px; margin-top: 5px; overflow: hidden; }
   .c-nivel { height: 100%; border-radius: 4px; transition: width .6s ease; }
-  .comanda.bien .c-nivel { background: #69db7c; }
-  .comanda.regular .c-nivel { background: #ffd43b; }
-  .comanda.critico .c-nivel { background: #ff6b6b; }
+  .comanda.bien .c-nivel { background: #97b077; }
+  .comanda.regular .c-nivel { background: #d9b36a; }
+  .comanda.critico .c-nivel { background: #c9645a; }
   .comanda.critico { border-color: #a13a44; animation: pulso-comanda 1s ease-in-out infinite; }
-  .comanda.alerta { border-color: #ffd43b; }
+  .comanda.alerta { border-color: #d9b36a; }
   @keyframes pulso-comanda {
     0%, 100% { box-shadow: 0 0 0 rgba(255, 107, 107, 0); }
     50% { box-shadow: 0 0 12px rgba(255, 107, 107, .5); }
   }
 
   #menu {
-    background: #0f151d;
+    background: #120d08;
     border: 1px solid var(--borde);
     border-top: none;
-    border-radius: 0 0 10px 10px;
+    border-radius: 0 0 4px 4px;
     padding: 10px 12px 12px;
     max-height: 45dvh;
     overflow-y: auto;
@@ -136,11 +152,16 @@
   /* Menú quirúrgico: tarjetas visuales con el instrumental */
   #menu.quirurgico { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 8px; }
   #menu.quirurgico .menu-titulo { grid-column: 1 / -1; }
-  button.opcion.tarjeta { margin: 0; align-items: center; background: #141d2a; }
+  button.opcion.tarjeta { margin: 0; align-items: center; background: var(--papel); }
   button.opcion.tarjeta .icono { flex: none; width: 40px; height: 40px; display: block; }
   button.opcion.tarjeta .icono .icono-svg { width: 40px; height: 40px; }
   button.opcion.tarjeta:hover .icono-svg g { stroke: var(--acento); }
-  .menu-titulo { padding: 4px 2px 8px; font-weight: 700; }
+  .menu-titulo {
+    padding: 4px 2px 8px;
+    font-family: Georgia, "Times New Roman", serif;
+    font-weight: 700;
+    letter-spacing: 1px;
+  }
   button.opcion {
     display: flex;
     align-items: baseline;
@@ -149,10 +170,10 @@
     text-align: left;
     margin: 4px 0;
     padding: 9px 12px;
-    background: #17202b;
+    background: var(--papel);
     color: var(--tinta);
     border: 1px solid var(--borde);
-    border-radius: 8px;
+    border-radius: 3px;
     font: inherit;
     cursor: pointer;
     transition: background .12s, border-color .12s, transform .05s;
@@ -160,33 +181,36 @@
     animation: aparecer .18s ease-out both;
   }
   button.opcion:hover, button.opcion:focus-visible {
-    background: #1d2938;
+    background: #241c12;
     border-color: var(--acento);
     outline: none;
   }
   button.opcion:active { transform: scale(.995); }
-  button.opcion .num { color: #ffd43b; min-width: 1.4em; flex: none; }
-  button.opcion .detalle { color: #868e96; font-size: .9em; }
+  button.opcion .num { color: var(--acento); min-width: 1.4em; flex: none; }
+  button.opcion .detalle { color: #8a7f6a; font-size: .9em; }
   button.reinicio { justify-content: center; color: var(--acento); font-weight: 700; }
 
-  /* ── Estilos que emite el conversor ANSI → HTML ──────────── */
+  /* ── Estilos que emite el conversor ANSI → HTML (paleta noir) ── */
   .ansi-b { font-weight: 700; }
   .ansi-d { opacity: .65; }
   .ansi-i { font-style: italic; }
   .ansi-u { text-decoration: underline; }
   .ansi-inv { background: var(--tinta); color: var(--fondo); }
-  .ansi-rojo { color: #ff6b6b; }
-  .ansi-verde { color: #69db7c; }
-  .ansi-amarillo { color: #ffd43b; }
-  .ansi-azul { color: #74c0fc; }
-  .ansi-magenta { color: #f783ac; }
-  .ansi-cian { color: #66d9e8; }
-  .ansi-gris { color: #868e96; }
-  .ansi-fondo-rojo { background: #c92a2a; color: #fff; }
+  .ansi-rojo { color: #c9645a; }
+  .ansi-verde { color: #97b077; }
+  .ansi-amarillo { color: #d9b36a; }
+  .ansi-azul { color: #8ba3b8; }
+  .ansi-magenta { color: #b58a9e; }
+  .ansi-cian { color: #cfa257; }
+  .ansi-gris { color: #8a7f6a; }
+  .ansi-fondo-rojo { background: #74241e; color: #efe4d0; }
 
-  /* ── Escenas ilustradas ──────────────────────────────────── */
+  /* ── Escenas ilustradas (viradas a sepia: cine de los 40) ── */
   figure.escena { margin: 10px 0; animation: aparecer .4s ease-out; }
-  .dibujo { display: block; width: 100%; max-width: 460px; height: auto; margin: 0 auto; }
+  .dibujo { display: block; width: 100%; max-width: 460px; height: auto; margin: 0 auto; filter: sepia(.4) saturate(.75) contrast(1.02); }
+  .campo-svg { filter: sepia(.3) saturate(.8); }
+  .retrato { filter: grayscale(.88) sepia(.25) contrast(1.08); }
+  .cuerpo { filter: sepia(.3) saturate(.85); }
   .estrella { fill: #cfe6ff; animation: titilar 3s ease-in-out infinite; }
   .ventana { fill: #ffd54a; opacity: .85; animation: ventana 7s steps(1) infinite; }
   .neon { fill: #ff5d5d; filter: drop-shadow(0 0 6px #ff5d5d); animation: pulso-cruz 2s ease-in-out infinite; }
@@ -224,7 +248,7 @@
   .retrato {
     width: 118px; height: 118px; flex: none;
     border: 1px solid var(--borde); border-radius: 10px;
-    background: #10161f;
+    background: var(--papel);
   }
   .gota { animation: gotear 1.6s ease-in infinite; transform-box: fill-box; transform-origin: center; }
   .gota2 { animation-delay: .8s; }
@@ -232,7 +256,7 @@
   /* Mapa corporal del dolor */
   .ficha-cuerpo {
     display: flex; align-items: center; gap: 14px;
-    background: #10161f; border: 1px solid var(--borde); border-radius: 10px;
+    background: var(--papel); border: 1px solid var(--borde); border-radius: 10px;
     padding: 10px 14px; max-width: 340px;
   }
   .cuerpo { width: 92px; height: auto; flex: none; }
@@ -1714,6 +1738,8 @@
         pruebaEsquiva: this.rng() < (variante.pruebaEsquiva ?? 0),
         informeDudoso: variante.informeDudoso,
         notasClinicas: [],
+        interrogado: false,
+        descuentoPrueba: 0,
         estabilidad,
         minutoLlegada,
         estado: "espera",
@@ -1740,6 +1766,85 @@
     }
   };
 
+  // src/data/interrogatorios.ts
+  var INTERROGATORIOS = {
+    apendicitis: {
+      afirmacion: "«Esto me ha empezado esta mañana, se lo juro por mis hijos.»",
+      correcta: "dudar",
+      revelacion: "Baja la mirada: «Bueno... ayer ya me molestaba al andar, pero pensé que era del gimnasio.» El cuadro lleva más horas de las que confiesa.",
+      cerrojo: "Se ofende: «¿Me está llamando exagerado?» Y a partir de ahí, monosílabos."
+    },
+    colecistitis: {
+      afirmacion: "«¿Grasas? Ninguna, doctor. En mi casa se come a la plancha de toda la vida.»",
+      correcta: "mentira",
+      pruebaClave: "eco",
+      revelacion: "Le enseñas la vesícula en la pantalla y suspira: «...ayer hubo torreznos. Y croquetas. Era el bautizo de mi nieto.»",
+      cerrojo: "Cruza los brazos: «Usted qué sabrá lo que ceno yo.» Su mujer, desde la puerta, niega con la cabeza."
+    },
+    colico_biliar: {
+      afirmacion: "«Este dolor es clavadito al de mis cólicos de siempre. Me tomo el Nolotil y a casa.»",
+      correcta: "creer",
+      revelacion: "Te sostiene la mirada sin pestañear. Los pacientes que se conocen su dolor suelen tener razón.",
+      cerrojo: "Levanta las manos: «¿Ahora resulta que no me conozco mis propias piedras?» Pierdes el poco rapport que tenías."
+    },
+    obstruccion: {
+      afirmacion: "«¿De vientre? Voy estupendamente, como un reloj suizo.»",
+      correcta: "dudar",
+      revelacion: "Su hija interviene desde la silla: «Papá, llevas tres días quejándote de que no puedes.» Él protesta, pero el dato queda.",
+      cerrojo: "Te da la espalda en la camilla. La hija, que era tu mejor testigo, sale a por un café."
+    },
+    diverticulitis: {
+      afirmacion: "«Los antibióticos del otro médico me los tomé enteritos, como me dijeron.»",
+      correcta: "dudar",
+      revelacion: "«...los dejé al tercer día, cuando me encontré mejor. Es que me sentaban fatal al estómago.» Diverticulitis a medio tratar: eso explica muchas cosas.",
+      cerrojo: "Saca el blíster vacío del bolsillo como prueba. Vacío, sí — pero el envase es de hace dos meses."
+    },
+    isquemia: {
+      afirmacion: "«Del corazón estoy sano. Me miraron hace años y me dijeron que era fuerte como un toro.»",
+      correcta: "dudar",
+      revelacion: "«...bueno, mencionaron algo de una arritmia y que volviera para unas pastillas. No volví, ¿para qué? Si estaba bien.» FA sin anticoagular. Ahí está tu émbolo.",
+      cerrojo: "Se cierra: «Sanísimo, le digo.» El electrocardiograma tendrá que hablar por él."
+    },
+    trauma: {
+      afirmacion: "«Fue una caidita de nada, ni siquiera iba rápido. Ni me hace falta estar aquí.»",
+      correcta: "mentira",
+      pruebaClave: "ecofast",
+      revelacion: "Le muestras el líquido libre en la pantalla y traga saliva: «...iba a ochenta. Y la moto no era mía. No se lo diga a mi padre.»",
+      cerrojo: "«Que estoy bien, pesado.» Firma que quiere irse. Te toca retenerle con diplomacia y sin papeles."
+    },
+    ulcus: {
+      afirmacion: "«¿Pastillas? Yo no tomo nada de nada. Ni un paracetamol.»",
+      correcta: "mentira",
+      pruebaClave: "tc",
+      revelacion: "Con el neumoperitoneo en la pantalla, confiesa: «...el ibuprofeno no cuenta, ¿no? Me tomo dos al día para la espalda. Desde hace meses. Sin desayunar.»",
+      cerrojo: "«Nada de nada, ya se lo he dicho.» Su úlcera opina distinto, pero necesitarás la imagen para demostrarlo."
+    },
+    hernia: {
+      afirmacion: "«El bulto me entra solo desde hace años. Hoy no sé qué le pasa, no quiere.»",
+      correcta: "creer",
+      revelacion: "Es exactamente la historia de una hernia de años que hoy se ha incarcerado. El que describe bien su bulto, rara vez miente sobre él.",
+      cerrojo: "«¿No me cree? Pues mire usted el bulto.» Tenía razón, y ahora te lo recordará toda la noche."
+    },
+    pancreatitis: {
+      afirmacion: "«¿Alcohol? Una copita de vino en las comidas, como recomiendan los médicos.»",
+      correcta: "dudar",
+      revelacion: "«...fue mi cumpleaños este finde. Empezamos el viernes y... técnicamente seguimos el domingo.» La lipasa ya lo veía venir.",
+      cerrojo: "«Una copita, he dicho.» Su acompañante mira al techo con mucho interés."
+    },
+    gastroenteritis: {
+      afirmacion: "«Hemos comido todos lo mismo en el bautizo y estamos todos igual, por el grupo se lo digo.»",
+      correcta: "creer",
+      revelacion: "Te enseña el chat familiar: catorce mensajes, tres audios y una encuesta («¿quién más está vomitando?»: 9 votos). Epidemiología de primera mano.",
+      cerrojo: "Guarda el móvil, dolido: «Encima de malos, mentirosos.» El chat familiar era tu mejor prueba y ya no lo verás."
+    },
+    colico_renal: {
+      afirmacion: "«Es igualito al de mi piedra de hace dos años. Mismo sitio, mismo retortijón, mismo todo.»",
+      correcta: "creer",
+      revelacion: "Se retuerce mientras lo cuenta, sin defensa en la tripa. La memoria del cólico renal no se olvida ni se inventa.",
+      cerrojo: "«¿Que no? Mire, hasta le digo por dónde va a bajar la piedra.» Acertó él. Tú no."
+    }
+  };
+
   // src/data/pruebas.ts
   var PRUEBAS = {
     analitica: { id: "analitica", nombre: "Analítica completa (hemograma, PCR, lactato)", duracionMin: 45 },
@@ -1755,6 +1860,21 @@
     angiotc: "Angio-TC: ejes vasculares permeables, sin otros hallazgos.",
     ecofast: "Eco-FAST negativa: no se objetiva líquido libre."
   };
+
+  // src/engine/calificacion.ts
+  function calificarCaso(p) {
+    if (p.estado === "exitus") return 1;
+    let estrellas = 5;
+    if (!p.diagnosticoConfirmado) estrellas--;
+    if (p.pruebasRealizadas.length > 2) estrellas--;
+    if (p.interrogado && p.interrogatorioAcertado === false) estrellas--;
+    if (p.cirugiaPerfecta === false) estrellas--;
+    if (p.reingresado) estrellas--;
+    return Math.max(1, Math.min(5, estrellas));
+  }
+  function pintarEstrellas(n) {
+    return "★".repeat(n) + "☆".repeat(5 - n);
+  }
 
   // src/ui/ansi.ts
   var habilitado = typeof process !== "undefined" && process !== null ? process.stdout?.isTTY ?? false : false;
@@ -1832,7 +1952,8 @@
 ${negrita("Parte de guardia:")}`);
       for (const p of ctx.historial) {
         const atipica = !p.varianteId.startsWith("tipic") ? gris(` [presentación atípica: ${p.varianteId}]`) : "";
-        ctx.io.escribir(`  ${this.iconoDestino(p)} ${p.nombre} — ${p.patologia.nombre} → ${this.destino(p)}${atipica}`);
+        const estrellas = p.estrellas !== void 0 ? ` ${amarillo(pintarEstrellas(p.estrellas))}` : "";
+        ctx.io.escribir(`  ${this.iconoDestino(p)} ${p.nombre} — ${p.patologia.nombre} → ${this.destino(p)}${estrellas}${atipica}`);
       }
       ctx.io.escribir(`
 ${negrita("Balance:")}`);
@@ -2079,7 +2200,13 @@ ${negrita(`PASO ${n + 1}/${pasos.length}: ${paso.titulo}`)}`);
       ctx.hospital.quirofanosLibres++;
       ctx.stats.cirugiasRealizadas++;
       ctx.stats.atendidos++;
+      p.cirugiaPerfecta = perfecta;
       this.resolverPostoperatorio(ctx, perfecta);
+      p.estrellas = calificarCaso(p);
+      ctx.io.escribir(
+        `
+  ${negrita("EXPEDIENTE CERRADO")} — Calificación del caso: ${amarillo(pintarEstrellas(p.estrellas))}`
+      );
       ctx.io.escribir(`
 ${gris(`Perla docente: ${p.patologia.notaDocente}`)}`);
       if (avisos.length > 0) {
@@ -2278,10 +2405,19 @@ ${negrita("Ronda de planta:")}`);
 ${cian("Exploración física:")} ${paciente.exploracion}`);
             break;
           }
+          case "interrogar":
+            await this.interrogar(ctx, paciente);
+            break;
           case "prueba": {
             const prueba = PRUEBAS[accion.prueba];
-            ctx.io.escribir(gris(`Solicitas ${prueba.nombre}. Esperas el resultado...`));
-            this.mostrarAvisos(ctx, ctx.avanzarTiempo(prueba.duracionMin));
+            const duracion = Math.max(5, prueba.duracionMin - paciente.descuentoPrueba);
+            if (paciente.descuentoPrueba > 0) {
+              ctx.io.escribir(gris(`Sabes exactamente qué buscar: ${prueba.nombre} priorizada (${duracion} min).`));
+              paciente.descuentoPrueba = 0;
+            } else {
+              ctx.io.escribir(gris(`Solicitas ${prueba.nombre}. Esperas el resultado...`));
+            }
+            this.mostrarAvisos(ctx, ctx.avanzarTiempo(duracion));
             if (prueba.id === paciente.patologia.pruebaDiana && paciente.pruebaEsquiva) {
               paciente.pruebaEsquiva = false;
               paciente.notasClinicas.push(
@@ -2338,6 +2474,13 @@ ${cian(`Resultado de ${prueba.nombre}:`)}
       const opciones = [];
       if (!_TriageState.explorados.has(paciente.id)) {
         opciones.push({ etiqueta: "Explorar al paciente", detalle: "10 min", valor: { tipo: "explorar" } });
+      }
+      if (!paciente.interrogado && INTERROGATORIOS[paciente.patologia.id]) {
+        opciones.push({
+          etiqueta: cian("Apretar en la anamnesis: algo no encaja"),
+          detalle: "5 min",
+          valor: { tipo: "interrogar" }
+        });
       }
       for (const prueba of Object.values(PRUEBAS)) {
         if (!paciente.pruebasRealizadas.includes(prueba.id)) {
@@ -2421,6 +2564,56 @@ ${cian("🩺 Tu adjunto arquea una ceja:")} ${gris(`«¿${this.nombreDecision(de
       return p.patologia.hallazgosParciales[prueba] ?? INFORME_INESPECIFICO[prueba];
     }
     // ────────────────────────────────────────────────────────────
+    /**
+     * El interrogatorio: el paciente jura algo y tú decides si tragártelo.
+     * Acusar de mentir sin la prueba que lo desmonta no sirve de nada — como
+     * en toda buena sala de interrogatorios.
+     */
+    async interrogar(ctx, p) {
+      const dossier = INTERROGATORIOS[p.patologia.id];
+      this.mostrarAvisos(ctx, ctx.avanzarTiempo(5));
+      ctx.io.escribir(`
+${cian("Le sostienes la mirada y repasas su historia. El paciente declara:")}`);
+      ctx.io.escribir(`  ${negrita(dossier.afirmacion)}`);
+      const respuesta = await ctx.io.elegir("¿Qué le dices?", [
+        { etiqueta: verde("Creerle"), detalle: "su historia se sostiene", valor: "creer" },
+        { etiqueta: amarillo("Dudar"), detalle: "presiónale: hay huecos en el relato", valor: "dudar" },
+        { etiqueta: rojo("Acusarle de mentir"), detalle: "necesitarás una prueba que lo desmonte", valor: "mentira" }
+      ]);
+      if (respuesta === "mentira" && dossier.correcta === "mentira" && dossier.pruebaClave && !p.pruebasRealizadas.includes(dossier.pruebaClave)) {
+        ctx.cirujano.estres = Math.min(100, ctx.cirujano.estres + 3);
+        ctx.io.escribir(
+          amarillo("\nAciertas... pero sin nada en la mano. «Demuéstremelo», dice. Y tiene razón: vuelve cuando tengas la prueba.")
+        );
+        p.notasClinicas.push(`Sospechas que miente: la ${PRUEBAS[dossier.pruebaClave].nombre.toLowerCase()} lo desmontaría.`);
+        return;
+      }
+      p.interrogado = true;
+      if (respuesta === dossier.correcta) {
+        p.interrogatorioAcertado = true;
+        p.descuentoPrueba = 15;
+        ctx.cirujano.estres = Math.max(0, ctx.cirujano.estres - 4);
+        ctx.io.escribir(verde(`
+${dossier.revelacion}`));
+        ctx.io.escribir(gris("  La historia real acelera el caso: tu próxima prueba irá 15 minutos más rápida (ya sabes qué buscar)."));
+        p.notasClinicas.push("Anamnesis real conseguida: el relato inicial no era todo.");
+      } else {
+        p.interrogatorioAcertado = false;
+        ctx.cirujano.estres = Math.min(100, ctx.cirujano.estres + 6);
+        this.mostrarAvisos(ctx, ctx.avanzarTiempo(10));
+        ctx.io.escribir(rojo(`
+${dossier.cerrojo}`));
+        ctx.io.escribir(gris("  El paciente se cierra en banda. Diez minutos perdidos en reconstruir la confianza."));
+      }
+    }
+    /** Cierra el expediente: calcula y anuncia las estrellas del caso. */
+    calificar(ctx, p) {
+      p.estrellas = calificarCaso(p);
+      ctx.io.escribir(
+        `
+  ${negrita("EXPEDIENTE CERRADO")} — Calificación del caso: ${amarillo(pintarEstrellas(p.estrellas))}`
+      );
+    }
     resolverAlta(ctx, p) {
       this.sacarDeEspera(ctx, p);
       ctx.stats.atendidos++;
@@ -2431,6 +2624,7 @@ ${cian("🩺 Tu adjunto arquea una ceja:")} ${gris(`«¿${this.nombreDecision(de
         ctx.io.escribir(verde(`
 ✔ Alta correcta: ${p.patologia.nombre} no precisaba ingreso ni cirugía.`));
         ctx.io.escribir(gris(`  Perla docente: ${p.patologia.notaDocente}`));
+        this.calificar(ctx, p);
         return;
       }
       ctx.stats.altasErroneas++;
@@ -2443,6 +2637,7 @@ ${cian("🩺 Tu adjunto arquea una ceja:")} ${gris(`«¿${this.nombreDecision(de
         ctx.io.escribir(rojo(negrita(`
 ✝ ${p.nombre} fallece en su domicilio horas después del alta (${p.patologia.nombre}).`)));
         ctx.io.escribir(gris(`  ${p.patologia.notaDocente}`));
+        this.calificar(ctx, p);
         return;
       }
       p.estabilidad = estabilidadDeVuelta;
@@ -2468,10 +2663,12 @@ Ingresas a ${p.nombre} con sueroterapia y antibiótico. La planta lo vigilará..
         ctx.io.escribir(verde(`
 ✔ Ingreso correcto: ${p.patologia.nombre} se trata con medidas conservadoras, no con bisturí.`));
         ctx.io.escribir(gris(`  Perla docente: ${p.patologia.notaDocente}`));
+        this.calificar(ctx, p);
       } else {
         ctx.stats.ingresosCorrectos++;
         ctx.io.escribir(verde(`
 Ingresas a ${p.nombre} en observación. Prudente, aunque podía haberse ido de alta.`));
+        this.calificar(ctx, p);
       }
     }
     sacarDeEspera(ctx, p) {
@@ -2775,21 +2972,24 @@ Ingresas a ${p.nombre} en observación. Prudente, aunque podía haberse ido de a
       this.io.escribir(negrita(cian("   SURGEON'S NIGHT — El Turno de Guardia")));
       this.io.escribir(lineaSeparadora());
       this.io.escribir(`
-  Son las ${negrita("08:00")}. Empiezan tus ${negrita("24 horas")} como cirujano general
-  de guardia en un hospital público. Tienes ${negrita("2 quirófanos")}, ${negrita("3 camas de REA")}
-  y un busca que no va a dejar de sonar.
+  ${gris("Llueve sobre la ciudad y el busca acaba de sonar por primera vez.")}
+  ${gris("Van a ser veinticuatro horas largas.")}
 
-  ${negrita("Reglas de supervivencia:")}
-   • Todo cuesta tiempo, y los pacientes no tratados se deterioran.
-   • La prueba adecuada confirma el diagnóstico; operar a ciegas se paga.
-   • No todo dolor abdominal se opera: dar el alta también es decidir.
-   • Vigila tu ${negrita("energía")} y tu ${negrita("estrés")}: con fatiga, hasta la decisión
-     correcta puede salir mal. El café es tu amigo. Dosifícalo.
+  Este hospital te da ${negrita("2 quirófanos")}, ${negrita("3 camas de REA")} y una cafetera
+  que hace un ruido raro. Con eso tienes que llegar vivo — tú y ellos —
+  a las ${negrita("08:00")} de mañana.
 
-  ${gris("¿No eres sanitario? Empieza en modo Residente: el adjunto te guía y")}
-  ${gris("cada caso te deja su perla docente. Se aprende operando.")}
+  ${negrita("Lo que aprendí en mi primera guardia, y nadie me contó:")}
+   • Aquí todo cuesta tiempo, y el tiempo lo pagan los que esperan.
+   • Los pacientes no mienten por maldad. Mienten por miedo, por
+     vergüenza o por sus nietos. Tu trabajo es notarlo.
+   • La prueba correcta cierra el caso. Operar a ciegas también,
+     pero de otra manera.
+   • No todo vientre se abre. Firmar un alta es un acto quirúrgico.
+   • Y vigila tu ${negrita("energía")}: a las cinco de la mañana las manos
+     son de otro. El café ayuda. Hasta que deja de ayudar.
 
-  ${gris("Sobrevive hasta las 08:00 de mañana. Suerte, doctor/a.")}
+  ${gris("¿Sin bata? Entra de Residente: alguien con canas te irá soplando.")}
 `);
     }
   };
@@ -3136,6 +3336,7 @@ Ingresas a ${p.nombre} en observación. Prudente, aunque podía haberse ido de a
     constructor() {
       __publicField(this, "ctx", null);
       __publicField(this, "latidoTimer", null);
+      __publicField(this, "lluvia", null);
       __publicField(this, "activo", true);
       try {
         this.activo = localStorage.getItem(CLAVE_SILENCIO) !== "1";
@@ -3156,13 +3357,49 @@ Ingresas a ${p.nombre} en observación. Prudente, aunque podía haberse ido de a
           localStorage.setItem(CLAVE_SILENCIO, this.activo ? "0" : "1");
         } catch {
         }
-        if (!this.activo) this.pararLatido();
+        if (!this.activo) {
+          this.pararLatido();
+          this.pararLluvia();
+        } else {
+          this.empezarLluvia();
+        }
         pintar();
       });
     }
     // ── Sonidos ─────────────────────────────────────────────────
     click() {
       this.tono({ freq: 1250, dur: 0.035, gain: 0.045, tipo: "square" });
+      this.empezarLluvia();
+    }
+    /** Lluvia noir de fondo: ruido blanco filtrado en bucle, muy bajito. */
+    empezarLluvia() {
+      if (this.lluvia) return;
+      const ctx = this.asegurarContexto();
+      if (!ctx) return;
+      const duracion = 3;
+      const buffer = ctx.createBuffer(1, ctx.sampleRate * duracion, ctx.sampleRate);
+      const datos = buffer.getChannelData(0);
+      for (let i = 0; i < datos.length; i++) datos[i] = Math.random() * 2 - 1;
+      const fuente = ctx.createBufferSource();
+      fuente.buffer = buffer;
+      fuente.loop = true;
+      const filtro = ctx.createBiquadFilter();
+      filtro.type = "lowpass";
+      filtro.frequency.value = 900;
+      const ganancia = ctx.createGain();
+      ganancia.gain.setValueAtTime(0, ctx.currentTime);
+      ganancia.gain.linearRampToValueAtTime(0.014, ctx.currentTime + 2.5);
+      fuente.connect(filtro).connect(ganancia).connect(ctx.destination);
+      fuente.start();
+      this.lluvia = { fuente, ganancia };
+    }
+    pararLluvia() {
+      if (!this.lluvia) return;
+      try {
+        this.lluvia.fuente.stop();
+      } catch {
+      }
+      this.lluvia = null;
     }
     /** Un bip de monitor. */
     bip() {

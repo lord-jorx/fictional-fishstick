@@ -12,7 +12,7 @@ import type { OpcionQuirurgica, Paciente, PasoQuirurgico } from '../core/types.j
 import { COMPLICACIONES_IMPREVISTAS } from '../data/complicaciones.js';
 import { amarillo, cian, fondoRojo, gris, negrita, rojo, verde } from '../ui/ansi.js';
 import { barra, lineaSeparadora } from '../ui/hud.js';
-
+import { calificarCaso, pintarEstrellas } from './calificacion.js';
 import { TriageState } from './TriageState.js';
 
 export class SurgeryState implements GameState {
@@ -99,8 +99,13 @@ export class SurgeryState implements GameState {
     ctx.stats.cirugiasRealizadas++;
     ctx.stats.atendidos++;
 
+    p.cirugiaPerfecta = perfecta;
     this.resolverPostoperatorio(ctx, perfecta);
 
+    p.estrellas = calificarCaso(p);
+    ctx.io.escribir(
+      `\n  ${negrita('EXPEDIENTE CERRADO')} — Calificación del caso: ${amarillo(pintarEstrellas(p.estrellas))}`,
+    );
     ctx.io.escribir(`\n${gris(`Perla docente: ${p.patologia.notaDocente}`)}`);
     if (avisos.length > 0) {
       ctx.io.escribir(negrita('\nMientras estabas en quirófano:'));

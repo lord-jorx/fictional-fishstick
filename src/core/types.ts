@@ -39,6 +39,26 @@ export interface PlanQuirurgico {
 
 export type ManejoCorrecto = 'cirugia' | 'conservador' | 'alta';
 
+/** Respuestas posibles ante la declaración del paciente (estilo interrogatorio). */
+export type RespuestaInterrogatorio = 'creer' | 'dudar' | 'mentira';
+
+/**
+ * El interrogatorio clínico: el paciente jura algo al llegar. Tú decides si
+ * creerle, dudar o acusarle de mentir — y una acusación solo se sostiene si
+ * llevas la prueba que lo desmonta. Acertar suelta información que acelera
+ * el caso; fallar cierra al paciente en banda.
+ */
+export interface InterrogatorioClinico {
+  afirmacion: string;
+  correcta: RespuestaInterrogatorio;
+  /** Si la respuesta correcta es 'mentira', esta prueba es la que lo desmonta. */
+  pruebaClave?: PruebaId;
+  /** Lo que confiesa si aciertas. */
+  revelacion: string;
+  /** Cómo se enroca si fallas. */
+  cerrojo: string;
+}
+
 /**
  * Variante clínica de presentación: la misma patología puede debutar de
  * forma típica o esquiva. Las variantes se sortean por peso al generar el
@@ -127,6 +147,15 @@ export interface Paciente {
   informeDudoso?: string;
   /** Apuntes que la ficha muestra al jugador (p. ej. "eco no concluyente"). */
   notasClinicas: string[];
+  /** true cuando el interrogatorio quedó zanjado (acierto o fallo). */
+  interrogado: boolean;
+  interrogatorioAcertado?: boolean;
+  /** Minutos de descuento en la próxima prueba (premio del interrogatorio). */
+  descuentoPrueba: number;
+  /** true si su cirugía salió impecable (para la calificación del caso). */
+  cirugiaPerfecta?: boolean;
+  /** Calificación final del caso, 1-5 estrellas (se fija al resolverlo). */
+  estrellas?: number;
   /** 0-100. A 0, el paciente fallece. */
   estabilidad: number;
   /** Minuto de guardia en el que llegó. */
