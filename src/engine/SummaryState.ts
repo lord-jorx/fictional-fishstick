@@ -38,6 +38,24 @@ export class SummaryState implements GameState {
     ctx.io.escribir(`  Complicaciones:           ${s.complicaciones === 0 ? verde('0') : amarillo(String(s.complicaciones))}`);
     ctx.io.escribir(`  Éxitus:                   ${s.exitus === 0 ? verde('0') : rojo(String(s.exitus))}`);
 
+    // Cooperativo: desglose por cirujano y MVP de la noche.
+    if (ctx.equipo.length > 1) {
+      ctx.io.escribir(`\n${negrita('La noche, por cirujano:')}`);
+      const medias: number[] = [];
+      ctx.equipo.forEach((c, i) => {
+        const suyos = ctx.historial.filter((p) => p.cirujanoIdx === i && p.estrellas !== undefined);
+        const media = suyos.length > 0 ? suyos.reduce((s, p) => s + (p.estrellas ?? 0), 0) / suyos.length : 0;
+        medias.push(media);
+        ctx.io.escribir(
+          `  ${negrita(c.nombre)} — ${suyos.length} expediente(s), media ${amarillo(media.toFixed(1))} ★`,
+        );
+      });
+      const mvp = medias[0]! === medias[1]! ? null : medias[0]! > medias[1]! ? 0 : 1;
+      if (mvp !== null && ctx.historial.some((p) => p.cirujanoIdx !== undefined)) {
+        ctx.io.escribir(gris(`  El café de mañana lo paga quien no es ${ctx.equipo[mvp]!.nombre}.`));
+      }
+    }
+
     let puntos = this.puntuacion(ctx);
     if (ctx.modoResidente) {
       puntos = Math.round(puntos * 0.85);

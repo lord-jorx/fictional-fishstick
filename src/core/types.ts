@@ -156,6 +156,8 @@ export interface Paciente {
   cirugiaPerfecta?: boolean;
   /** Calificación final del caso, 1-5 estrellas (se fija al resolverlo). */
   estrellas?: number;
+  /** Índice del cirujano que lleva el caso (cooperativo local). */
+  cirujanoIdx?: number;
   /** 0-100. A 0, el paciente fallece. */
   estabilidad: number;
   /** Minuto de guardia en el que llegó. */

@@ -4,6 +4,7 @@
  */
 import type { GameContext } from '../core/GameContext.js';
 import type { Paciente } from '../core/types.js';
+import { t } from '../i18n.js';
 import { amarillo, cian, gris, negrita, rojo, verde } from './ansi.js';
 
 /** Convierte minutos de guardia (0-1440, empieza a las 08:00) en "HH:MM". */
@@ -40,13 +41,21 @@ export function pintarHUD(ctx: GameContext): void {
   ctx.io.escribir('\n' + lineaSeparadora());
   ctx.io.escribir(
     `  ${negrita(cian('SURGEON’S NIGHT'))}  ${gris('|')}  🕐 ${negrita(horaGuardia(ctx.minuto))}` +
-      `  ${gris('|')}  quedan ${amarillo(restante)} de guardia`,
+      `  ${gris('|')}  ${t('quedan')} ${amarillo(restante)}`,
   );
-  ctx.io.escribir(`  Energía ${barra(ctx.cirujano.energia)}   Estrés ${barra(ctx.cirujano.estres, true)}`);
+  if (ctx.equipo.length > 1) {
+    for (const c of ctx.equipo) {
+      ctx.io.escribir(
+        `  ${negrita(c.nombre.padEnd(12).slice(0, 12))} ${t('energia')} ${barra(c.energia, false, 12)}  ${t('estres')} ${barra(c.estres, true, 12)}`,
+      );
+    }
+  } else {
+    ctx.io.escribir(`  ${t('energia')} ${barra(ctx.cirujano.energia)}   ${t('estres')} ${barra(ctx.cirujano.estres, true)}`);
+  }
   ctx.io.escribir(
-    `  Quirófanos libres: ${negrita(`${ctx.hospital.quirofanosLibres}/${ctx.hospital.quirofanosTotales}`)}` +
-      `   Camas REA libres: ${negrita(`${ctx.hospital.camasReaLibres}/${ctx.hospital.camasReaTotales}`)}` +
-      `   Pacientes en espera: ${negrita(String(ctx.salaEspera.length))}`,
+    `  ${t('quirofanos')}: ${negrita(`${ctx.hospital.quirofanosLibres}/${ctx.hospital.quirofanosTotales}`)}` +
+      `   ${t('camasRea')}: ${negrita(`${ctx.hospital.camasReaLibres}/${ctx.hospital.camasReaTotales}`)}` +
+      `   ${t('enEspera')}: ${negrita(String(ctx.salaEspera.length))}`,
   );
   ctx.io.escribir(lineaSeparadora());
 }

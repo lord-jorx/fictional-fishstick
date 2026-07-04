@@ -13,6 +13,7 @@ import { COMPLICACIONES_IMPREVISTAS } from '../data/complicaciones.js';
 import { amarillo, cian, fondoRojo, gris, negrita, rojo, verde } from '../ui/ansi.js';
 import { barra, lineaSeparadora } from '../ui/hud.js';
 import { calificarCaso, pintarEstrellas } from './calificacion.js';
+import { t } from '../i18n.js';
 import { TriageState } from './TriageState.js';
 
 export class SurgeryState implements GameState {
@@ -35,9 +36,14 @@ export class SurgeryState implements GameState {
       edad: p.edad,
       tablero: ctx.tablero(),
     });
+    if (p.cirujanoIdx !== undefined) ctx.cirujanoActivo = p.cirujanoIdx;
+
     ctx.io.escribir('\n' + lineaSeparadora());
     ctx.io.escribir(`  ${negrita(cian('🔪 QUIRÓFANO'))} — ${negrita(plan.nombre)}`);
     ctx.io.escribir(`  Paciente: ${p.nombre}, ${p.edad} años. ${gris(p.patologia.nombre)}`);
+    if (ctx.equipo.length > 1) {
+      ctx.io.escribir(`  ${t('opera')}: ${negrita(ctx.equipo[ctx.cirujanoActivo]!.nombre)}`);
+    }
     ctx.io.escribir(lineaSeparadora());
 
     if (!p.diagnosticoConfirmado) {
@@ -176,7 +182,7 @@ export class SurgeryState implements GameState {
         });
       }
 
-      const eleccion = await ctx.io.elegir('¿Cómo procedes?', menu);
+      const eleccion = await ctx.io.elegir(t('comoProcedes'), menu);
       if (eleccion !== 'adjunto') return eleccion;
 
       ctx.consultasAdjunto--;

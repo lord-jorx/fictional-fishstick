@@ -128,11 +128,48 @@ const ZONA_POR_PATOLOGIA: Record<string, string> = {
   colico_renal: 'lumbar-der',
 };
 
-/** Silueta con el foco de dolor pulsando. Devuelve null si no hay mapa. */
+/** Lo que el paciente dice mientras se señala (bocadillo de la escena). */
+export const QUEJAS: Record<string, string> = {
+  apendicitis: '¡Ay! Aquí abajo, doctor... y no me deje apretar, que es peor.',
+  colecistitis: 'Aquí, debajo de las costillas... me sube hasta la paletilla.',
+  colico_biliar: 'Es aquí, como siempre... pero hoy no se me pasa con nada.',
+  obstruccion: 'La tripa entera, doctor... y mire cómo la tengo de hinchada.',
+  diverticulitis: 'Este lado, no me toque... ¡le digo que NO me toque!',
+  isquemia: 'Por dentro, doctor, por DENTRO... nunca he tenido un dolor así.',
+  trauma: 'Aquí en el costado... y el hombro, ¿qué tendrá que ver el hombro?',
+  ulcus: 'Fue de golpe, como una puñalada... aquí, en la boca del estómago.',
+  hernia: 'El bulto de siempre, doctor... pero hoy no entra y duele horrores.',
+  pancreatitis: 'Me atraviesa hasta la espalda... como un cinturón apretado.',
+  gastroenteritis: 'Retortijones, doctor... vengo del baño y ya querría volver.',
+  colico_renal: '¡No puedo estarme quieto! Me coge del riñón y baja hasta abajo...',
+};
+
+/** Coordenadas y nombre de la zona dolorosa (para escenas que las necesiten). */
+export function zonaDolorInfo(
+  zonaDolor?: string,
+  patologiaId?: string,
+): { zona: string; puntos: Array<[number, number]> } | null {
+  const clave = zonaDolor ?? (patologiaId ? ZONA_POR_PATOLOGIA[patologiaId] : undefined);
+  const zona = clave ? ZONAS[clave] : undefined;
+  return zona ? { zona: zona.zona, puntos: zona.puntos.map((p) => [...p] as [number, number]) } : null;
+}
+
+/** Silueta con el foco de dolor pulsando y la mano del paciente señalándolo. */
 export function cuerpoConDolor(zonaDolor?: string, patologiaId?: string): string | null {
   const clave = zonaDolor ?? (patologiaId ? ZONA_POR_PATOLOGIA[patologiaId] : undefined);
   const zona = clave ? ZONAS[clave] : undefined;
   if (!zona) return null;
+
+  // El brazo del paciente: del hombro derecho hacia el primer foco de dolor.
+  const [dx, dy] = zona.puntos[0]!;
+  const hx = dx + (dx < 60 ? 7 : -7);
+  const hy = dy - 6;
+  const brazo = `
+    <g class="brazo">
+      <path d="M84 46 Q ${Math.max(hx + 22, 96)} ${Math.min(hy + 14, 120)} ${hx} ${hy}"
+        fill="none" stroke="#b98a63" stroke-width="7" stroke-linecap="round"/>
+      <circle cx="${hx}" cy="${hy}" r="4.6" fill="#c99b72"/>
+    </g>`;
 
   const focos = zona.puntos
     .map(
@@ -150,6 +187,7 @@ export function cuerpoConDolor(zonaDolor?: string, patologiaId?: string): string
     <path class="silueta" d="M60 30 C46 30 38 36 36 47 L31 78 C30 93 30 106 33 120 L37 150 C38 159 46 163 60 163 C74 163 82 159 83 150 L87 120 C90 106 90 93 89 78 L84 47 C82 36 74 30 60 30 Z"/>
     <path class="guias" d="M36 76 H84 M34 118 H86 M60 58 V152"/>
     ${focos}
+    ${brazo}
   </svg>
   <div class="cuerpo-pie">Dolor referido: ${zona.zona}</div>
 </div>`;

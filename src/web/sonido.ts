@@ -127,6 +127,27 @@ class MotorSonido {
     );
   }
 
+  /** Quejido del paciente: un lamento breve y grave (nada teatral). */
+  quejido(): void {
+    const ctx = this.asegurarContexto();
+    if (!ctx) return;
+    const t0 = ctx.currentTime + 0.05;
+    const osc = ctx.createOscillator();
+    const gan = ctx.createGain();
+    const filtro = ctx.createBiquadFilter();
+    filtro.type = 'lowpass';
+    filtro.frequency.value = 500;
+    osc.type = 'sawtooth';
+    osc.frequency.setValueAtTime(200, t0);
+    osc.frequency.exponentialRampToValueAtTime(120, t0 + 0.45);
+    gan.gain.setValueAtTime(0, t0);
+    gan.gain.linearRampToValueAtTime(0.028, t0 + 0.08);
+    gan.gain.exponentialRampToValueAtTime(0.0001, t0 + 0.5);
+    osc.connect(filtro).connect(gan).connect(ctx.destination);
+    osc.start(t0);
+    osc.stop(t0 + 0.55);
+  }
+
   /** Asistolia: el tono continuo del monitor. */
   asistolia(): void {
     this.pararLatido();

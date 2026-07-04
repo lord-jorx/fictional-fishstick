@@ -7,8 +7,14 @@
  * `avanzarTiempo`, que es quien aplica deterioro, fatiga, llegadas
  * y liberación de recursos.
  */
-import type { ComandaPaciente, IO } from './io.js';
+import type { ComandaPaciente, IO, Rasgos } from './io.js';
 import type { Cirujano, Estadisticas, Hospital, Paciente } from './types.js';
+
+/** Un cirujano del equipo de guardia (1 en solitario, 2 en cooperativo local). */
+export interface MiembroEquipo extends Cirujano {
+  nombre: string;
+  rasgos?: Rasgos;
+}
 
 /** PRNG determinista (mulberry32) para partidas reproducibles con --seed. */
 export function crearRng(semilla: number): () => number {
@@ -55,7 +61,15 @@ export class GameContext {
   /** Llamadas al adjunto disponibles en quirófano (solo modo residente). */
   consultasAdjunto = 3;
 
-  readonly cirujano: Cirujano = { energia: 100, estres: 10 };
+  /** Equipo de guardia; en solitario tiene un único miembro. */
+  equipo: MiembroEquipo[] = [{ nombre: 'De guardia', energia: 100, estres: 10 }];
+  /** Índice del cirujano que está actuando ahora mismo. */
+  cirujanoActivo = 0;
+
+  /** El cirujano activo (las mecánicas de fatiga/estrés operan sobre él). */
+  get cirujano(): Cirujano {
+    return this.equipo[this.cirujanoActivo] ?? this.equipo[0]!;
+  }
   readonly hospital: Hospital = {
     quirofanosLibres: 2,
     quirofanosTotales: 2,
@@ -151,12 +165,14 @@ export class GameContext {
       restante -= dt;
       this.minuto += dt;
 
-      // ── Cirujano: fatiga o descanso ──
-      if (opciones.descanso) {
-        this.cirujano.energia = Math.min(100, this.cirujano.energia + dt * 0.6);
-        this.cirujano.estres = Math.max(0, this.cirujano.estres - dt * 0.35);
-      } else {
-        this.cirujano.energia = Math.max(0, this.cirujano.energia - dt * 0.09);
+      // ── Equipo: fatiga o descanso (la noche pasa para todos) ──
+      for (const c of this.equipo) {
+        if (opciones.descanso) {
+          c.energia = Math.min(100, c.energia + dt * 0.6);
+          c.estres = Math.max(0, c.estres - dt * 0.35);
+        } else {
+          c.energia = Math.max(0, c.energia - dt * 0.09);
+        }
       }
 
       // ── Llegadas de pacientes ──

@@ -7,6 +7,37 @@ Un **noir de hospital**: detective procedural de los 40 donde el crimen es
 la patología, el interrogatorio es la anamnesis y el veredicto se firma con
 bisturí.
 
+## 🌍 Idiomas
+
+La interfaz está disponible en **español, inglés, francés, catalán y
+alemán** (menú al arrancar, o `?lang=en` en la URL). El contenido clínico
+narrativo (anamnesis, interrogatorios, pasos quirúrgicos, perlas) es un pack
+de contenido aparte — en v1 existe en español, y la estructura de datos
+admite packs por idioma sin tocar el motor.
+
+## 🤝 Cooperativo local: «pásame el bisturí»
+
+Al arrancar eliges guardia **en solitario o a dúo** (misma pantalla). En
+cooperativo, cada cirujano tiene su **energía y estrés propios** (el HUD
+muestra las dos barras), **cada caso tiene su responsable** — al atender a
+un paciente nuevo decidís quién lo lleva, y su cirugía la opera esa persona
+con SU fatiga — y el parte de las 08:00 desglosa expedientes y media de
+estrellas por cirujano. El café de mañana lo paga quien pierda.
+
+## 🧑‍⚕️ Editor de personaje
+
+Ficha rápida o a medida: nombre libre y aspecto (tono de piel, peinado,
+color de pelo, gafas, vello facial) con **vista previa del retrato en
+vivo**. En dúo, cada cirujano crea el suyo.
+
+## 🗣 Pacientes que se quejan de verdad
+
+Al atender a cada paciente: retrato con expresión de dolor, **bocadillo con
+su queja hablada** («Me atraviesa hasta la espalda... como un cinturón»),
+**la mano del paciente señalando el punto exacto del dolor** en el mapa
+corporal (animada, palpándose), gotas de sudor si está sufriendo y un
+quejido sonoro sintetizado. La anamnesis entra por los ojos y los oídos.
+
 ## 🕵️ El interrogatorio clínico
 
 Cada paciente **declara algo** al llegar («¿Alcohol? Una copita en las

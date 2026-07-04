@@ -11,11 +11,15 @@ import { TriageState } from '../engine/TriageState.js';
 import { cian, gris, negrita } from '../ui/ansi.js';
 import { lineaSeparadora } from '../ui/hud.js';
 import type { IO } from './io.js';
-import { crearRng, GameContext } from './GameContext.js';
+import { fijarIdioma, IDIOMAS, t, type Idioma } from '../i18n.js';
+import type { Rasgos } from './io.js';
+import { crearRng, GameContext, type MiembroEquipo } from './GameContext.js';
 import { MaquinaEstados } from './StateMachine.js';
 
 export type ModoJuego = 'adjunto' | 'residente' | 'negra';
 export type RitmoJuego = 'turnos' | 'real';
+
+const NOMBRES_DEFECTO = ['Dra. Ríos', 'Dr. Baró'];
 
 export class ShiftEngine {
   private readonly ctx: GameContext;
@@ -26,13 +30,25 @@ export class ShiftEngine {
     semilla?: number,
     private modo?: ModoJuego,
     private ritmo?: RitmoJuego,
+    private idiomaElegido?: Idioma,
   ) {
     this.rng = crearRng(semilla ?? (Date.now() & 0x7fffffff));
     this.ctx = new GameContext(this.rng, io);
   }
 
   async iniciar(): Promise<void> {
+    // Idioma antes que nada (la portada ya sale traducida... la interfaz;
+    // el contenido clínico narrativo es un pack aparte, en español en v1).
+    if (this.idiomaElegido === undefined) {
+      this.idiomaElegido = await this.io.elegir<Idioma>(
+        'Idioma / Language / Langue / Llengua / Sprache',
+        IDIOMAS.map((i) => ({ etiqueta: i.nombre, valor: i.id })),
+      );
+    }
+    fijarIdioma(this.idiomaElegido);
+
     this.pintarPortada();
+    await this.prepararEquipo();
 
     if (this.modo === undefined) {
       this.modo = await this.io.elegir<ModoJuego>('¿Con qué nivel sales a la guardia?', [
@@ -119,8 +135,77 @@ export class ShiftEngine {
       }
     }
 
-    await this.io.pausa('Pulsa Intro para fichar y empezar la guardia...');
+    await this.io.pausa(t('fichar'));
     await new MaquinaEstados().ejecutar(new TriageState(), this.ctx);
+  }
+
+  // ────────────────────────────────────────────────────────────
+  /** Solo o cooperativo local, con editor de personaje opcional. */
+  private async prepararEquipo(): Promise<void> {
+    const cuantos = await this.io.elegir('¿Cómo sales a esta guardia?', [
+      { etiqueta: 'En solitario', valor: 1 },
+      { etiqueta: 'Dúo cooperativo (local): dos cirujanos, una guardia', valor: 2 },
+    ]);
+
+    const equipo: MiembroEquipo[] = [];
+    for (let i = 0; i < cuantos; i++) {
+      equipo.push(await this.crearCirujano(i, cuantos));
+    }
+    this.ctx.equipo = equipo;
+    if (cuantos === 2) {
+      this.io.escribir(
+        gris(`\n  ${equipo[0]!.nombre} y ${equipo[1]!.nombre} comparten la noche: cada paciente`) +
+          gris('\n  tendrá su responsable, y el parte final no olvida de quién fue cada caso.'),
+      );
+    }
+  }
+
+  private async crearCirujano(indice: number, total: number): Promise<MiembroEquipo> {
+    const porDefecto = NOMBRES_DEFECTO[indice] ?? `Dr. ${indice + 1}`;
+    const titulo = total > 1 ? `Cirujano ${indice + 1}` : 'Tu cirujano';
+
+    const modo = await this.io.elegir(`${titulo}: ¿ficha rápida o a medida?`, [
+      { etiqueta: `Empezar ya como ${porDefecto}`, valor: 'rapido' as const },
+      { etiqueta: 'Editor de personaje (nombre y aspecto)', valor: 'editor' as const },
+    ]);
+
+    if (modo === 'rapido' || !this.io.preguntarTexto) {
+      return { nombre: porDefecto, energia: 100, estres: 10 };
+    }
+
+    const nombre = (await this.io.preguntarTexto('¿Cómo te llaman en el hospital?', porDefecto)).slice(0, 24);
+    const rasgos: Rasgos = { piel: 1, peinado: 'corto', pelo: 0, gafas: false, vello: false, nombre };
+    const previsualizar = () => this.io.escena?.('editor', { rasgos, nombre });
+
+    previsualizar();
+    rasgos.piel = await this.io.elegir('Tono de piel', [1, 2, 3, 4, 5].map((n) => ({ etiqueta: `Tono ${n}`, valor: n - 1 })));
+    previsualizar();
+    rasgos.peinado = await this.io.elegir('Peinado', [
+      { etiqueta: 'Corto', valor: 'corto' as const },
+      { etiqueta: 'Melena', valor: 'melena' as const },
+      { etiqueta: 'Rapado', valor: 'calvo' as const },
+    ]);
+    previsualizar();
+    rasgos.pelo = await this.io.elegir('Color de pelo', [
+      { etiqueta: 'Negro', valor: 0 },
+      { etiqueta: 'Castaño oscuro', valor: 1 },
+      { etiqueta: 'Castaño', valor: 3 },
+      { etiqueta: 'Cobrizo', valor: 4 },
+    ]);
+    previsualizar();
+    rasgos.gafas = await this.io.elegir('¿Gafas?', [
+      { etiqueta: 'Sin gafas', valor: false },
+      { etiqueta: 'Con gafas', valor: true },
+    ]);
+    previsualizar();
+    rasgos.vello = await this.io.elegir('¿Vello facial?', [
+      { etiqueta: 'No', valor: false },
+      { etiqueta: 'Sí', valor: true },
+    ]);
+    previsualizar();
+
+    this.io.escribir(gris(`  ${nombre}, en plantilla. La cafetera ya sabe tu nombre.`));
+    return { nombre, rasgos, energia: 100, estres: 10 };
   }
 
   private pintarPortada(): void {

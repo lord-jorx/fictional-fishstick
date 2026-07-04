@@ -11,6 +11,7 @@ import type { ManejoCorrecto, Paciente, PruebaId, RespuestaInterrogatorio } from
 import { INTERROGATORIOS } from '../data/interrogatorios.js';
 import { INFORME_INESPECIFICO, PRUEBAS } from '../data/pruebas.js';
 import { calificarCaso, pintarEstrellas } from './calificacion.js';
+import { t } from '../i18n.js';
 import { amarillo, cian, gris, negrita, rojo, verde } from '../ui/ansi.js';
 import { fichaPaciente, horaGuardia, lineaSeparadora, pintarHUD } from '../ui/hud.js';
 import type { Opcion } from '../core/io.js';
@@ -78,24 +79,24 @@ export class TriageState implements GameState {
   // ────────────────────────────────────────────────────────────
   private async elegirAccionDeSala(ctx: GameContext): Promise<AccionSala> {
     const opciones: Opcion<AccionSala>[] = ctx.salaEspera.map((p) => ({
-      etiqueta: `Atender a ${fichaPaciente(p)}`,
+      etiqueta: `${t('atenderA')} ${fichaPaciente(p)}`,
       valor: { tipo: 'paciente', paciente: p },
     }));
 
     if (ctx.ingresados.length > 0) {
-      opciones.push({ etiqueta: 'Pasar visita a los ingresados', detalle: '15 min', valor: { tipo: 'ronda' } });
+      opciones.push({ etiqueta: t('ronda'), detalle: '15 min', valor: { tipo: 'ronda' } });
     }
-    opciones.push({ etiqueta: 'Tomar un café y despejarte', detalle: '15 min, recupera', valor: { tipo: 'cafe' } });
+    opciones.push({ etiqueta: t('cafe'), detalle: '15 min ☕', valor: { tipo: 'cafe' } });
     if (ctx.salaEspera.length === 0) {
-      opciones.push({ etiqueta: 'Descansar hasta que suene el busca', detalle: 'recupera energía', valor: { tipo: 'esperar' } });
+      opciones.push({ etiqueta: t('descansar'), detalle: '💤', valor: { tipo: 'esperar' } });
     }
 
     opciones.push({ etiqueta: '⟳', oculta: true, valor: { tipo: 'refrescar' } });
 
     const titulo =
       ctx.salaEspera.length > 0
-        ? `Sala de urgencias — ${ctx.salaEspera.length} paciente(s) esperan tu decisión:`
-        : 'Urgencias está en calma (de momento). ¿Qué haces?';
+        ? `${t('salaTitulo')} (${ctx.salaEspera.length})`
+        : t('salaCalma');
     return ctx.io.elegir(titulo, opciones);
   }
 
@@ -108,6 +109,21 @@ export class TriageState implements GameState {
 
   // ────────────────────────────────────────────────────────────
   private async atenderPaciente(ctx: GameContext, paciente: Paciente): Promise<GameState> {
+    // Cooperativo local: cada caso tiene su responsable.
+    if (ctx.equipo.length > 1) {
+      if (paciente.cirujanoIdx === undefined) {
+        paciente.cirujanoIdx = await ctx.io.elegir(
+          t('quienLoLleva'),
+          ctx.equipo.map((c, i) => ({
+            etiqueta: `${c.nombre}`,
+            detalle: `${t('energia').toLowerCase()} ${Math.round(c.energia)} · ${t('estres').toLowerCase()} ${Math.round(c.estres)}`,
+            valor: i,
+          })),
+        );
+      }
+      ctx.cirujanoActivo = paciente.cirujanoIdx;
+    }
+
     ctx.io.escena?.('paciente', {
       patologiaId: paciente.patologia.id,
       pacienteId: paciente.id,
@@ -213,11 +229,11 @@ export class TriageState implements GameState {
     const opciones: Opcion<AccionPaciente>[] = [];
 
     if (!TriageState.explorados.has(paciente.id)) {
-      opciones.push({ etiqueta: 'Explorar al paciente', detalle: '10 min', valor: { tipo: 'explorar' } });
+      opciones.push({ etiqueta: t('explorar'), detalle: '10 min', valor: { tipo: 'explorar' } });
     }
     if (!paciente.interrogado && INTERROGATORIOS[paciente.patologia.id]) {
       opciones.push({
-        etiqueta: cian('Apretar en la anamnesis: algo no encaja'),
+        etiqueta: cian(t('apretar')),
         detalle: '5 min',
         valor: { tipo: 'interrogar' },
       });
@@ -225,21 +241,21 @@ export class TriageState implements GameState {
     for (const prueba of Object.values(PRUEBAS)) {
       if (!paciente.pruebasRealizadas.includes(prueba.id)) {
         opciones.push({
-          etiqueta: `Solicitar ${prueba.nombre}`,
+          etiqueta: `${t('solicitar')} ${prueba.nombre}`,
           detalle: `${prueba.duracionMin} min`,
           valor: { tipo: 'prueba', prueba: prueba.id },
         });
       }
     }
     opciones.push(
-      { etiqueta: negrita('Dar de alta con tratamiento ambulatorio'), valor: { tipo: 'alta' } },
-      { etiqueta: negrita('Ingresar para tratamiento conservador / observación'), valor: { tipo: 'ingreso' } },
-      { etiqueta: negrita(rojo('Programar CIRUGÍA URGENTE')), detalle: `quirófanos libres: ${ctx.hospital.quirofanosLibres}`, valor: { tipo: 'cirugia' } },
-      { etiqueta: gris('Dejarlo en el box y volver al control'), valor: { tipo: 'volver' } },
+      { etiqueta: negrita(t('alta')), valor: { tipo: 'alta' } },
+      { etiqueta: negrita(t('ingresar')), valor: { tipo: 'ingreso' } },
+      { etiqueta: negrita(rojo(t('cirugiaUrgente'))), detalle: `quirófanos libres: ${ctx.hospital.quirofanosLibres}`, valor: { tipo: 'cirugia' } },
+      { etiqueta: gris(t('volverControl')), valor: { tipo: 'volver' } },
       { etiqueta: '⟳', oculta: true, valor: { tipo: 'reevaluar' } },
     );
 
-    return ctx.io.elegir(`¿Qué haces con ${paciente.nombre}?`, opciones);
+    return ctx.io.elegir(`${t('queHacesCon')} ${paciente.nombre}?`, opciones);
   }
 
   // ────────────────────────────────────────────────────────────
@@ -319,10 +335,10 @@ export class TriageState implements GameState {
     ctx.io.escribir(`\n${cian('Le sostienes la mirada y repasas su historia. El paciente declara:')}`);
     ctx.io.escribir(`  ${negrita(dossier.afirmacion)}`);
 
-    const respuesta = await ctx.io.elegir<RespuestaInterrogatorio>('¿Qué le dices?', [
-      { etiqueta: verde('Creerle'), detalle: 'su historia se sostiene', valor: 'creer' },
-      { etiqueta: amarillo('Dudar'), detalle: 'presiónale: hay huecos en el relato', valor: 'dudar' },
-      { etiqueta: rojo('Acusarle de mentir'), detalle: 'necesitarás una prueba que lo desmonte', valor: 'mentira' },
+    const respuesta = await ctx.io.elegir<RespuestaInterrogatorio>(t('queLeDices'), [
+      { etiqueta: verde(t('creerle')), valor: 'creer' },
+      { etiqueta: amarillo(t('dudar')), valor: 'dudar' },
+      { etiqueta: rojo(t('acusar')), valor: 'mentira' },
     ]);
 
     // Acusación correcta pero sin la prueba encima: se enroca, puedes volver.

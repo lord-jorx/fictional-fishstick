@@ -9,6 +9,7 @@ import * as readline from 'node:readline';
 import { stdin, stdout } from 'node:process';
 import type { IO, Opcion } from '../core/io.js';
 import { amarillo, gris, negrita } from './ansi.js';
+import { t } from '../i18n.js';
 
 export class ConsoleIO implements IO {
   private readonly rl = readline.createInterface({ input: stdin, output: stdout });
@@ -56,8 +57,14 @@ export class ConsoleIO implements IO {
     }
   }
 
-  async pausa(mensaje = 'Pulsa Intro para continuar...'): Promise<void> {
-    await this.preguntar(gris(mensaje));
+  async pausa(mensaje?: string): Promise<void> {
+    await this.preguntar(gris(mensaje ?? t('continuar')));
+  }
+
+  async preguntarTexto(pregunta: string, porDefecto: string): Promise<string> {
+    this.escribir(`\n${negrita(pregunta)} ${gris(`(Intro = ${porDefecto})`)}`);
+    const r = (await this.preguntar(amarillo('> '))).trim();
+    return r || porDefecto;
   }
 
   cerrar(): void {

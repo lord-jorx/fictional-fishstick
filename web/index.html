@@ -287,6 +287,47 @@
   @keyframes charco { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.12); } }
   @keyframes pulso-asa { 0%, 100% { opacity: 1; } 50% { opacity: .75; } }
 
+  /* Entrada de texto (editor de personaje) */
+  #campo-texto {
+    width: 100%;
+    margin: 4px 0 8px;
+    padding: 9px 12px;
+    background: var(--papel);
+    color: var(--tinta);
+    border: 1px solid var(--borde);
+    border-radius: 3px;
+    font: inherit;
+  }
+  #campo-texto:focus { outline: none; border-color: var(--acento); }
+
+  /* El paciente habla y se señala */
+  .bocadillo {
+    position: relative;
+    max-width: 430px;
+    background: #efe6d2;
+    color: #241c12;
+    border-radius: 10px 10px 10px 2px;
+    padding: 9px 14px;
+    margin: 4px 0 10px 14px;
+    font-style: italic;
+    animation: aparecer .35s ease-out;
+  }
+  .bocadillo::before {
+    content: "";
+    position: absolute; left: -8px; bottom: 6px;
+    border: 8px solid transparent;
+    border-right-color: #efe6d2;
+    border-bottom-width: 2px;
+  }
+  .bocadillo .ay {
+    position: absolute; top: -12px; right: 10px;
+    font-size: .78em; font-style: normal; font-weight: 700;
+    color: var(--alarma);
+    animation: pulso-dolor 1.1s ease-in-out infinite;
+  }
+  .brazo { animation: palpar 1.4s ease-in-out infinite; }
+  @keyframes palpar { 0%, 100% { transform: translate(0, 0); } 50% { transform: translate(0, 2.4px); } }
+
   /* Esquema anatómico paso a paso */
   .anatomia-svg { display: block; width: 100%; max-width: 440px; margin: 6px auto; }
   .objetivo-anillo {
@@ -1895,6 +1936,61 @@
     return "★".repeat(n) + "☆".repeat(5 - n);
   }
 
+  // src/i18n.ts
+  var IDIOMAS = [
+    { id: "es", nombre: "Español" },
+    { id: "en", nombre: "English" },
+    { id: "fr", nombre: "Français" },
+    { id: "ca", nombre: "Català" },
+    { id: "de", nombre: "Deutsch" }
+  ];
+  var idiomaActual = "es";
+  function fijarIdioma(idioma) {
+    idiomaActual = idioma;
+  }
+  var C = {
+    energia: ["Energía", "Energy", "Énergie", "Energia", "Energie"],
+    estres: ["Estrés", "Stress", "Stress", "Estrès", "Stress"],
+    quirofanos: ["Quirófanos libres", "Free theatres", "Blocs libres", "Quiròfans lliures", "Freie OP-Säle"],
+    camasRea: ["Camas REA libres", "Free ICU beds", "Lits réa libres", "Llits REA lliures", "Freie Intensivbetten"],
+    enEspera: ["Pacientes en espera", "Patients waiting", "Patients en attente", "Pacients en espera", "Wartende Patienten"],
+    quedan: ["quedan", "left", "restant", "queden", "übrig"],
+    deGuardia: ["de guardia", "on call", "de garde", "de guàrdia", "im Dienst"],
+    atenderA: ["Atender a", "See", "Examiner", "Atendre", "Behandeln:"],
+    ronda: ["Pasar visita a los ingresados", "Round on admitted patients", "Visite des hospitalisés", "Passar visita als ingressats", "Visite bei Stationspatienten"],
+    cafe: ["Tomar un café y despejarte", "Grab a coffee and reset", "Prendre un café", "Fer un cafè i espavilar-te", "Kaffee holen und durchatmen"],
+    descansar: ["Descansar hasta que suene el busca", "Rest until the pager goes off", "Se reposer jusqu’au bip", "Descansar fins que soni el busca", "Ausruhen, bis der Pieper geht"],
+    salaTitulo: ["Sala de urgencias — pacientes esperan tu decisión:", "A&E — patients await your call:", "Urgences — des patients attendent :", "Urgències — pacients esperen la teva decisió:", "Notaufnahme — Patienten warten:"],
+    salaCalma: ["Urgencias está en calma (de momento). ¿Qué haces?", "A&E is quiet (for now). Your move?", "Les urgences sont calmes (pour l’instant).", "Urgències està en calma (de moment). Què fas?", "Die Notaufnahme ist ruhig (noch). Was tust du?"],
+    explorar: ["Explorar al paciente", "Examine the patient", "Examiner le patient", "Explorar el pacient", "Patienten untersuchen"],
+    apretar: ["Apretar en la anamnesis: algo no encaja", "Press them: the story has holes", "Insister : quelque chose cloche", "Estrènyer l’anamnesi: alguna cosa no quadra", "Nachbohren: da stimmt was nicht"],
+    solicitar: ["Solicitar", "Order", "Demander", "Sol·licitar", "Anfordern:"],
+    alta: ["Dar de alta con tratamiento ambulatorio", "Discharge with outpatient treatment", "Renvoyer avec traitement ambulatoire", "Donar l’alta amb tractament ambulatori", "Entlassen mit ambulanter Therapie"],
+    ingresar: ["Ingresar para tratamiento conservador / observación", "Admit for conservative management", "Hospitaliser pour traitement conservateur", "Ingressar per a tractament conservador", "Stationär aufnehmen (konservativ)"],
+    cirugiaUrgente: ["Programar CIRUGÍA URGENTE", "Book EMERGENCY SURGERY", "Programmer une CHIRURGIE URGENTE", "Programar CIRURGIA URGENT", "NOTOPERATION ansetzen"],
+    volverControl: ["Dejarlo en el box y volver al control", "Leave them in the bay and step out", "Le laisser au box et revenir au poste", "Deixar-lo al box i tornar al control", "Im Behandlungsraum lassen"],
+    comoProcedes: ["¿Cómo procedes?", "How do you proceed?", "Comment procédez-vous ?", "Com procedeixes?", "Wie gehst du vor?"],
+    queHacesCon: ["¿Qué haces con", "What do you do with", "Que faites-vous de", "Què fas amb", "Was tust du mit"],
+    queLeDices: ["¿Qué le dices?", "What do you say?", "Que répondez-vous ?", "Què li dius?", "Was sagst du?"],
+    creerle: ["Creerle", "Believe them", "Le croire", "Creure’l", "Glauben"],
+    dudar: ["Dudar", "Doubt", "Douter", "Dubtar", "Zweifeln"],
+    acusar: ["Acusarle de mentir", "Call the lie", "L’accuser de mentir", "Acusar-lo de mentir", "Der Lüge bezichtigen"],
+    continuar: ["Pulsa Intro para continuar...", "Press Enter to continue...", "Appuyez sur Entrée...", "Prem Intro per continuar...", "Weiter mit Eingabetaste..."],
+    fichar: ["Pulsa Intro para fichar y empezar la guardia...", "Press Enter to clock in...", "Entrée pour pointer et commencer la garde...", "Prem Intro per fitxar i començar la guàrdia...", "Eingabe drücken und Dienst antreten..."],
+    minutos: ["min", "min", "min", "min", "Min."],
+    urgenciasTag: ["urgencias", "A&E", "urgences", "urgències", "Notaufnahme"],
+    plantaTag: ["planta", "ward", "étage", "planta", "Station"],
+    quienLoLleva: ["¿Quién lleva este caso?", "Who takes this case?", "Qui prend ce cas ?", "Qui porta aquest cas?", "Wer übernimmt den Fall?"],
+    llevaElCaso: ["Lleva el caso", "Case lead", "Responsable du cas", "Porta el cas", "Fallführung"],
+    opera: ["Opera", "Operating", "Opère", "Opera", "Es operiert"]
+  };
+  function t(clave) {
+    const fila = C[clave];
+    if (!fila) return String(clave);
+    const indice = ["es", "en", "fr", "ca", "de"].indexOf(idiomaActual);
+    return fila[indice] ?? fila[0];
+  }
+
   // src/ui/ansi.ts
   var habilitado = typeof process !== "undefined" && process !== null ? process.stdout?.isTTY ?? false : false;
   function configurarColores(activo) {
@@ -1942,11 +2038,19 @@
     const restante = `${Math.floor(restanteMin / 60)}h ${String(restanteMin % 60).padStart(2, "0")}m`;
     ctx.io.escribir("\n" + lineaSeparadora());
     ctx.io.escribir(
-      `  ${negrita(cian("SURGEON’S NIGHT"))}  ${gris("|")}  🕐 ${negrita(horaGuardia(ctx.minuto))}  ${gris("|")}  quedan ${amarillo(restante)} de guardia`
+      `  ${negrita(cian("SURGEON’S NIGHT"))}  ${gris("|")}  🕐 ${negrita(horaGuardia(ctx.minuto))}  ${gris("|")}  ${t("quedan")} ${amarillo(restante)}`
     );
-    ctx.io.escribir(`  Energía ${barra(ctx.cirujano.energia)}   Estrés ${barra(ctx.cirujano.estres, true)}`);
+    if (ctx.equipo.length > 1) {
+      for (const c of ctx.equipo) {
+        ctx.io.escribir(
+          `  ${negrita(c.nombre.padEnd(12).slice(0, 12))} ${t("energia")} ${barra(c.energia, false, 12)}  ${t("estres")} ${barra(c.estres, true, 12)}`
+        );
+      }
+    } else {
+      ctx.io.escribir(`  ${t("energia")} ${barra(ctx.cirujano.energia)}   ${t("estres")} ${barra(ctx.cirujano.estres, true)}`);
+    }
     ctx.io.escribir(
-      `  Quirófanos libres: ${negrita(`${ctx.hospital.quirofanosLibres}/${ctx.hospital.quirofanosTotales}`)}   Camas REA libres: ${negrita(`${ctx.hospital.camasReaLibres}/${ctx.hospital.camasReaTotales}`)}   Pacientes en espera: ${negrita(String(ctx.salaEspera.length))}`
+      `  ${t("quirofanos")}: ${negrita(`${ctx.hospital.quirofanosLibres}/${ctx.hospital.quirofanosTotales}`)}   ${t("camasRea")}: ${negrita(`${ctx.hospital.camasReaLibres}/${ctx.hospital.camasReaTotales}`)}   ${t("enEspera")}: ${negrita(String(ctx.salaEspera.length))}`
     );
     ctx.io.escribir(lineaSeparadora());
   }
@@ -1983,6 +2087,23 @@ ${negrita("Balance:")}`);
       ctx.io.escribir(`  Altas erróneas:           ${s.altasErroneas === 0 ? verde("0") : rojo(String(s.altasErroneas))}`);
       ctx.io.escribir(`  Complicaciones:           ${s.complicaciones === 0 ? verde("0") : amarillo(String(s.complicaciones))}`);
       ctx.io.escribir(`  Éxitus:                   ${s.exitus === 0 ? verde("0") : rojo(String(s.exitus))}`);
+      if (ctx.equipo.length > 1) {
+        ctx.io.escribir(`
+${negrita("La noche, por cirujano:")}`);
+        const medias = [];
+        ctx.equipo.forEach((c, i) => {
+          const suyos = ctx.historial.filter((p) => p.cirujanoIdx === i && p.estrellas !== void 0);
+          const media = suyos.length > 0 ? suyos.reduce((s2, p) => s2 + (p.estrellas ?? 0), 0) / suyos.length : 0;
+          medias.push(media);
+          ctx.io.escribir(
+            `  ${negrita(c.nombre)} — ${suyos.length} expediente(s), media ${amarillo(media.toFixed(1))} ★`
+          );
+        });
+        const mvp = medias[0] === medias[1] ? null : medias[0] > medias[1] ? 0 : 1;
+        if (mvp !== null && ctx.historial.some((p) => p.cirujanoIdx !== void 0)) {
+          ctx.io.escribir(gris(`  El café de mañana lo paga quien no es ${ctx.equipo[mvp].nombre}.`));
+        }
+      }
       let puntos = this.puntuacion(ctx);
       if (ctx.modoResidente) {
         puntos = Math.round(puntos * 0.85);
@@ -2173,9 +2294,13 @@ ${negrita("Puntuación final:")} ${negrita(puntos >= 0 ? verde(String(puntos)) :
         edad: p.edad,
         tablero: ctx.tablero()
       });
+      if (p.cirujanoIdx !== void 0) ctx.cirujanoActivo = p.cirujanoIdx;
       ctx.io.escribir("\n" + lineaSeparadora());
       ctx.io.escribir(`  ${negrita(cian("🔪 QUIRÓFANO"))} — ${negrita(plan.nombre)}`);
       ctx.io.escribir(`  Paciente: ${p.nombre}, ${p.edad} años. ${gris(p.patologia.nombre)}`);
+      if (ctx.equipo.length > 1) {
+        ctx.io.escribir(`  ${t("opera")}: ${negrita(ctx.equipo[ctx.cirujanoActivo].nombre)}`);
+      }
       ctx.io.escribir(lineaSeparadora());
       if (!p.diagnosticoConfirmado) {
         p.estabilidad = Math.max(1, p.estabilidad - 8);
@@ -2294,7 +2419,7 @@ ${gris(`Perla docente: ${p.patologia.notaDocente}`)}`);
             valor: "adjunto"
           });
         }
-        const eleccion = await ctx.io.elegir("¿Cómo procedes?", menu);
+        const eleccion = await ctx.io.elegir(t("comoProcedes"), menu);
         if (eleccion !== "adjunto") return eleccion;
         ctx.consultasAdjunto--;
         const correcta = opciones.find((op) => op.correcta);
@@ -2392,18 +2517,18 @@ ${cian("🩺 El adjunto, con voz de dormido:")} ${gris(`«Yo lo tengo claro: ${c
     // ────────────────────────────────────────────────────────────
     async elegirAccionDeSala(ctx) {
       const opciones = ctx.salaEspera.map((p) => ({
-        etiqueta: `Atender a ${fichaPaciente(p)}`,
+        etiqueta: `${t("atenderA")} ${fichaPaciente(p)}`,
         valor: { tipo: "paciente", paciente: p }
       }));
       if (ctx.ingresados.length > 0) {
-        opciones.push({ etiqueta: "Pasar visita a los ingresados", detalle: "15 min", valor: { tipo: "ronda" } });
+        opciones.push({ etiqueta: t("ronda"), detalle: "15 min", valor: { tipo: "ronda" } });
       }
-      opciones.push({ etiqueta: "Tomar un café y despejarte", detalle: "15 min, recupera", valor: { tipo: "cafe" } });
+      opciones.push({ etiqueta: t("cafe"), detalle: "15 min ☕", valor: { tipo: "cafe" } });
       if (ctx.salaEspera.length === 0) {
-        opciones.push({ etiqueta: "Descansar hasta que suene el busca", detalle: "recupera energía", valor: { tipo: "esperar" } });
+        opciones.push({ etiqueta: t("descansar"), detalle: "💤", valor: { tipo: "esperar" } });
       }
       opciones.push({ etiqueta: "⟳", oculta: true, valor: { tipo: "refrescar" } });
-      const titulo = ctx.salaEspera.length > 0 ? `Sala de urgencias — ${ctx.salaEspera.length} paciente(s) esperan tu decisión:` : "Urgencias está en calma (de momento). ¿Qué haces?";
+      const titulo = ctx.salaEspera.length > 0 ? `${t("salaTitulo")} (${ctx.salaEspera.length})` : t("salaCalma");
       return ctx.io.elegir(titulo, opciones);
     }
     pasarVisita(ctx) {
@@ -2415,6 +2540,19 @@ ${negrita("Ronda de planta:")}`);
     }
     // ────────────────────────────────────────────────────────────
     async atenderPaciente(ctx, paciente) {
+      if (ctx.equipo.length > 1) {
+        if (paciente.cirujanoIdx === void 0) {
+          paciente.cirujanoIdx = await ctx.io.elegir(
+            t("quienLoLleva"),
+            ctx.equipo.map((c, i) => ({
+              etiqueta: `${c.nombre}`,
+              detalle: `${t("energia").toLowerCase()} ${Math.round(c.energia)} · ${t("estres").toLowerCase()} ${Math.round(c.estres)}`,
+              valor: i
+            }))
+          );
+        }
+        ctx.cirujanoActivo = paciente.cirujanoIdx;
+      }
       ctx.io.escena?.("paciente", {
         patologiaId: paciente.patologia.id,
         pacienteId: paciente.id,
@@ -2509,11 +2647,11 @@ ${cian(`Resultado de ${prueba.nombre}:`)}
     async elegirAccionPaciente(paciente, ctx) {
       const opciones = [];
       if (!_TriageState.explorados.has(paciente.id)) {
-        opciones.push({ etiqueta: "Explorar al paciente", detalle: "10 min", valor: { tipo: "explorar" } });
+        opciones.push({ etiqueta: t("explorar"), detalle: "10 min", valor: { tipo: "explorar" } });
       }
       if (!paciente.interrogado && INTERROGATORIOS[paciente.patologia.id]) {
         opciones.push({
-          etiqueta: cian("Apretar en la anamnesis: algo no encaja"),
+          etiqueta: cian(t("apretar")),
           detalle: "5 min",
           valor: { tipo: "interrogar" }
         });
@@ -2521,20 +2659,20 @@ ${cian(`Resultado de ${prueba.nombre}:`)}
       for (const prueba of Object.values(PRUEBAS)) {
         if (!paciente.pruebasRealizadas.includes(prueba.id)) {
           opciones.push({
-            etiqueta: `Solicitar ${prueba.nombre}`,
+            etiqueta: `${t("solicitar")} ${prueba.nombre}`,
             detalle: `${prueba.duracionMin} min`,
             valor: { tipo: "prueba", prueba: prueba.id }
           });
         }
       }
       opciones.push(
-        { etiqueta: negrita("Dar de alta con tratamiento ambulatorio"), valor: { tipo: "alta" } },
-        { etiqueta: negrita("Ingresar para tratamiento conservador / observación"), valor: { tipo: "ingreso" } },
-        { etiqueta: negrita(rojo("Programar CIRUGÍA URGENTE")), detalle: `quirófanos libres: ${ctx.hospital.quirofanosLibres}`, valor: { tipo: "cirugia" } },
-        { etiqueta: gris("Dejarlo en el box y volver al control"), valor: { tipo: "volver" } },
+        { etiqueta: negrita(t("alta")), valor: { tipo: "alta" } },
+        { etiqueta: negrita(t("ingresar")), valor: { tipo: "ingreso" } },
+        { etiqueta: negrita(rojo(t("cirugiaUrgente"))), detalle: `quirófanos libres: ${ctx.hospital.quirofanosLibres}`, valor: { tipo: "cirugia" } },
+        { etiqueta: gris(t("volverControl")), valor: { tipo: "volver" } },
         { etiqueta: "⟳", oculta: true, valor: { tipo: "reevaluar" } }
       );
-      return ctx.io.elegir(`¿Qué haces con ${paciente.nombre}?`, opciones);
+      return ctx.io.elegir(`${t("queHacesCon")} ${paciente.nombre}?`, opciones);
     }
     // ────────────────────────────────────────────────────────────
     pintarFichaClinica(ctx, p) {
@@ -2611,10 +2749,10 @@ ${cian("🩺 Tu adjunto arquea una ceja:")} ${gris(`«¿${this.nombreDecision(de
       ctx.io.escribir(`
 ${cian("Le sostienes la mirada y repasas su historia. El paciente declara:")}`);
       ctx.io.escribir(`  ${negrita(dossier.afirmacion)}`);
-      const respuesta = await ctx.io.elegir("¿Qué le dices?", [
-        { etiqueta: verde("Creerle"), detalle: "su historia se sostiene", valor: "creer" },
-        { etiqueta: amarillo("Dudar"), detalle: "presiónale: hay huecos en el relato", valor: "dudar" },
-        { etiqueta: rojo("Acusarle de mentir"), detalle: "necesitarás una prueba que lo desmonte", valor: "mentira" }
+      const respuesta = await ctx.io.elegir(t("queLeDices"), [
+        { etiqueta: verde(t("creerle")), valor: "creer" },
+        { etiqueta: amarillo(t("dudar")), valor: "dudar" },
+        { etiqueta: rojo(t("acusar")), valor: "mentira" }
       ]);
       if (respuesta === "mentira" && dossier.correcta === "mentira" && dossier.pruebaClave && !p.pruebasRealizadas.includes(dossier.pruebaClave)) {
         ctx.cirujano.estres = Math.min(100, ctx.cirujano.estres + 3);
@@ -2730,9 +2868,9 @@ Ingresas a ${p.nombre} en observación. Prudente, aunque podía haberse ido de a
     return () => {
       a |= 0;
       a = a + 1831565813 | 0;
-      let t = Math.imul(a ^ a >>> 15, 1 | a);
-      t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t;
-      return ((t ^ t >>> 14) >>> 0) / 4294967296;
+      let t2 = Math.imul(a ^ a >>> 15, 1 | a);
+      t2 = t2 + Math.imul(t2 ^ t2 >>> 7, 61 | t2) ^ t2;
+      return ((t2 ^ t2 >>> 14) >>> 0) / 4294967296;
     };
   }
   var GameContext = class {
@@ -2747,7 +2885,10 @@ Ingresas a ${p.nombre} en observación. Prudente, aunque podía haberse ido de a
       __publicField(this, "modoNegra", false);
       /** Llamadas al adjunto disponibles en quirófano (solo modo residente). */
       __publicField(this, "consultasAdjunto", 3);
-      __publicField(this, "cirujano", { energia: 100, estres: 10 });
+      /** Equipo de guardia; en solitario tiene un único miembro. */
+      __publicField(this, "equipo", [{ nombre: "De guardia", energia: 100, estres: 10 }]);
+      /** Índice del cirujano que está actuando ahora mismo. */
+      __publicField(this, "cirujanoActivo", 0);
       __publicField(this, "hospital", {
         quirofanosLibres: 2,
         quirofanosTotales: 2,
@@ -2775,6 +2916,10 @@ Ingresas a ${p.nombre} en observación. Prudente, aunque podía haberse ido de a
       __publicField(this, "llegadas", []);
       __publicField(this, "camasRea", []);
       __publicField(this, "ocupacionesExternas", []);
+    }
+    /** El cirujano activo (las mecánicas de fatiga/estrés operan sobre él). */
+    get cirujano() {
+      return this.equipo[this.cirujanoActivo] ?? this.equipo[0];
     }
     programarLlegadas(llegadas) {
       this.llegadas.push(...llegadas);
@@ -2826,11 +2971,13 @@ Ingresas a ${p.nombre} en observación. Prudente, aunque podía haberse ido de a
         const dt = Math.min(PASO, restante);
         restante -= dt;
         this.minuto += dt;
-        if (opciones.descanso) {
-          this.cirujano.energia = Math.min(100, this.cirujano.energia + dt * 0.6);
-          this.cirujano.estres = Math.max(0, this.cirujano.estres - dt * 0.35);
-        } else {
-          this.cirujano.energia = Math.max(0, this.cirujano.energia - dt * 0.09);
+        for (const c of this.equipo) {
+          if (opciones.descanso) {
+            c.energia = Math.min(100, c.energia + dt * 0.6);
+            c.estres = Math.max(0, c.estres - dt * 0.35);
+          } else {
+            c.energia = Math.max(0, c.energia - dt * 0.09);
+          }
         }
         while (this.llegadas.length > 0 && this.llegadas[0].minuto <= this.minuto) {
           const { paciente } = this.llegadas.shift();
@@ -2915,18 +3062,28 @@ Ingresas a ${p.nombre} en observación. Prudente, aunque podía haberse ido de a
   };
 
   // src/core/ShiftEngine.ts
+  var NOMBRES_DEFECTO = ["Dra. Ríos", "Dr. Baró"];
   var ShiftEngine = class {
-    constructor(io2, semilla2, modo2, ritmo2) {
+    constructor(io2, semilla2, modo2, ritmo2, idiomaElegido) {
       this.io = io2;
       this.modo = modo2;
       this.ritmo = ritmo2;
+      this.idiomaElegido = idiomaElegido;
       __publicField(this, "ctx");
       __publicField(this, "rng");
       this.rng = crearRng(semilla2 ?? Date.now() & 2147483647);
       this.ctx = new GameContext(this.rng, io2);
     }
     async iniciar() {
+      if (this.idiomaElegido === void 0) {
+        this.idiomaElegido = await this.io.elegir(
+          "Idioma / Language / Langue / Llengua / Sprache",
+          IDIOMAS.map((i) => ({ etiqueta: i.nombre, valor: i.id }))
+        );
+      }
+      fijarIdioma(this.idiomaElegido);
       this.pintarPortada();
+      await this.prepararEquipo();
       if (this.modo === void 0) {
         this.modo = await this.io.elegir("¿Con qué nivel sales a la guardia?", [
           {
@@ -2999,8 +3156,69 @@ Ingresas a ${p.nombre} en observación. Prudente, aunque podía haberse ido de a
           );
         }
       }
-      await this.io.pausa("Pulsa Intro para fichar y empezar la guardia...");
+      await this.io.pausa(t("fichar"));
       await new MaquinaEstados().ejecutar(new TriageState(), this.ctx);
+    }
+    // ────────────────────────────────────────────────────────────
+    /** Solo o cooperativo local, con editor de personaje opcional. */
+    async prepararEquipo() {
+      const cuantos = await this.io.elegir("¿Cómo sales a esta guardia?", [
+        { etiqueta: "En solitario", valor: 1 },
+        { etiqueta: "Dúo cooperativo (local): dos cirujanos, una guardia", valor: 2 }
+      ]);
+      const equipo = [];
+      for (let i = 0; i < cuantos; i++) {
+        equipo.push(await this.crearCirujano(i, cuantos));
+      }
+      this.ctx.equipo = equipo;
+      if (cuantos === 2) {
+        this.io.escribir(
+          gris(`
+  ${equipo[0].nombre} y ${equipo[1].nombre} comparten la noche: cada paciente`) + gris("\n  tendrá su responsable, y el parte final no olvida de quién fue cada caso.")
+        );
+      }
+    }
+    async crearCirujano(indice, total) {
+      const porDefecto = NOMBRES_DEFECTO[indice] ?? `Dr. ${indice + 1}`;
+      const titulo = total > 1 ? `Cirujano ${indice + 1}` : "Tu cirujano";
+      const modo2 = await this.io.elegir(`${titulo}: ¿ficha rápida o a medida?`, [
+        { etiqueta: `Empezar ya como ${porDefecto}`, valor: "rapido" },
+        { etiqueta: "Editor de personaje (nombre y aspecto)", valor: "editor" }
+      ]);
+      if (modo2 === "rapido" || !this.io.preguntarTexto) {
+        return { nombre: porDefecto, energia: 100, estres: 10 };
+      }
+      const nombre = (await this.io.preguntarTexto("¿Cómo te llaman en el hospital?", porDefecto)).slice(0, 24);
+      const rasgos = { piel: 1, peinado: "corto", pelo: 0, gafas: false, vello: false, nombre };
+      const previsualizar = () => this.io.escena?.("editor", { rasgos, nombre });
+      previsualizar();
+      rasgos.piel = await this.io.elegir("Tono de piel", [1, 2, 3, 4, 5].map((n) => ({ etiqueta: `Tono ${n}`, valor: n - 1 })));
+      previsualizar();
+      rasgos.peinado = await this.io.elegir("Peinado", [
+        { etiqueta: "Corto", valor: "corto" },
+        { etiqueta: "Melena", valor: "melena" },
+        { etiqueta: "Rapado", valor: "calvo" }
+      ]);
+      previsualizar();
+      rasgos.pelo = await this.io.elegir("Color de pelo", [
+        { etiqueta: "Negro", valor: 0 },
+        { etiqueta: "Castaño oscuro", valor: 1 },
+        { etiqueta: "Castaño", valor: 3 },
+        { etiqueta: "Cobrizo", valor: 4 }
+      ]);
+      previsualizar();
+      rasgos.gafas = await this.io.elegir("¿Gafas?", [
+        { etiqueta: "Sin gafas", valor: false },
+        { etiqueta: "Con gafas", valor: true }
+      ]);
+      previsualizar();
+      rasgos.vello = await this.io.elegir("¿Vello facial?", [
+        { etiqueta: "No", valor: false },
+        { etiqueta: "Sí", valor: true }
+      ]);
+      previsualizar();
+      this.io.escribir(gris(`  ${nombre}, en plantilla. La cafetera ya sabe tu nombre.`));
+      return { nombre, rasgos, energia: 100, estres: 10 };
     }
     pintarPortada() {
       this.io.escena?.("portada");
@@ -3288,10 +3506,33 @@ Ingresas a ${p.nombre} en observación. Prudente, aunque podía haberse ido de a
     gastroenteritis: "difuso",
     colico_renal: "lumbar-der"
   };
+  var QUEJAS = {
+    apendicitis: "¡Ay! Aquí abajo, doctor... y no me deje apretar, que es peor.",
+    colecistitis: "Aquí, debajo de las costillas... me sube hasta la paletilla.",
+    colico_biliar: "Es aquí, como siempre... pero hoy no se me pasa con nada.",
+    obstruccion: "La tripa entera, doctor... y mire cómo la tengo de hinchada.",
+    diverticulitis: "Este lado, no me toque... ¡le digo que NO me toque!",
+    isquemia: "Por dentro, doctor, por DENTRO... nunca he tenido un dolor así.",
+    trauma: "Aquí en el costado... y el hombro, ¿qué tendrá que ver el hombro?",
+    ulcus: "Fue de golpe, como una puñalada... aquí, en la boca del estómago.",
+    hernia: "El bulto de siempre, doctor... pero hoy no entra y duele horrores.",
+    pancreatitis: "Me atraviesa hasta la espalda... como un cinturón apretado.",
+    gastroenteritis: "Retortijones, doctor... vengo del baño y ya querría volver.",
+    colico_renal: "¡No puedo estarme quieto! Me coge del riñón y baja hasta abajo..."
+  };
   function cuerpoConDolor(zonaDolor, patologiaId) {
     const clave = zonaDolor ?? (patologiaId ? ZONA_POR_PATOLOGIA[patologiaId] : void 0);
     const zona = clave ? ZONAS[clave] : void 0;
     if (!zona) return null;
+    const [dx, dy] = zona.puntos[0];
+    const hx = dx + (dx < 60 ? 7 : -7);
+    const hy = dy - 6;
+    const brazo = `
+    <g class="brazo">
+      <path d="M84 46 Q ${Math.max(hx + 22, 96)} ${Math.min(hy + 14, 120)} ${hx} ${hy}"
+        fill="none" stroke="#b98a63" stroke-width="7" stroke-linecap="round"/>
+      <circle cx="${hx}" cy="${hy}" r="4.6" fill="#c99b72"/>
+    </g>`;
     const focos = zona.puntos.map(
       ([x, y]) => `
     <circle class="onda" cx="${x}" cy="${y}" r="9"/>
@@ -3305,6 +3546,7 @@ Ingresas a ${p.nombre} en observación. Prudente, aunque podía haberse ido de a
     <path class="silueta" d="M60 30 C46 30 38 36 36 47 L31 78 C30 93 30 106 33 120 L37 150 C38 159 46 163 60 163 C74 163 82 159 83 150 L87 120 C90 106 90 93 89 78 L84 47 C82 36 74 30 60 30 Z"/>
     <path class="guias" d="M36 76 H84 M34 118 H86 M60 58 V152"/>
     ${focos}
+    ${brazo}
   </svg>
   <div class="cuerpo-pie">Dolor referido: ${zona.zona}</div>
 </div>`;
@@ -3368,9 +3610,9 @@ Ingresas a ${p.nombre} en observación. Prudente, aunque podía haberse ido de a
     return () => {
       a |= 0;
       a = a + 1831565813 | 0;
-      let t = Math.imul(a ^ a >>> 15, 1 | a);
-      t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t;
-      return ((t ^ t >>> 14) >>> 0) / 4294967296;
+      let t2 = Math.imul(a ^ a >>> 15, 1 | a);
+      t2 = t2 + Math.imul(t2 ^ t2 >>> 7, 61 | t2) ^ t2;
+      return ((t2 ^ t2 >>> 14) >>> 0) / 4294967296;
     };
   }
   var PIELES = ["#f2c9a0", "#e8b98c", "#d9a271", "#c68d5e", "#a06a42", "#8d5a3a"];
@@ -3389,6 +3631,21 @@ Ingresas a ${p.nombre} en observación. Prudente, aunque podía haberse ido de a
     "beatriz",
     "nuria"
   ]);
+  function retratoDesdeRasgos(rasgos) {
+    return dibujarRetrato({
+      nombre: "Cirujano/a",
+      piel: PIELES[Math.max(0, Math.min(PIELES.length - 1, rasgos.piel))],
+      pelo: PELOS_JOVEN[Math.max(0, Math.min(PELOS_JOVEN.length - 1, rasgos.pelo))],
+      fondo: FONDOS[1],
+      calvo: rasgos.peinado === "calvo",
+      melena: rasgos.peinado === "melena",
+      barba: rasgos.vello,
+      gafas: rasgos.gafas,
+      mayor: false,
+      grave: false,
+      dolorido: false
+    });
+  }
   function retratoPaciente(dato) {
     const nombre = dato.nombre ?? "Paciente";
     const edad = dato.edad ?? 50;
@@ -3398,15 +3655,23 @@ Ingresas a ${p.nombre} en observación. Prudente, aunque podía haberse ido de a
     const propio = nombre.split(" ")[0].toLowerCase();
     const femenino = NOMBRES_FEMENINOS.has(propio) || propio.endsWith("a");
     const mayor = edad >= 62;
-    const piel = elegir(PIELES);
-    const pelo = mayor ? elegir(PELOS_MAYOR) : elegir(PELOS_JOVEN);
-    const fondo = elegir(FONDOS);
-    const calvo = !femenino && (mayor ? rng() < 0.45 : rng() < 0.12);
-    const melena = femenino ? rng() < 0.75 : rng() < 0.08;
-    const barba = !femenino && rng() < 0.45;
-    const gafas = rng() < (mayor ? 0.55 : 0.22);
-    const grave = estabilidad < 45;
-    const dolorido = estabilidad < 70;
+    return dibujarRetrato({
+      nombre,
+      piel: elegir(PIELES),
+      pelo: mayor ? elegir(PELOS_MAYOR) : elegir(PELOS_JOVEN),
+      fondo: elegir(FONDOS),
+      calvo: !femenino && (mayor ? rng() < 0.45 : rng() < 0.12),
+      melena: femenino ? rng() < 0.75 : rng() < 0.08,
+      barba: !femenino && rng() < 0.45,
+      gafas: rng() < (mayor ? 0.55 : 0.22),
+      mayor,
+      grave: estabilidad < 45,
+      dolorido: estabilidad < 70,
+      variarFlequillo: rng() < 0.5
+    });
+  }
+  function dibujarRetrato(p) {
+    const { nombre, piel, pelo, fondo, calvo, melena, barba, gafas, mayor, grave, dolorido } = p;
     const partes = [];
     partes.push(`<circle cx="50" cy="50" r="46" fill="${fondo}"/>`);
     partes.push(`<path d="M18 96 C22 76 34 70 50 70 C66 70 78 76 82 96 Z" fill="#7fa8c9"/>
@@ -3417,7 +3682,7 @@ Ingresas a ${p.nombre} en observación. Prudente, aunque podía haberse ido de a
     if (melena) {
       partes.push(`<path d="M27 66 C22 40 28 18 50 18 C72 18 78 40 73 66 L66 62 C70 44 66 30 50 28 C34 30 30 44 34 62 Z" fill="${pelo}"/>`);
     } else if (!calvo) {
-      const flequillo = rng() < 0.5 ? "M30 38 C30 22 40 16 50 16 C60 16 70 22 70 38 C62 30 56 28 50 28 C44 28 38 30 30 38 Z" : "M30 36 C28 20 42 14 52 15 C64 16 71 24 70 36 C64 26 54 26 46 27 C38 28 33 30 30 36 Z";
+      const flequillo = p.variarFlequillo ? "M30 38 C30 22 40 16 50 16 C60 16 70 22 70 38 C62 30 56 28 50 28 C44 28 38 30 30 38 Z" : "M30 36 C28 20 42 14 52 15 C64 16 71 24 70 36 C64 26 54 26 46 27 C38 28 33 30 30 36 Z";
       partes.push(`<path d="${flequillo}" fill="${pelo}"/>`);
     } else {
       partes.push(`<path d="M30 38 C31 32 33 28 36 26 M64 26 C67 28 69 32 70 38" stroke="${pelo}" stroke-width="3" fill="none" stroke-linecap="round"/>`);
@@ -3555,6 +3820,26 @@ Ingresas a ${p.nombre} en observación. Prudente, aunque podía haberse ido de a
         (f, i) => this.tono({ freq: f, dur: 0.16, gain: 0.05, retraso: i * 0.09 })
       );
     }
+    /** Quejido del paciente: un lamento breve y grave (nada teatral). */
+    quejido() {
+      const ctx = this.asegurarContexto();
+      if (!ctx) return;
+      const t0 = ctx.currentTime + 0.05;
+      const osc = ctx.createOscillator();
+      const gan = ctx.createGain();
+      const filtro = ctx.createBiquadFilter();
+      filtro.type = "lowpass";
+      filtro.frequency.value = 500;
+      osc.type = "sawtooth";
+      osc.frequency.setValueAtTime(200, t0);
+      osc.frequency.exponentialRampToValueAtTime(120, t0 + 0.45);
+      gan.gain.setValueAtTime(0, t0);
+      gan.gain.linearRampToValueAtTime(0.028, t0 + 0.08);
+      gan.gain.exponentialRampToValueAtTime(1e-4, t0 + 0.5);
+      osc.connect(filtro).connect(gan).connect(ctx.destination);
+      osc.start(t0);
+      osc.stop(t0 + 0.55);
+    }
     /** Asistolia: el tono continuo del monitor. */
     asistolia() {
       this.pararLatido();
@@ -3643,6 +3928,7 @@ Ingresas a ${p.nombre} en observación. Prudente, aunque podía haberse ido de a
       /** Refresco automático del menú pendiente (opción oculta), en tiempo real. */
       __publicField(this, "autoRefresco", null);
       __publicField(this, "ticker", null);
+      __publicField(this, "tarjetaEditor", null);
       this.salida = document.createElement("div");
       this.salida.id = "salida";
       this.comandas = document.createElement("div");
@@ -3709,9 +3995,23 @@ Ingresas a ${p.nombre} en observación. Prudente, aunque podía haberse ido de a
         case "paciente": {
           const retrato = dato ? retratoPaciente(dato) : "";
           const cuerpo = cuerpoConDolor(dato?.zonaDolor, dato?.patologiaId) ?? "";
+          const queja = dato?.patologiaId ? QUEJAS[dato.patologiaId] : void 0;
+          const bocadillo = queja ? `<div class="bocadillo">«${escaparHtml(queja)}»<span class="ay">¡ay!</span></div>` : "";
           if (retrato || cuerpo) {
-            this.insertarArte(`<div class="ficha-visual">${retrato}${cuerpo}</div>`, "paciente");
+            this.insertarArte(`${bocadillo}<div class="ficha-visual">${retrato}${cuerpo}</div>`, "paciente");
+            sonido.quejido();
           }
+          break;
+        }
+        case "editor": {
+          if (!dato?.rasgos) break;
+          if (!this.tarjetaEditor || !this.tarjetaEditor.isConnected) {
+            this.tarjetaEditor = document.createElement("figure");
+            this.tarjetaEditor.className = "escena escena-editor";
+            this.salida.appendChild(this.tarjetaEditor);
+          }
+          this.tarjetaEditor.innerHTML = `<div class="ficha-visual">${retratoDesdeRasgos(dato.rasgos)}<div class="cuerpo-pie">${escaparHtml(dato.rasgos.nombre ?? "")}</div></div>`;
+          this.desplazarAlFinal();
           break;
         }
         case "quirofano":
@@ -3740,7 +4040,7 @@ Ingresas a ${p.nombre} en observación. Prudente, aunque podía haberse ido de a
     elegir(titulo, opciones) {
       return new Promise((resolver) => {
         this.limpiarMenu();
-        const visual = document.body.classList.contains("en-quirofano") && titulo.includes("Cómo procedes");
+        const visual = document.body.classList.contains("en-quirofano") && titulo === t("comoProcedes");
         if (visual) this.menu.classList.add("quirurgico");
         const cabecera = document.createElement("div");
         cabecera.className = "menu-titulo";
@@ -3780,8 +4080,8 @@ Ingresas a ${p.nombre} en observación. Prudente, aunque podía haberse ido de a
         this.desplazarAlFinal();
       });
     }
-    pausa(mensaje = "Pulsa Intro para continuar...") {
-      const etiqueta = mensaje.includes("fichar") ? "▸ Fichar y empezar la guardia" : "▸ Continuar";
+    pausa(mensaje) {
+      const etiqueta = `▸ ${(mensaje ?? t("continuar")).replace(/Pulsa Intro para |Press Enter to |Appuyez sur Entrée|Prem Intro per |Eingabe(taste)? drücken( und)? /i, "")}`;
       return this.elegir(" ", [{ etiqueta, valor: void 0 }]);
     }
     /** Modo tiempo real: 1 s de reloj = 1 min de guardia, aunque no toques nada. */
@@ -3809,6 +4109,37 @@ Ingresas a ${p.nombre} en observación. Prudente, aunque podía haberse ido de a
           this.ticker = null;
         }
       }, 1e3);
+    }
+    preguntarTexto(pregunta, porDefecto) {
+      return new Promise((resolver) => {
+        this.limpiarMenu();
+        const cab = document.createElement("div");
+        cab.className = "menu-titulo";
+        cab.innerHTML = ansiAHtml(pregunta);
+        const campo = document.createElement("input");
+        campo.type = "text";
+        campo.id = "campo-texto";
+        campo.placeholder = porDefecto;
+        campo.maxLength = 24;
+        const boton = document.createElement("button");
+        boton.className = "opcion reinicio";
+        boton.textContent = "✓ Confirmar";
+        const enviar = () => {
+          const valor = campo.value.trim() || porDefecto;
+          sonido.click();
+          this.escribir(`\x1B[90m> ${valor}\x1B[39m`);
+          this.limpiarMenu();
+          resolver(valor);
+        };
+        boton.addEventListener("click", enviar);
+        campo.addEventListener("keydown", (ev) => {
+          if (ev.key === "Enter") enviar();
+          ev.stopPropagation();
+        });
+        this.menu.append(cab, campo, boton);
+        campo.focus();
+        this.desplazarAlFinal();
+      });
     }
     cerrar() {
       sonido.pararLatido();
@@ -3867,7 +4198,7 @@ Ingresas a ${p.nombre} en observación. Prudente, aunque podía haberse ido de a
         tarjeta.innerHTML = `
         <div class="c-nombre">${escaparHtml(c.nombre.split(" ")[0] ?? c.nombre)}</div>
         <div class="c-barra"><div class="c-nivel" style="width:${Math.max(0, Math.min(100, Math.round(c.estabilidad)))}%"></div></div>
-        <div class="c-lugar">${c.lugar === "espera" ? "🚪 urgencias" : "🛏 planta"}${c.alerta ? " ⚠" : ""}</div>`;
+        <div class="c-lugar">${c.lugar === "espera" ? `🚪 ${t("urgenciasTag")}` : `🛏 ${t("plantaTag")}`}${c.alerta ? " ⚠" : ""}</div>`;
         this.comandas.appendChild(tarjeta);
       }
     }
@@ -3919,8 +4250,10 @@ Ingresas a ${p.nombre} en observación. Prudente, aunque podía haberse ido de a
   var modo = modoParam === "residente" || modoParam === "adjunto" || modoParam === "negra" ? modoParam : void 0;
   var ritmoParam = parametros.get("ritmo");
   var ritmo = ritmoParam === "real" || ritmoParam === "turnos" ? ritmoParam : void 0;
+  var langParam = parametros.get("lang");
+  var lang = langParam === "es" || langParam === "en" || langParam === "fr" || langParam === "ca" || langParam === "de" ? langParam : void 0;
   var io = new WebIO(document.getElementById("app"));
-  new ShiftEngine(io, semilla, modo, ritmo).iniciar().catch((error) => {
+  new ShiftEngine(io, semilla, modo, ritmo, lang).iniciar().catch((error) => {
     io.escribir(`\x1B[31mLa guardia ha terminado de forma inesperada: ${String(error)}\x1B[39m`);
   });
 })();

@@ -6,6 +6,7 @@
  *   ?modo=residente   → salta el menú de nivel (también ?modo=adjunto)
  */
 import { ShiftEngine, type ModoJuego, type RitmoJuego } from '../core/ShiftEngine.js';
+import type { Idioma } from '../i18n.js';
 import { configurarColores } from '../ui/ansi.js';
 import { WebIO } from './WebIO.js';
 
@@ -27,7 +28,13 @@ const ritmoParam = parametros.get('ritmo');
 const ritmo: RitmoJuego | undefined =
   ritmoParam === 'real' || ritmoParam === 'turnos' ? ritmoParam : undefined;
 
+const langParam = parametros.get('lang');
+const lang: Idioma | undefined =
+  langParam === 'es' || langParam === 'en' || langParam === 'fr' || langParam === 'ca' || langParam === 'de'
+    ? langParam
+    : undefined;
+
 const io = new WebIO(document.getElementById('app')!);
-new ShiftEngine(io, semilla, modo, ritmo).iniciar().catch((error: unknown) => {
+new ShiftEngine(io, semilla, modo, ritmo, lang).iniciar().catch((error: unknown) => {
   io.escribir(`\x1b[31mLa guardia ha terminado de forma inesperada: ${String(error)}\x1b[39m`);
 });

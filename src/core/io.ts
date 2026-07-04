@@ -34,7 +34,17 @@ export interface LatidoTiempoReal {
 }
 
 /** Momentos visuales del juego, para adaptadores que sepan ilustrarlos. */
-export type EscenaId = 'portada' | 'triaje' | 'paciente' | 'quirofano' | 'paso' | 'fin';
+export type EscenaId = 'portada' | 'triaje' | 'paciente' | 'quirofano' | 'paso' | 'fin' | 'editor';
+
+/** Rasgos elegibles del retrato (editor de personaje y pacientes). */
+export interface Rasgos {
+  piel: number;
+  peinado: 'corto' | 'melena' | 'calvo';
+  pelo: number;
+  gafas: boolean;
+  vello: boolean;
+  nombre?: string;
+}
 
 /** Una "comanda" del tablero de urgencias: paciente pendiente y su reloj vital. */
 export interface ComandaPaciente {
@@ -64,6 +74,10 @@ export interface EscenaDato {
   imprevisto?: boolean;
   /** Escena 'fin': puntuación final (para el expediente persistente del cirujano). */
   puntos?: number;
+  /** Escena 'editor': rasgos actuales para la vista previa del retrato. */
+  rasgos?: Rasgos;
+  /** Escena 'paciente': queja hablada del paciente (bocadillo). */
+  queja?: string;
 }
 
 export interface IO {
@@ -73,6 +87,8 @@ export interface IO {
   elegir<T>(titulo: string, opciones: Opcion<T>[]): Promise<T>;
   /** Pausa hasta que el jugador confirme (Intro / botón). */
   pausa(mensaje?: string): Promise<void>;
+  /** Pregunta de texto libre opcional (nombre del cirujano, etc.). */
+  preguntarTexto?(pregunta: string, porDefecto: string): Promise<string>;
   /** Fin de la partida: libera recursos (readline) o muestra el reinicio (web). */
   cerrar(): void;
   /**

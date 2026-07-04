@@ -38,6 +38,29 @@ const NOMBRES_FEMENINOS = new Set([
   'carmen', 'lucía', 'pilar', 'elena', 'dolores', 'marta', 'isabel', 'rosa', 'beatriz', 'nuria',
 ]);
 
+/** Retrato desde rasgos explícitos (editor de personaje). */
+export function retratoDesdeRasgos(rasgos: {
+  piel: number;
+  peinado: 'corto' | 'melena' | 'calvo';
+  pelo: number;
+  gafas: boolean;
+  vello: boolean;
+}): string {
+  return dibujarRetrato({
+    nombre: 'Cirujano/a',
+    piel: PIELES[Math.max(0, Math.min(PIELES.length - 1, rasgos.piel))]!,
+    pelo: PELOS_JOVEN[Math.max(0, Math.min(PELOS_JOVEN.length - 1, rasgos.pelo))]!,
+    fondo: FONDOS[1]!,
+    calvo: rasgos.peinado === 'calvo',
+    melena: rasgos.peinado === 'melena',
+    barba: rasgos.vello,
+    gafas: rasgos.gafas,
+    mayor: false,
+    grave: false,
+    dolorido: false,
+  });
+}
+
 export function retratoPaciente(dato: EscenaDato): string {
   const nombre = dato.nombre ?? 'Paciente';
   const edad = dato.edad ?? 50;
@@ -49,18 +72,39 @@ export function retratoPaciente(dato: EscenaDato): string {
   const femenino = NOMBRES_FEMENINOS.has(propio) || propio.endsWith('a');
   const mayor = edad >= 62;
 
-  const piel = elegir(PIELES);
-  const pelo = mayor ? elegir(PELOS_MAYOR) : elegir(PELOS_JOVEN);
-  const fondo = elegir(FONDOS);
-  const calvo = !femenino && (mayor ? rng() < 0.45 : rng() < 0.12);
-  const melena = femenino ? rng() < 0.75 : rng() < 0.08;
-  const barba = !femenino && rng() < 0.45;
-  const gafas = rng() < (mayor ? 0.55 : 0.22);
+  return dibujarRetrato({
+    nombre,
+    piel: elegir(PIELES),
+    pelo: mayor ? elegir(PELOS_MAYOR) : elegir(PELOS_JOVEN),
+    fondo: elegir(FONDOS),
+    calvo: !femenino && (mayor ? rng() < 0.45 : rng() < 0.12),
+    melena: femenino ? rng() < 0.75 : rng() < 0.08,
+    barba: !femenino && rng() < 0.45,
+    gafas: rng() < (mayor ? 0.55 : 0.22),
+    mayor,
+    grave: estabilidad < 45,
+    dolorido: estabilidad < 70,
+    variarFlequillo: rng() < 0.5,
+  });
+}
 
-  // Expresión según lo mal que esté el paciente.
-  const grave = estabilidad < 45;
-  const dolorido = estabilidad < 70;
+interface ParametrosRetrato {
+  nombre: string;
+  piel: string;
+  pelo: string;
+  fondo: string;
+  calvo: boolean;
+  melena: boolean;
+  barba: boolean;
+  gafas: boolean;
+  mayor: boolean;
+  grave: boolean;
+  dolorido: boolean;
+  variarFlequillo?: boolean;
+}
 
+function dibujarRetrato(p: ParametrosRetrato): string {
+  const { nombre, piel, pelo, fondo, calvo, melena, barba, gafas, mayor, grave, dolorido } = p;
   const partes: string[] = [];
 
   partes.push(`<circle cx="50" cy="50" r="46" fill="${fondo}"/>`);
@@ -77,7 +121,7 @@ export function retratoPaciente(dato: EscenaDato): string {
   if (melena) {
     partes.push(`<path d="M27 66 C22 40 28 18 50 18 C72 18 78 40 73 66 L66 62 C70 44 66 30 50 28 C34 30 30 44 34 62 Z" fill="${pelo}"/>`);
   } else if (!calvo) {
-    const flequillo = rng() < 0.5
+    const flequillo = p.variarFlequillo
       ? 'M30 38 C30 22 40 16 50 16 C60 16 70 22 70 38 C62 30 56 28 50 28 C44 28 38 30 30 38 Z'
       : 'M30 36 C28 20 42 14 52 15 C64 16 71 24 70 36 C64 26 54 26 46 27 C38 28 33 30 30 36 Z';
     partes.push(`<path d="${flequillo}" fill="${pelo}"/>`);

@@ -9,9 +9,10 @@
 import type { ComandaPaciente, EscenaDato, EscenaId, IO, LatidoTiempoReal, Opcion } from '../core/io.js';
 import { horaGuardia } from '../ui/hud.js';
 import { esquemaQuirurgico } from './anatomia.js';
-import { ARTE_AMANECER, ARTE_PORTADA, BANNER_QUIROFANO, cuerpoConDolor, SVG_AMBULANCIA } from './arte.js';
+import { ARTE_AMANECER, ARTE_PORTADA, BANNER_QUIROFANO, cuerpoConDolor, QUEJAS, SVG_AMBULANCIA } from './arte.js';
+import { t } from '../i18n.js';
 import { iconoHerramienta } from './quirofano.js';
-import { retratoPaciente } from './retrato.js';
+import { retratoDesdeRasgos, retratoPaciente } from './retrato.js';
 import { sonido } from './sonido.js';
 
 const ESTILOS_ABRE: Record<number, string> = {
@@ -67,6 +68,7 @@ export class WebIO implements IO {
   /** Refresco automático del menú pendiente (opción oculta), en tiempo real. */
   private autoRefresco: (() => void) | null = null;
   private ticker: number | null = null;
+  private tarjetaEditor: HTMLElement | null = null;
 
   constructor(raiz: HTMLElement) {
     this.salida = document.createElement('div');
@@ -138,9 +140,25 @@ export class WebIO implements IO {
       case 'paciente': {
         const retrato = dato ? retratoPaciente(dato) : '';
         const cuerpo = cuerpoConDolor(dato?.zonaDolor, dato?.patologiaId) ?? '';
+        const queja = dato?.patologiaId ? QUEJAS[dato.patologiaId] : undefined;
+        const bocadillo = queja
+          ? `<div class="bocadillo">«${escaparHtml(queja)}»<span class="ay">¡ay!</span></div>`
+          : '';
         if (retrato || cuerpo) {
-          this.insertarArte(`<div class="ficha-visual">${retrato}${cuerpo}</div>`, 'paciente');
+          this.insertarArte(`${bocadillo}<div class="ficha-visual">${retrato}${cuerpo}</div>`, 'paciente');
+          sonido.quejido();
         }
+        break;
+      }
+      case 'editor': {
+        if (!dato?.rasgos) break;
+        if (!this.tarjetaEditor || !this.tarjetaEditor.isConnected) {
+          this.tarjetaEditor = document.createElement('figure');
+          this.tarjetaEditor.className = 'escena escena-editor';
+          this.salida.appendChild(this.tarjetaEditor);
+        }
+        this.tarjetaEditor.innerHTML = `<div class="ficha-visual">${retratoDesdeRasgos(dato.rasgos)}<div class="cuerpo-pie">${escaparHtml(dato.rasgos.nombre ?? '')}</div></div>`;
+        this.desplazarAlFinal();
         break;
       }
       case 'quirofano':
@@ -175,7 +193,7 @@ export class WebIO implements IO {
       // En quirófano, las técnicas se eligen visualmente: tarjetas con el
       // icono del instrumental o la maniobra que describen.
       const visual =
-        document.body.classList.contains('en-quirofano') && titulo.includes('Cómo procedes');
+        document.body.classList.contains('en-quirofano') && titulo === t('comoProcedes');
       if (visual) this.menu.classList.add('quirurgico');
 
       const cabecera = document.createElement('div');
@@ -222,10 +240,8 @@ export class WebIO implements IO {
     });
   }
 
-  pausa(mensaje = 'Pulsa Intro para continuar...'): Promise<void> {
-    const etiqueta = mensaje.includes('fichar')
-      ? '▸ Fichar y empezar la guardia'
-      : '▸ Continuar';
+  pausa(mensaje?: string): Promise<void> {
+    const etiqueta = `▸ ${(mensaje ?? t('continuar')).replace(/Pulsa Intro para |Press Enter to |Appuyez sur Entrée|Prem Intro per |Eingabe(taste)? drücken( und)? /i, '')}`;
     return this.elegir(' ', [{ etiqueta, valor: undefined as void }]);
   }
 
@@ -257,6 +273,38 @@ export class WebIO implements IO {
         this.ticker = null;
       }
     }, 1000);
+  }
+
+  preguntarTexto(pregunta: string, porDefecto: string): Promise<string> {
+    return new Promise((resolver) => {
+      this.limpiarMenu();
+      const cab = document.createElement('div');
+      cab.className = 'menu-titulo';
+      cab.innerHTML = ansiAHtml(pregunta);
+      const campo = document.createElement('input');
+      campo.type = 'text';
+      campo.id = 'campo-texto';
+      campo.placeholder = porDefecto;
+      campo.maxLength = 24;
+      const boton = document.createElement('button');
+      boton.className = 'opcion reinicio';
+      boton.textContent = '✓ Confirmar';
+      const enviar = () => {
+        const valor = campo.value.trim() || porDefecto;
+        sonido.click();
+        this.escribir(`\x1b[90m> ${valor}\x1b[39m`);
+        this.limpiarMenu();
+        resolver(valor);
+      };
+      boton.addEventListener('click', enviar);
+      campo.addEventListener('keydown', (ev) => {
+        if (ev.key === 'Enter') enviar();
+        ev.stopPropagation();
+      });
+      this.menu.append(cab, campo, boton);
+      campo.focus();
+      this.desplazarAlFinal();
+    });
   }
 
   cerrar(): void {
@@ -319,7 +367,7 @@ export class WebIO implements IO {
       tarjeta.innerHTML = `
         <div class="c-nombre">${escaparHtml(c.nombre.split(' ')[0] ?? c.nombre)}</div>
         <div class="c-barra"><div class="c-nivel" style="width:${Math.max(0, Math.min(100, Math.round(c.estabilidad)))}%"></div></div>
-        <div class="c-lugar">${c.lugar === 'espera' ? '🚪 urgencias' : '🛏 planta'}${c.alerta ? ' ⚠' : ''}</div>`;
+        <div class="c-lugar">${c.lugar === 'espera' ? `🚪 ${t('urgenciasTag')}` : `🛏 ${t('plantaTag')}`}${c.alerta ? ' ⚠' : ''}</div>`;
       this.comandas.appendChild(tarjeta);
     }
   }
