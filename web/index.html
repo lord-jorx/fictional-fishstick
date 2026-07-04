@@ -2010,12 +2010,17 @@ ${negrita("Puntuación final:")} ${negrita(puntos >= 0 ? verde(String(puntos)) :
       return cirugiasConExito * 120 + s.cirugiasPerfectas * 40 + s.altasCorrectas * 60 + s.ingresosCorrectos * 30 - s.altasErroneas * 50 - s.ingresosErroneos * 30 - s.complicaciones * 40 - s.exitus * 200 - abandonados * 60;
     }
     veredicto(puntos) {
-      if (puntos >= 700) return verde("«Guardia de libro. Material de Jefe de Servicio.»");
-      if (puntos >= 450) return verde("«Adjunto senior: sólido, resolutivo, fiable.»");
-      if (puntos >= 250) return cian("«Buen adjunto de guardia. Se puede dormir contigo en el hospital.»");
-      if (puntos >= 100) return amarillo("«Nivel R5: te falta tablas, pero los pacientes sobreviven.»");
-      if (puntos >= 0) return amarillo("«Nivel R3. Repasa las indicaciones quirúrgicas, por favor.»");
-      return rojo("«¿Seguro que esto es lo tuyo? El lunes hablamos en mi despacho.»");
+      if (puntos >= 700)
+        return verde("«He leído tu parte dos veces. La segunda, por gusto. No se lo digas a nadie, pero anoche este hospital tuvo suerte.»");
+      if (puntos >= 450)
+        return verde("«Sólido. De los que dejan el quirófano como lo encontraron y el parte sin adjetivos. Sigue así y acabarás pagando tú los cafés.»");
+      if (puntos >= 250)
+        return cian("«Se puede dormir contigo de guardia, que es lo máximo que un jefe reconoce en voz alta.»");
+      if (puntos >= 100)
+        return amarillo("«Los pacientes sobreviven, que no es poco. Las formas, ya si eso, otro día.»");
+      if (puntos >= 0)
+        return amarillo("«Repasa indicaciones quirúrgicas. Y no me mires así: lo digo por los dos.»");
+      return rojo("«Cierra la puerta al entrar. Tenemos que hablar de lo de anoche, y no va a ser corto.»");
     }
   };
 
