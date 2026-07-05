@@ -133,6 +133,7 @@ export class WebIO implements IO {
           dato?.totalEtapas ?? 3,
           dato?.evento,
           dato?.imprevisto,
+          dato?.estabilidad,
         );
         if (esquema) this.insertarArte(esquema, 'anatomia');
         break;
@@ -305,6 +306,10 @@ export class WebIO implements IO {
       campo.focus();
       this.desplazarAlFinal();
     });
+  }
+
+  experiencia(): number {
+    return this.leerCarrera()?.xp ?? 0;
   }
 
   cerrar(): void {

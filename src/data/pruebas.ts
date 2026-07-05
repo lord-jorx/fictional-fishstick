@@ -9,6 +9,7 @@ export const PRUEBAS: Record<PruebaId, PruebaDiagnostica> = {
   tc:        { id: 'tc',        nombre: 'TC abdominal con contraste',                   duracionMin: 60 },
   angiotc:   { id: 'angiotc',   nombre: 'Angio-TC abdominal',                           duracionMin: 75 },
   ecofast:   { id: 'ecofast',   nombre: 'Eco-FAST',                                     duracionMin: 10 },
+  ecg:       { id: 'ecg',       nombre: 'Electrocardiograma',                           duracionMin: 10 },
 };
 
 /** Informe genérico cuando la prueba no aporta nada para esa patología. */
@@ -18,4 +19,5 @@ export const INFORME_INESPECIFICO: Record<PruebaId, string> = {
   tc: 'TC sin hallazgos agudos relevantes.',
   angiotc: 'Angio-TC: ejes vasculares permeables, sin otros hallazgos.',
   ecofast: 'Eco-FAST negativa: no se objetiva líquido libre.',
+  ecg: 'ECG: ritmo sinusal sin alteraciones agudas de la repolarización.',
 };

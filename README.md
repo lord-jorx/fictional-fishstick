@@ -38,6 +38,39 @@ su queja hablada** («Me atraviesa hasta la espalda... como un cinturón»),
 corporal (animada, palpándose), gotas de sudor si está sufriendo y un
 quejido sonoro sintetizado. La anamnesis entra por los ojos y los oídos.
 
+## 🏥 Niveles de hospital y derivaciones
+
+Al empezar eliges dónde te toca la noche:
+
+- **Comarcal (nivel 1)** — 1 quirófano, 1 REA, sin angio-TC nocturno y menos
+  pacientes. Lo vascular grave, el TCE y el código infarto **se derivan**: la
+  ambulancia medicalizada es una decisión clínica más, y derivar con criterio
+  puntúa (y derivar lo que podías asumir, te lo recuerda el adjunto receptor).
+- **General (nivel 2)** — el clásico: 2 quirófanos, 3 REA; sin neurocirugía
+  ni hemodinámica (TCE e IAM viajan).
+- **Referencia (nivel 3)** — 3 quirófanos, 4 REA y de todo... y dos
+  pacientes más por noche. Aquí derivar es escurrir el bulto.
+
+## 🎖 Roguelite: la taquilla del cirujano
+
+La XP de tu expediente desbloquea **mejoras permanentes** que se aplican
+solas al fichar: *Termo del bueno* (300 XP), *Ojo clínico* (800: pruebas 5
+min más rápidas), *El número personal del adjunto* (1.500: una llamada en
+cualquier modo), *Equipo compenetrado* (2.500: menos imprevistos) y
+*Templanza* (4.000: empiezas sin estrés). Cada guardia alimenta la
+siguiente.
+
+## 🚑 Paciente traumático y patología médica
+
+Además del abdomen: **neumotórax a tensión** (se drena en urgencias, sin
+esperar a la imagen), **TCE con hematoma epidural** (intervalo lúcido,
+Cushing y una ambulancia que no puede esperar), **IAM de cara inferior**
+disfrazado de "dolor de estómago" (el **ECG** — prueba nueva de 10 minutos —
+te salva de un TC inútil) y **cetoacidosis diabética** que imita un abdomen
+agudo que jamás debe operarse. El quirófano suma además un **monitor de
+constantes en vivo** en el esquema anatómico (FC/TA/SatO₂ del paciente,
+paso a paso) y el instrumental entrando al campo.
+
 ## 🕵️ El interrogatorio clínico
 
 Cada paciente **declara algo** al llegar («¿Alcohol? Una copita en las

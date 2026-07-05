@@ -38,6 +38,10 @@ const VITALES: Record<string, PerfilVitales> = {
   gastroenteritis: { tas: [110, 125], tad: [70, 82], fc: [80, 95],   sat: [98, 99], temp: [36.9, 37.6] },
   colico_biliar:   { tas: [115, 130], tad: [72, 85], fc: [70, 85],   sat: [98, 99], temp: [36.5, 37.0] },
   colico_renal:    { tas: [125, 145], tad: [78, 90], fc: [85, 100],  sat: [98, 99], temp: [36.5, 37.1] },
+  neumotorax:      { tas: [78, 92],   tad: [48, 58], fc: [125, 140], sat: [82, 88], temp: [36.2, 36.8] },
+  tce:             { tas: [148, 168], tad: [85, 98], fc: [48, 58],   sat: [96, 98], temp: [36.4, 36.9] },
+  iam:             { tas: [92, 108],  tad: [58, 70], fc: [52, 64],   sat: [95, 97], temp: [36.0, 36.5] },
+  cad:             { tas: [96, 110],  tad: [60, 72], fc: [110, 124], sat: [97, 99], temp: [36.8, 37.4] },
 };
 
 const NOMBRES = [

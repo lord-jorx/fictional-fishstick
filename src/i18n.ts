@@ -65,6 +65,7 @@ const C: Catalogo = {
   quienLoLleva: ['¿Quién lleva este caso?', 'Who takes this case?', 'Qui prend ce cas ?', 'Qui porta aquest cas?', 'Wer übernimmt den Fall?'],
   llevaElCaso: ['Lleva el caso', 'Case lead', 'Responsable du cas', 'Porta el cas', 'Fallführung'],
   opera: ['Opera', 'Operating', 'Opère', 'Opera', 'Es operiert'],
+  derivar: ['Derivar en ambulancia medicalizada al centro de referencia', 'Transfer by ambulance to the referral centre', 'Transférer en ambulance vers le centre de référence', 'Derivar en ambulància medicalitzada al centre de referència', 'Mit Notarztwagen ins Referenzzentrum verlegen'],
 };
 
 /** Texto de interfaz en el idioma activo. */

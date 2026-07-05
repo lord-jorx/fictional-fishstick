@@ -32,6 +32,7 @@ type AccionPaciente =
   | { tipo: 'alta' }
   | { tipo: 'ingreso' }
   | { tipo: 'cirugia' }
+  | { tipo: 'derivar' }
   | { tipo: 'volver' }
   | { tipo: 'reevaluar' };
 
@@ -52,7 +53,7 @@ export class TriageState implements GameState {
     switch (accion.tipo) {
       case 'cafe': {
         this.mostrarAvisos(ctx, ctx.avanzarTiempo(15, { descanso: true }));
-        ctx.cirujano.energia = Math.min(100, ctx.cirujano.energia + 5);
+        ctx.cirujano.energia = Math.min(100, ctx.cirujano.energia + (ctx.mejoras.has('termo') ? 15 : 5));
         ctx.io.escribir(verde('☕ Un café con el residente. Respiras hondo.'));
         return this;
       }
@@ -161,7 +162,8 @@ export class TriageState implements GameState {
 
         case 'prueba': {
           const prueba = PRUEBAS[accion.prueba];
-          const duracion = Math.max(5, prueba.duracionMin - paciente.descuentoPrueba);
+          const bonus = ctx.mejoras.has('ojo') ? 5 : 0;
+          const duracion = Math.max(5, prueba.duracionMin - paciente.descuentoPrueba - bonus);
           if (paciente.descuentoPrueba > 0) {
             ctx.io.escribir(gris(`Sabes exactamente qué buscar: ${prueba.nombre} priorizada (${duracion} min).`));
             paciente.descuentoPrueba = 0;
@@ -191,6 +193,11 @@ export class TriageState implements GameState {
           }
           break;
         }
+
+        case 'derivar':
+          this.resolverDerivacion(ctx, paciente);
+          await ctx.io.pausa();
+          return this;
 
         case 'alta':
           if (await this.adjuntoDuda(ctx, paciente, 'alta')) break;
@@ -239,6 +246,7 @@ export class TriageState implements GameState {
       });
     }
     for (const prueba of Object.values(PRUEBAS)) {
+      if (ctx.pruebasNoDisponibles.includes(prueba.id)) continue;
       if (!paciente.pruebasRealizadas.includes(prueba.id)) {
         opciones.push({
           etiqueta: `${t('solicitar')} ${prueba.nombre}`,
@@ -251,6 +259,7 @@ export class TriageState implements GameState {
       { etiqueta: negrita(t('alta')), valor: { tipo: 'alta' } },
       { etiqueta: negrita(t('ingresar')), valor: { tipo: 'ingreso' } },
       { etiqueta: negrita(rojo(t('cirugiaUrgente'))), detalle: `quirófanos libres: ${ctx.hospital.quirofanosLibres}`, valor: { tipo: 'cirugia' } },
+      { etiqueta: cian(t('derivar')), detalle: '30 min', valor: { tipo: 'derivar' } },
       { etiqueta: gris(t('volverControl')), valor: { tipo: 'volver' } },
       { etiqueta: '⟳', oculta: true, valor: { tipo: 'reevaluar' } },
     );
@@ -438,6 +447,29 @@ export class TriageState implements GameState {
       ctx.io.escribir(verde(`\nIngresas a ${p.nombre} en observación. Prudente, aunque podía haberse ido de alta.`));
       this.calificar(ctx, p);
     }
+  }
+
+  /** Derivación en ambulancia: en el comarcal es criterio; en el de referencia, escurrir el bulto. */
+  private resolverDerivacion(ctx: GameContext, p: Paciente): void {
+    this.sacarDeEspera(ctx, p);
+    ctx.stats.atendidos++;
+    this.mostrarAvisos(ctx, ctx.avanzarTiempo(30));
+    p.estado = 'derivado';
+    p.derivacionCorrecta = ctx.derivables.includes(p.patologia.id);
+
+    if (p.derivacionCorrecta) {
+      ctx.stats.derivacionesCorrectas++;
+      ctx.cirujano.estres = Math.max(0, ctx.cirujano.estres - 3);
+      ctx.io.escribir(verde(`\n\u2714 ${p.nombre} sale en ambulancia medicalizada, estabilizado y con la historia bien hecha.`));
+      ctx.io.escribir(gris(`  ${p.patologia.nombre}: este centro no era el sitio. Saber derivar tambien salva vidas.`));
+      ctx.io.escribir(gris(`  Perla docente: ${p.patologia.notaDocente}`));
+    } else {
+      ctx.stats.derivacionesErroneas++;
+      ctx.cirujano.estres = Math.min(100, ctx.cirujano.estres + 5);
+      ctx.io.escribir(amarillo(`\nDerivas a ${p.nombre}... y a la hora llama el adjunto receptor: "Y esto, no lo podiais asumir vosotros?"`));
+      ctx.io.escribir(gris('  Una ambulancia ocupada, un paciente paseado y un favor que ahora debes.'));
+    }
+    this.calificar(ctx, p);
   }
 
   private sacarDeEspera(ctx: GameContext, p: Paciente): void {

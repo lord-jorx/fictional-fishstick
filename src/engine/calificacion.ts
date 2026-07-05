@@ -9,6 +9,16 @@ import type { Paciente } from '../core/types.js';
 export function calificarCaso(p: Paciente): number {
   if (p.estado === 'exitus') return 1;
 
+  // Derivaciones: se juzga el criterio, no el diagnóstico completo (a veces
+  // se deriva precisamente porque aquí no hay con qué confirmarlo).
+  if (p.estado === 'derivado') {
+    if (!p.derivacionCorrecta) return 2;
+    let e = 5;
+    if (p.pruebasRealizadas.length > 2) e--;
+    if (p.interrogado && p.interrogatorioAcertado === false) e--;
+    return Math.max(1, e);
+  }
+
   let estrellas = 5;
   if (!p.diagnosticoConfirmado) estrellas--;
   if (p.pruebasRealizadas.length > 2) estrellas--;

@@ -93,4 +93,31 @@ export const INTERROGATORIOS: Record<string, InterrogatorioClinico> = {
     revelacion: 'Se retuerce mientras lo cuenta, sin defensa en la tripa. La memoria del cólico renal no se olvida ni se inventa.',
     cerrojo: '«¿Que no? Mire, hasta le digo por dónde va a bajar la piedra.» Acertó él. Tú no.',
   },
+  neumotorax: {
+    afirmacion: '«Puedo... respirar... solo es... el golpe...»',
+    correcta: 'creer',
+    revelacion: 'No hay tiempo para diálogos: el tórax silba su propio interrogatorio. A este se le cree y se le drena.',
+    cerrojo: 'Pierdes segundos preciosos discutiendo con alguien que apenas puede hablar.',
+  },
+  tce: {
+    afirmacion: '«No perdí el conocimiento, solo me mareé un segundo. Mi mujer exagera.»',
+    correcta: 'dudar',
+    revelacion:
+      'Su mujer, desde la puerta: «Estuvo dos minutos sin responder, y luego decía que estaba perfecto.» El intervalo lúcido, contado por el mejor testigo.',
+    cerrojo: 'Él insiste en irse a casa "a dormir la siesta". Justo lo que un epidural agradece.',
+  },
+  iam: {
+    afirmacion: '«Es del estómago seguro, doctor. Me sentó mal la cena, siempre me pasa.»',
+    correcta: 'dudar',
+    revelacion:
+      '«...bueno, también me pasó el mes pasado subiendo cuestas. Y sin cenar.» Angina de esfuerzo previa: el estómago era el corazón.',
+    cerrojo: 'Se toma un antiácido de su bolsillo delante de ti, como prueba pericial.',
+  },
+  cad: {
+    afirmacion: '«La insulina me la pongo religiosamente, como me enseñaron.»',
+    correcta: 'dudar',
+    revelacion:
+      '«...con el catarro no comía, así que tampoco me la ponía. Era lo lógico, ¿no?» El error clásico: la CAD aplaude.',
+    cerrojo: 'Te enseña la pluma de insulina como quien enseña el carnet. El cartucho, curiosamente, lleno.',
+  },
 };

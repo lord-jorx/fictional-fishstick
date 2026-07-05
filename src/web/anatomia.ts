@@ -134,6 +134,19 @@ const ESQUEMAS: Record<string, EsquemaCirugia> = {
   },
 };
 
+/** Monitor de anestesia en vivo: constantes derivadas de la estabilidad. */
+function chipConstantes(evento: string, estabilidad: number): string {
+  if (/anestesia|hipotens|desatur|tr[ií]ada|noradrenalina|desploma|ph 7/i.test(evento)) return '';
+  const fc = Math.round(132 - estabilidad * 0.62);
+  const tas = Math.round(68 + estabilidad * 0.52);
+  const sat = Math.min(99, Math.round(89 + estabilidad * 0.1));
+  const color = estabilidad >= 60 ? '#97b077' : estabilidad >= 35 ? '#d9b36a' : '#c9645a';
+  return `<g><rect x="196" y="8" width="76" height="30" rx="5" fill="#0b0f14" stroke="#3b3223"/>
+    <text x="204" y="21" font-size="8" fill="${color}" font-family="inherit">FC ${fc}  TA ${tas}</text>
+    <text x="204" y="32" font-size="8" fill="${color}" font-family="inherit">SatO₂ ${sat}%</text>
+    <circle class="alarma-led" cx="264" cy="15" r="2.4" fill="${color}"/></g>`;
+}
+
 /** Complicación dibujada sobre el punto de trabajo actual. */
 function estampa(evento: string, [x, y]: readonly [number, number]): string {
   if (/sangr|hemoperitoneo|ti[ñn]e|exang|coagul/i.test(evento)) {
@@ -165,6 +178,7 @@ export function esquemaQuirurgico(
   totalEtapas: number,
   evento = '',
   imprevisto = false,
+  estabilidad = 75,
 ): string | null {
   const esquema = patologiaId ? ESQUEMAS[patologiaId] : undefined;
   if (!esquema) return null;
@@ -198,8 +212,11 @@ export function esquemaQuirurgico(
              M0 30 H280 M0 70 H280 M0 110 H280 M0 150 H280" stroke="#171209" stroke-width="1"/>
     ${esquema.organos}
     ${completadas}
+    <path class="instrumento" d="M262 150 L${actual[0] + 14} ${actual[1] + 10}" stroke="#cfd8e2" stroke-width="4.5" stroke-linecap="round"/>
+    <path class="instrumento" d="M${actual[0] + 14} ${actual[1] + 10} l-7 -5" stroke="#8fa1b3" stroke-width="2.4"/>
     ${OBJETIVO(actual)}
     ${estampa(evento, actual)}
+    ${chipConstantes(evento, estabilidad)}
   </g>
   <text x="10" y="18" font-size="9.5" fill="#cfa257" letter-spacing="2" font-family="Georgia, serif">${esquema.titulo}</text>
   ${progreso}

@@ -335,6 +335,8 @@
     animation: objetivo 1.6s ease-in-out infinite;
     filter: drop-shadow(0 0 5px rgba(207, 162, 87, .6));
   }
+  .instrumento { animation: entrar-instr .8s ease-out both; }
+  @keyframes entrar-instr { from { transform: translate(46px, 34px); opacity: 0; } to { transform: none; opacity: 1; } }
   @keyframes objetivo { 0%, 100% { transform: scale(1); opacity: 1; } 50% { transform: scale(1.25); opacity: .55; } }
 
   /* Expediente del cirujano (carrera persistente) */

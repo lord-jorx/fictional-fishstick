@@ -3,7 +3,7 @@
  */
 
 /** Pruebas diagnósticas disponibles en urgencias. */
-export type PruebaId = 'analitica' | 'eco' | 'tc' | 'angiotc' | 'ecofast';
+export type PruebaId = 'analitica' | 'eco' | 'tc' | 'angiotc' | 'ecofast' | 'ecg';
 
 export interface PruebaDiagnostica {
   id: PruebaId;
@@ -123,6 +123,7 @@ export type EstadoPaciente =
   | 'alta'        // dado de alta
   | 'operado'     // intervenido con éxito, en planta
   | 'rea'         // intervenido, ocupa cama de reanimación
+  | 'derivado'    // trasladado en ambulancia al centro de referencia
   | 'exitus';     // fallecido
 
 export interface Paciente {
@@ -158,6 +159,8 @@ export interface Paciente {
   estrellas?: number;
   /** Índice del cirujano que lleva el caso (cooperativo local). */
   cirujanoIdx?: number;
+  /** true si la derivación fue el manejo correcto en este centro. */
+  derivacionCorrecta?: boolean;
   /** 0-100. A 0, el paciente fallece. */
   estabilidad: number;
   /** Minuto de guardia en el que llegó. */
@@ -196,4 +199,6 @@ export interface Estadisticas {
   ingresosErroneos: number;
   exitus: number;
   complicaciones: number;
+  derivacionesCorrectas: number;
+  derivacionesErroneas: number;
 }

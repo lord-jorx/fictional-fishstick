@@ -89,6 +89,8 @@ export interface IO {
   pausa(mensaje?: string): Promise<void>;
   /** Pregunta de texto libre opcional (nombre del cirujano, etc.). */
   preguntarTexto?(pregunta: string, porDefecto: string): Promise<string>;
+  /** XP acumulada de la carrera del jugador (adaptadores con memoria). */
+  experiencia?(): number;
   /** Fin de la partida: libera recursos (readline) o muestra el reinicio (web). */
   cerrar(): void;
   /**

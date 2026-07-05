@@ -335,6 +335,8 @@
     animation: objetivo 1.6s ease-in-out infinite;
     filter: drop-shadow(0 0 5px rgba(207, 162, 87, .6));
   }
+  .instrumento { animation: entrar-instr .8s ease-out both; }
+  @keyframes entrar-instr { from { transform: translate(46px, 34px); opacity: 0; } to { transform: none; opacity: 1; } }
   @keyframes objetivo { 0%, 100% { transform: scale(1); opacity: 1; } 50% { transform: scale(1.25); opacity: .55; } }
 
   /* Expediente del cirujano (carrera persistente) */
@@ -846,7 +848,8 @@
       hallazgosParciales: {
         analitica: "Lactato 4,9 mmol/L, leucocitosis 17.000, acidosis metabólica incipiente. ¡Piensa en isquemia!",
         tc: "TC sin fase arterial dedicada: asas de calibre normal con pared adelgazada. Estudio subóptimo para valorar la AMS.",
-        eco: "Ecografía: escaso líquido libre. No valorable el eje mesentérico."
+        eco: "Ecografía: escaso líquido libre. No valorable el eje mesentérico.",
+        ecg: "ECG: fibrilación auricular con respuesta ventricular rápida. Ahí tienes la fábrica de émbolos."
       },
       deterioroPorHora: 12,
       estabilidadInicial: [50, 65],
@@ -1208,6 +1211,178 @@
           }
         ]
       }
+    },
+    // ──────────────────────────────────────────────────────────────
+    {
+      id: "neumotorax",
+      nombre: "Neumotórax a tensión",
+      quirurgica: true,
+      frecuencia: 4,
+      presentacion: {
+        sintomas: [
+          "Costalada contra el bordillo con la bici hace una hora",
+          "Disnea que empeora por minutos; habla entrecortado",
+          "Dolor torácico derecho punzante que aumenta al respirar"
+        ],
+        exploracion: "Hipofonesis franca en hemitórax derecho con timpanismo; ingurgitación yugular; tráquea desviada a la izquierda. Se está apagando delante de ti.",
+        constantes: "TA 84/50, FC 132, Sat 84%, Tª 36,4 °C — ¡hipotenso, taquicárdico y desaturando!"
+      },
+      pruebaDiana: "ecofast",
+      hallazgoDiana: "Eco torácica a pie de cama: ausencia de deslizamiento pleural derecho con punto pulmonar. Neumotórax a tensión: esto se drena YA, sin esperar a más imagen.",
+      hallazgosParciales: {
+        analitica: "Pedir analítica a un neumotórax a tensión es una forma educada de perder al paciente.",
+        tc: "El TC confirmaría... si el paciente llegara vivo al escáner. La clínica ya te lo ha dicho todo.",
+        ecg: "ECG: taquicardia sinusal con bajos voltajes derechos. Compatible, pero la clínica manda."
+      },
+      deterioroPorHora: 20,
+      estabilidadInicial: [35, 50],
+      manejoCorrecto: "cirugia",
+      notaDocente: "El neumotórax a tensión es un diagnóstico CLÍNICO: hipofonesis + timpanismo + yugulares + shock. Se descomprime de inmediato (aguja en 2º espacio o dedo-drenaje en 5º) antes que cualquier prueba de imagen.",
+      cirugia: {
+        nombre: "Descompresión torácica + drenaje",
+        duracionMin: 40,
+        pasos: [
+          {
+            titulo: "Descompresión inmediata",
+            evento: "El paciente se hipotensa más. La aguja o el dedo: algo tiene que entrar en ese tórax ahora.",
+            opciones: [
+              {
+                texto: "Toracostomía con el dedo en 5º espacio, línea axilar media: aire que silba y TA que remonta",
+                correcta: true,
+                resultado: "El sifón de aire confirma el diagnóstico. La tensión cede y las yugulares se vacían.",
+                deltaEstabilidad: 12,
+                deltaEstres: 3
+              },
+              {
+                texto: "Esperar al TC para confirmar antes de agujerear a nadie",
+                correcta: false,
+                resultado: "Camino del escáner el paciente entra en disociación electromecánica. Vuelves corriendo.",
+                deltaEstabilidad: -22,
+                deltaEstres: 15
+              }
+            ]
+          },
+          {
+            titulo: "Colocación del drenaje",
+            evento: "Toca el tubo torácico definitivo. El espacio pleural está a tu merced... y el paquete intercostal también.",
+            opciones: [
+              {
+                texto: "Disección roma SOBRE el borde superior de la costilla inferior y tubo dirigido a vértice",
+                correcta: true,
+                resultado: "El tubo burbujea y oscila. El pulmón vuelve a su sitio en la placa.",
+                deltaEstabilidad: 5,
+                deltaEstres: -2
+              },
+              {
+                texto: 'Trocar a ciegas con empuje firme: "siempre ha funcionado"',
+                correcta: false,
+                resultado: "El trocar sin control es el instrumento con más órganos en su currículum. Sangrado intercostal.",
+                deltaEstabilidad: -14,
+                deltaEstres: 10
+              }
+            ]
+          },
+          {
+            titulo: "Comprobación final",
+            evento: "El drenaje burbujea de forma continua y masiva, más de lo esperado.",
+            opciones: [
+              {
+                texto: "Sospechar lesión traqueobronquial: fijar el tubo, oxígeno y avisar a torácica para fibrobroncoscopia",
+                correcta: true,
+                resultado: "Fuga aérea masiva bien encaminada: esto ya es asunto de cirugía torácica, y lo has visto a tiempo.",
+                deltaEstabilidad: 0,
+                deltaEstres: 2
+              },
+              {
+                texto: 'Pinzar el drenaje "para que no pierda tanto aire"',
+                correcta: false,
+                resultado: "Pinzar un drenaje que fuga es reconstruir el neumotórax a tensión con tus propias manos.",
+                deltaEstabilidad: -18,
+                deltaEstres: 12
+              }
+            ]
+          }
+        ]
+      }
+    },
+    // ──────────────────────────────────────────────────────────────
+    {
+      id: "tce",
+      nombre: "TCE con hematoma epidural",
+      quirurgica: false,
+      frecuencia: 4,
+      presentacion: {
+        sintomas: [
+          "Caída de un andamio hace 3 h con golpe temporal derecho",
+          'Perdió el conocimiento, se recuperó "perfectamente"... y ahora está cada vez más torpe',
+          "Cefalea creciente y un vómito en la sala de espera"
+        ],
+        exploracion: "Somnoliento, Glasgow 13 y bajando. Pupila derecha perezosa. Hematoma en cuero cabelludo temporal derecho. El intervalo lúcido de los libros, delante de ti.",
+        constantes: "TA 158/92, FC 52, Sat 97%, Tª 36,6 °C"
+      },
+      pruebaDiana: "tc",
+      hallazgoDiana: "TC craneal: colección hiperdensa biconvexa temporal derecha con efecto masa y desviación de línea media. Hematoma epidural: esto es neurocirugía URGENTE.",
+      hallazgosParciales: {
+        analitica: "Coagulación normal. La analítica no descarta nada dentro del cráneo.",
+        ecg: "Bradicardia sinusal. Con esa TA en ascenso: reflejo de Cushing en marcha."
+      },
+      deterioroPorHora: 14,
+      estabilidadInicial: [45, 60],
+      manejoCorrecto: "conservador",
+      notaDocente: "Intervalo lúcido + deterioro + anisocoria = hematoma epidural hasta que el TC diga otra cosa. El tratamiento es craneotomía urgente por NEUROCIRUGÍA: en un centro sin ella, la derivación inmediata es el acto quirúrgico más importante de la noche."
+    },
+    // ──────────────────────────────────────────────────────────────
+    {
+      id: "iam",
+      nombre: "IAM inferior (disfrazado de abdomen)",
+      quirurgica: false,
+      frecuencia: 5,
+      presentacion: {
+        sintomas: [
+          'Dolor "de estómago" opresivo de 2 h, con náuseas y un vómito',
+          'Sudoración fría que él atribuye a "algo que ha cenado"',
+          'Fumador, hipertenso, y con un hermano "operado del corazón"'
+        ],
+        exploracion: "Epigastrio apenas doloroso a la palpación profunda, sin defensa. Pálido, sudoroso, mal aspecto general que no cuadra con la tripa.",
+        constantes: "TA 98/62, FC 58, Sat 96%, Tª 36,2 °C"
+      },
+      pruebaDiana: "ecg",
+      hallazgoDiana: 'ECG: elevación del ST en II, III y aVF. Infarto agudo de cara inferior: el "dolor de estómago" era el corazón. Activa el código infarto.',
+      hallazgosParciales: {
+        analitica: "Troponina en curso... pero el ECG tarda 10 minutos y no espera a nadie.",
+        eco: "Abdomen anodino. A veces la mejor ecografía abdominal es la que te hace mirar más arriba.",
+        tc: "TC abdominal normal. Irradiar el abdomen equivocado no diagnostica el tórax correcto."
+      },
+      deterioroPorHora: 12,
+      estabilidadInicial: [50, 65],
+      manejoCorrecto: "conservador",
+      notaDocente: "El IAM inferior debuta como epigastralgia con cortejo vegetativo y bradicardia. Todo dolor epigástrico de perfil raro merece un ECG de 10 minutos ANTES que un TC de 60. El tratamiento es reperfusión urgente (hemodinámica), no bisturí."
+    },
+    // ──────────────────────────────────────────────────────────────
+    {
+      id: "cad",
+      nombre: "Cetoacidosis diabética (abdomen agudo... que no lo es)",
+      quirurgica: false,
+      frecuencia: 4,
+      presentacion: {
+        sintomas: [
+          "Dolor abdominal difuso e intenso de 12 h con vómitos",
+          "Sed insaciable y micciones continuas estos días",
+          'Diabético tipo 1 "con la insulina un poco abandonada" tras un catarro'
+        ],
+        exploracion: "Abdomen doloroso de forma difusa pero depresible, sin verdadera defensa. Respiración profunda y rápida; aliento afrutado inconfundible. Deshidratado.",
+        constantes: "TA 102/64, FC 118, Sat 98%, Tª 37,1 °C — ¡taquicárdico!"
+      },
+      pruebaDiana: "analitica",
+      hallazgoDiana: "Analítica: glucemia 486 mg/dL, pH 7,12, bicarbonato 9, cetonemia intensa. Cetoacidosis diabética: el abdomen duele, pero el problema es metabólico.",
+      hallazgosParciales: {
+        tc: "TC abdominal sin hallazgos. La CAD imita el abdomen quirúrgico y se ríe de los escáneres.",
+        ecg: "Taquicardia sinusal con ondas T algo picudas: vigila ese potasio durante el tratamiento."
+      },
+      deterioroPorHora: 8,
+      estabilidadInicial: [50, 68],
+      manejoCorrecto: "conservador",
+      notaDocente: "La cetoacidosis diabética produce dolor abdominal intenso que imita un abdomen agudo — y operarla puede ser mortal. Kussmaul + aliento cetósico + glucemia disparada: fluidos, insulina y potasio. El bisturí, enfundado."
     },
     // ──────────────────────────────────────────────────────────────
     // Casos de manejo conservador: ingresar también es tratar.
@@ -1676,7 +1851,11 @@
     pancreatitis: { tas: [108, 128], tad: [65, 80], fc: [92, 108], sat: [94, 97], temp: [37.1, 38] },
     gastroenteritis: { tas: [110, 125], tad: [70, 82], fc: [80, 95], sat: [98, 99], temp: [36.9, 37.6] },
     colico_biliar: { tas: [115, 130], tad: [72, 85], fc: [70, 85], sat: [98, 99], temp: [36.5, 37] },
-    colico_renal: { tas: [125, 145], tad: [78, 90], fc: [85, 100], sat: [98, 99], temp: [36.5, 37.1] }
+    colico_renal: { tas: [125, 145], tad: [78, 90], fc: [85, 100], sat: [98, 99], temp: [36.5, 37.1] },
+    neumotorax: { tas: [78, 92], tad: [48, 58], fc: [125, 140], sat: [82, 88], temp: [36.2, 36.8] },
+    tce: { tas: [148, 168], tad: [85, 98], fc: [48, 58], sat: [96, 98], temp: [36.4, 36.9] },
+    iam: { tas: [92, 108], tad: [58, 70], fc: [52, 64], sat: [95, 97], temp: [36, 36.5] },
+    cad: { tas: [96, 110], tad: [60, 72], fc: [110, 124], sat: [97, 99], temp: [36.8, 37.4] }
   };
   var NOMBRES = [
     "Manuel Ortega",
@@ -1902,6 +2081,30 @@
       correcta: "creer",
       revelacion: "Se retuerce mientras lo cuenta, sin defensa en la tripa. La memoria del cólico renal no se olvida ni se inventa.",
       cerrojo: "«¿Que no? Mire, hasta le digo por dónde va a bajar la piedra.» Acertó él. Tú no."
+    },
+    neumotorax: {
+      afirmacion: "«Puedo... respirar... solo es... el golpe...»",
+      correcta: "creer",
+      revelacion: "No hay tiempo para diálogos: el tórax silba su propio interrogatorio. A este se le cree y se le drena.",
+      cerrojo: "Pierdes segundos preciosos discutiendo con alguien que apenas puede hablar."
+    },
+    tce: {
+      afirmacion: "«No perdí el conocimiento, solo me mareé un segundo. Mi mujer exagera.»",
+      correcta: "dudar",
+      revelacion: "Su mujer, desde la puerta: «Estuvo dos minutos sin responder, y luego decía que estaba perfecto.» El intervalo lúcido, contado por el mejor testigo.",
+      cerrojo: 'Él insiste en irse a casa "a dormir la siesta". Justo lo que un epidural agradece.'
+    },
+    iam: {
+      afirmacion: "«Es del estómago seguro, doctor. Me sentó mal la cena, siempre me pasa.»",
+      correcta: "dudar",
+      revelacion: "«...bueno, también me pasó el mes pasado subiendo cuestas. Y sin cenar.» Angina de esfuerzo previa: el estómago era el corazón.",
+      cerrojo: "Se toma un antiácido de su bolsillo delante de ti, como prueba pericial."
+    },
+    cad: {
+      afirmacion: "«La insulina me la pongo religiosamente, como me enseñaron.»",
+      correcta: "dudar",
+      revelacion: "«...con el catarro no comía, así que tampoco me la ponía. Era lo lógico, ¿no?» El error clásico: la CAD aplaude.",
+      cerrojo: "Te enseña la pluma de insulina como quien enseña el carnet. El cartucho, curiosamente, lleno."
     }
   };
 
@@ -1911,19 +2114,28 @@
     eco: { id: "eco", nombre: "Ecografía abdominal", duracionMin: 30 },
     tc: { id: "tc", nombre: "TC abdominal con contraste", duracionMin: 60 },
     angiotc: { id: "angiotc", nombre: "Angio-TC abdominal", duracionMin: 75 },
-    ecofast: { id: "ecofast", nombre: "Eco-FAST", duracionMin: 10 }
+    ecofast: { id: "ecofast", nombre: "Eco-FAST", duracionMin: 10 },
+    ecg: { id: "ecg", nombre: "Electrocardiograma", duracionMin: 10 }
   };
   var INFORME_INESPECIFICO = {
     analitica: "Analítica sin alteraciones relevantes.",
     eco: "Ecografía sin hallazgos significativos. Gas interpuesto limita el estudio.",
     tc: "TC sin hallazgos agudos relevantes.",
     angiotc: "Angio-TC: ejes vasculares permeables, sin otros hallazgos.",
-    ecofast: "Eco-FAST negativa: no se objetiva líquido libre."
+    ecofast: "Eco-FAST negativa: no se objetiva líquido libre.",
+    ecg: "ECG: ritmo sinusal sin alteraciones agudas de la repolarización."
   };
 
   // src/engine/calificacion.ts
   function calificarCaso(p) {
     if (p.estado === "exitus") return 1;
+    if (p.estado === "derivado") {
+      if (!p.derivacionCorrecta) return 2;
+      let e = 5;
+      if (p.pruebasRealizadas.length > 2) e--;
+      if (p.interrogado && p.interrogatorioAcertado === false) e--;
+      return Math.max(1, e);
+    }
     let estrellas = 5;
     if (!p.diagnosticoConfirmado) estrellas--;
     if (p.pruebasRealizadas.length > 2) estrellas--;
@@ -1982,7 +2194,8 @@
     plantaTag: ["planta", "ward", "étage", "planta", "Station"],
     quienLoLleva: ["¿Quién lleva este caso?", "Who takes this case?", "Qui prend ce cas ?", "Qui porta aquest cas?", "Wer übernimmt den Fall?"],
     llevaElCaso: ["Lleva el caso", "Case lead", "Responsable du cas", "Porta el cas", "Fallführung"],
-    opera: ["Opera", "Operating", "Opère", "Opera", "Es operiert"]
+    opera: ["Opera", "Operating", "Opère", "Opera", "Es operiert"],
+    derivar: ["Derivar en ambulancia medicalizada al centro de referencia", "Transfer by ambulance to the referral centre", "Transférer en ambulance vers le centre de référence", "Derivar en ambulància medicalitzada al centre de referència", "Mit Notarztwagen ins Referenzzentrum verlegen"]
   };
   function t(clave) {
     const fila = C[clave];
@@ -2086,6 +2299,9 @@ ${negrita("Balance:")}`);
       ctx.io.escribir(`  Ingresos en observación:  ${s.ingresosCorrectos} correctos, ${s.ingresosErroneos} discutibles`);
       ctx.io.escribir(`  Altas erróneas:           ${s.altasErroneas === 0 ? verde("0") : rojo(String(s.altasErroneas))}`);
       ctx.io.escribir(`  Complicaciones:           ${s.complicaciones === 0 ? verde("0") : amarillo(String(s.complicaciones))}`);
+      if (s.derivacionesCorrectas + s.derivacionesErroneas > 0) {
+        ctx.io.escribir(`  Derivaciones:             ${verde(String(s.derivacionesCorrectas))} con criterio, ${s.derivacionesErroneas === 0 ? verde("0") : rojo(String(s.derivacionesErroneas))} innecesarias`);
+      }
       ctx.io.escribir(`  Éxitus:                   ${s.exitus === 0 ? verde("0") : rojo(String(s.exitus))}`);
       if (ctx.equipo.length > 1) {
         ctx.io.escribir(`
@@ -2131,6 +2347,8 @@ ${negrita("Puntuación final:")} ${negrita(puntos >= 0 ? verde(String(puntos)) :
           return amarillo("intervenido, en REA");
         case "alta":
           return verde("alta");
+        case "derivado":
+          return cian("derivado al centro de referencia");
         case "ingresado":
           return amarillo("sigue ingresado (te lo dejas al de la mañana)");
         case "espera":
@@ -2148,7 +2366,7 @@ ${negrita("Puntuación final:")} ${negrita(puntos >= 0 ? verde(String(puntos)) :
         (p) => (p.estado === "operado" || p.estado === "rea") && p.patologia.quirurgica
       ).length;
       const abandonados = ctx.historial.filter((p) => p.estado === "espera").length;
-      return cirugiasConExito * 120 + s.cirugiasPerfectas * 40 + s.altasCorrectas * 60 + s.ingresosCorrectos * 30 - s.altasErroneas * 50 - s.ingresosErroneos * 30 - s.complicaciones * 40 - s.exitus * 200 - abandonados * 60;
+      return cirugiasConExito * 120 + s.cirugiasPerfectas * 40 + s.altasCorrectas * 60 + s.derivacionesCorrectas * 60 - s.derivacionesErroneas * 40 + s.ingresosCorrectos * 30 - s.altasErroneas * 50 - s.ingresosErroneos * 30 - s.complicaciones * 40 - s.exitus * 200 - abandonados * 60;
     }
     veredicto(puntos) {
       if (puntos >= 700)
@@ -2318,6 +2536,7 @@ ${negrita("Puntuación final:")} ${negrita(puntos >= 0 ? verde(String(puntos)) :
         if (!esImprevisto) etapa++;
         ctx.io.escena?.("paso", {
           patologiaId: p.patologia.id,
+          estabilidad: p.estabilidad,
           etapa,
           totalEtapas,
           evento: paso.evento,
@@ -2389,6 +2608,7 @@ ${gris(`Perla docente: ${p.patologia.notaDocente}`)}`);
       if (this.paciente.estabilidad < 50) prob += 0.12;
       if (ctx.cirujano.energia < 40) prob += 0.08;
       if (ctx.modoNegra) prob += 0.12;
+      if (ctx.mejoras.has("equipo")) prob -= 0.06;
       const pasos = [...base];
       const imprevistos = /* @__PURE__ */ new Set();
       const bolsa = [...COMPLICACIONES_IMPREVISTAS];
@@ -2413,7 +2633,7 @@ ${gris(`Perla docente: ${p.patologia.notaDocente}`)}`);
           etiqueta: op.texto,
           valor: op
         }));
-        if (ctx.modoResidente && ctx.consultasAdjunto > 0) {
+        if (ctx.consultasAdjunto > 0) {
           menu.push({
             etiqueta: cian(`📞 Llamar al adjunto (quedan ${ctx.consultasAdjunto} llamadas)`),
             valor: "adjunto"
@@ -2492,7 +2712,7 @@ ${cian("🩺 El adjunto, con voz de dormido:")} ${gris(`«Yo lo tengo claro: ${c
       switch (accion.tipo) {
         case "cafe": {
           this.mostrarAvisos(ctx, ctx.avanzarTiempo(15, { descanso: true }));
-          ctx.cirujano.energia = Math.min(100, ctx.cirujano.energia + 5);
+          ctx.cirujano.energia = Math.min(100, ctx.cirujano.energia + (ctx.mejoras.has("termo") ? 15 : 5));
           ctx.io.escribir(verde("☕ Un café con el residente. Respiras hondo."));
           return this;
         }
@@ -2584,7 +2804,8 @@ ${cian("Exploración física:")} ${paciente.exploracion}`);
             break;
           case "prueba": {
             const prueba = PRUEBAS[accion.prueba];
-            const duracion = Math.max(5, prueba.duracionMin - paciente.descuentoPrueba);
+            const bonus = ctx.mejoras.has("ojo") ? 5 : 0;
+            const duracion = Math.max(5, prueba.duracionMin - paciente.descuentoPrueba - bonus);
             if (paciente.descuentoPrueba > 0) {
               ctx.io.escribir(gris(`Sabes exactamente qué buscar: ${prueba.nombre} priorizada (${duracion} min).`));
               paciente.descuentoPrueba = 0;
@@ -2614,6 +2835,10 @@ ${cian(`Resultado de ${prueba.nombre}:`)}
             }
             break;
           }
+          case "derivar":
+            this.resolverDerivacion(ctx, paciente);
+            await ctx.io.pausa();
+            return this;
           case "alta":
             if (await this.adjuntoDuda(ctx, paciente, "alta")) break;
             this.resolverAlta(ctx, paciente);
@@ -2657,6 +2882,7 @@ ${cian(`Resultado de ${prueba.nombre}:`)}
         });
       }
       for (const prueba of Object.values(PRUEBAS)) {
+        if (ctx.pruebasNoDisponibles.includes(prueba.id)) continue;
         if (!paciente.pruebasRealizadas.includes(prueba.id)) {
           opciones.push({
             etiqueta: `${t("solicitar")} ${prueba.nombre}`,
@@ -2669,6 +2895,7 @@ ${cian(`Resultado de ${prueba.nombre}:`)}
         { etiqueta: negrita(t("alta")), valor: { tipo: "alta" } },
         { etiqueta: negrita(t("ingresar")), valor: { tipo: "ingreso" } },
         { etiqueta: negrita(rojo(t("cirugiaUrgente"))), detalle: `quirófanos libres: ${ctx.hospital.quirofanosLibres}`, valor: { tipo: "cirugia" } },
+        { etiqueta: cian(t("derivar")), detalle: "30 min", valor: { tipo: "derivar" } },
         { etiqueta: gris(t("volverControl")), valor: { tipo: "volver" } },
         { etiqueta: "⟳", oculta: true, valor: { tipo: "reevaluar" } }
       );
@@ -2845,6 +3072,29 @@ Ingresas a ${p.nombre} en observación. Prudente, aunque podía haberse ido de a
         this.calificar(ctx, p);
       }
     }
+    /** Derivación en ambulancia: en el comarcal es criterio; en el de referencia, escurrir el bulto. */
+    resolverDerivacion(ctx, p) {
+      this.sacarDeEspera(ctx, p);
+      ctx.stats.atendidos++;
+      this.mostrarAvisos(ctx, ctx.avanzarTiempo(30));
+      p.estado = "derivado";
+      p.derivacionCorrecta = ctx.derivables.includes(p.patologia.id);
+      if (p.derivacionCorrecta) {
+        ctx.stats.derivacionesCorrectas++;
+        ctx.cirujano.estres = Math.max(0, ctx.cirujano.estres - 3);
+        ctx.io.escribir(verde(`
+✔ ${p.nombre} sale en ambulancia medicalizada, estabilizado y con la historia bien hecha.`));
+        ctx.io.escribir(gris(`  ${p.patologia.nombre}: este centro no era el sitio. Saber derivar tambien salva vidas.`));
+        ctx.io.escribir(gris(`  Perla docente: ${p.patologia.notaDocente}`));
+      } else {
+        ctx.stats.derivacionesErroneas++;
+        ctx.cirujano.estres = Math.min(100, ctx.cirujano.estres + 5);
+        ctx.io.escribir(amarillo(`
+Derivas a ${p.nombre}... y a la hora llama el adjunto receptor: "Y esto, no lo podiais asumir vosotros?"`));
+        ctx.io.escribir(gris("  Una ambulancia ocupada, un paciente paseado y un favor que ahora debes."));
+      }
+      this.calificar(ctx, p);
+    }
     sacarDeEspera(ctx, p) {
       const i = ctx.salaEspera.indexOf(p);
       if (i >= 0) ctx.salaEspera.splice(i, 1);
@@ -2861,6 +3111,40 @@ Ingresas a ${p.nombre} en observación. Prudente, aunque podía haberse ido de a
   /** Pacientes por los que el adjunto ya dudó una vez (modo residente). */
   __publicField(_TriageState, "avisadosPorAdjunto", /* @__PURE__ */ new Set());
   var TriageState = _TriageState;
+
+  // src/data/hospitales.ts
+  var HOSPITALES = [
+    {
+      id: "general",
+      nombre: "Hospital General (nivel 2)",
+      descripcion: "2 quirófanos, 3 REA, sin neurocirugía ni hemodinámica de guardia",
+      quirofanos: 2,
+      camasRea: 3,
+      pacientesExtra: 0,
+      pruebasNoDisponibles: [],
+      derivables: ["tce", "iam"]
+    },
+    {
+      id: "comarcal",
+      nombre: "Hospital Comarcal (nivel 1)",
+      descripcion: "1 quirófano, 1 REA, sin angio-TC nocturno; saber derivar es sobrevivir",
+      quirofanos: 1,
+      camasRea: 1,
+      pacientesExtra: -2,
+      pruebasNoDisponibles: ["angiotc"],
+      derivables: ["isquemia", "diverticulitis", "tce", "iam"]
+    },
+    {
+      id: "referencia",
+      nombre: "Hospital de Referencia (nivel 3)",
+      descripcion: "3 quirófanos, 4 REA, de todo... y toda la provincia llamando a tu puerta",
+      quirofanos: 3,
+      camasRea: 4,
+      pacientesExtra: 2,
+      pruebasNoDisponibles: [],
+      derivables: []
+    }
+  ];
 
   // src/core/GameContext.ts
   function crearRng(semilla2) {
@@ -2883,6 +3167,12 @@ Ingresas a ${p.nombre} en observación. Prudente, aunque podía haberse ido de a
       __publicField(this, "modoResidente", false);
       /** Guardia negra: atípicas al doble, hospital saturado, más complicaciones. */
       __publicField(this, "modoNegra", false);
+      /** Nombre del centro y reglas de derivación del nivel elegido. */
+      __publicField(this, "nombreHospital", "Hospital General");
+      __publicField(this, "derivables", []);
+      __publicField(this, "pruebasNoDisponibles", []);
+      /** Mejoras roguelite desbloqueadas por la carrera del cirujano. */
+      __publicField(this, "mejoras", /* @__PURE__ */ new Set());
       /** Llamadas al adjunto disponibles en quirófano (solo modo residente). */
       __publicField(this, "consultasAdjunto", 3);
       /** Equipo de guardia; en solitario tiene un único miembro. */
@@ -2903,6 +3193,8 @@ Ingresas a ${p.nombre} en observación. Prudente, aunque podía haberse ido de a
       __publicField(this, "historial", []);
       __publicField(this, "stats", {
         atendidos: 0,
+        derivacionesCorrectas: 0,
+        derivacionesErroneas: 0,
         cirugiasRealizadas: 0,
         cirugiasPerfectas: 0,
         altasCorrectas: 0,
@@ -3084,6 +3376,41 @@ Ingresas a ${p.nombre} en observación. Prudente, aunque podía haberse ido de a
       fijarIdioma(this.idiomaElegido);
       this.pintarPortada();
       await this.prepararEquipo();
+      const perfil = await this.io.elegir(
+        "¿En qué hospital toca esta noche?",
+        HOSPITALES.map((h) => ({ etiqueta: h.nombre, detalle: h.descripcion, valor: h }))
+      );
+      this.ctx.nombreHospital = perfil.nombre;
+      this.ctx.derivables = perfil.derivables;
+      this.ctx.pruebasNoDisponibles = perfil.pruebasNoDisponibles;
+      this.ctx.hospital.quirofanosTotales = this.ctx.hospital.quirofanosLibres = perfil.quirofanos;
+      this.ctx.hospital.camasReaTotales = this.ctx.hospital.camasReaLibres = perfil.camasRea;
+      if (perfil.pruebasNoDisponibles.length > 0) {
+        this.io.escribir(gris("\n  Aviso del jefe: esta noche no hay angio-TC. Lo vascular grave, a referencia."));
+      }
+      if (perfil.derivables.length > 0) {
+        this.io.escribir(gris("  La ambulancia medicalizada está operativa: derivar con criterio también puntúa."));
+      }
+      const xp = this.io.experiencia?.() ?? 0;
+      const TAQUILLA = [
+        { id: "termo", xpMin: 300, nombre: "Termo del bueno (el café rinde el triple)" },
+        { id: "ojo", xpMin: 800, nombre: "Ojo clínico (todas las pruebas, 5 min más rápidas)" },
+        { id: "busca", xpMin: 1500, nombre: "El número personal del adjunto (1 llamada en cualquier modo)" },
+        { id: "equipo", xpMin: 2500, nombre: "Equipo compenetrado (menos imprevistos en quirófano)" },
+        { id: "templanza", xpMin: 4e3, nombre: "Templanza (empiezas la guardia sin estrés)" }
+      ];
+      for (const mejora of TAQUILLA) {
+        if (xp >= mejora.xpMin) this.ctx.mejoras.add(mejora.id);
+      }
+      if (this.ctx.mejoras.size > 0) {
+        this.io.escribir(gris("\n  TAQUILLA — tu carrera te acompaña:"));
+        for (const mejora of TAQUILLA) {
+          if (this.ctx.mejoras.has(mejora.id)) this.io.escribir(gris(`   ✓ ${mejora.nombre}`));
+        }
+        if (this.ctx.mejoras.has("templanza")) {
+          for (const c of this.ctx.equipo) c.estres = 0;
+        }
+      }
       if (this.modo === void 0) {
         this.modo = await this.io.elegir("¿Con qué nivel sales a la guardia?", [
           {
@@ -3111,14 +3438,14 @@ Ingresas a ${p.nombre} en observación. Prudente, aunque podía haberse ido de a
         );
       }
       if (this.ctx.modoNegra) {
-        this.ctx.hospital.camasReaTotales = 2;
-        this.ctx.hospital.camasReaLibres = 2;
+        this.ctx.hospital.camasReaTotales = Math.max(1, this.ctx.hospital.camasReaTotales - 1);
+        this.ctx.hospital.camasReaLibres = this.ctx.hospital.camasReaTotales;
         this.io.escribir(
           gris("\n  Guardia negra: la noche que se cuenta en el café de los cambios de turno.") + gris("\n  Más pacientes, presentaciones engañosas al doble, una cama de REA menos") + gris("\n  y el quirófano más disputado. Suerte. La necesitarás.")
         );
       }
       const atipicidad = this.ctx.modoResidente ? 0.5 : this.ctx.modoNegra ? 2 : 1;
-      const fabrica = new PatientFactory(this.rng, atipicidad, this.ctx.modoNegra ? 2 : 0);
+      const fabrica = new PatientFactory(this.rng, atipicidad, (this.ctx.modoNegra ? 2 : 0) + perfil.pacientesExtra);
       this.ctx.programarLlegadas(fabrica.generarLlegadasDeGuardia());
       const inicio1 = 180 + Math.floor(this.rng() * 300);
       const inicio2 = 720 + Math.floor(this.rng() * 300);
@@ -3156,6 +3483,7 @@ Ingresas a ${p.nombre} en observación. Prudente, aunque podía haberse ido de a
           );
         }
       }
+      this.ctx.consultasAdjunto = this.ctx.modoResidente ? 3 : this.ctx.mejoras.has("busca") ? 1 : 0;
       await this.io.pausa(t("fichar"));
       await new MaquinaEstados().ejecutar(new TriageState(), this.ctx);
     }
@@ -3356,6 +3684,17 @@ Ingresas a ${p.nombre} en observación. Prudente, aunque podía haberse ido de a
       ${ETIQUETA(158, 96, 226, 124, "asa incarcerada")}`
     }
   };
+  function chipConstantes(evento, estabilidad) {
+    if (/anestesia|hipotens|desatur|tr[ií]ada|noradrenalina|desploma|ph 7/i.test(evento)) return "";
+    const fc = Math.round(132 - estabilidad * 0.62);
+    const tas = Math.round(68 + estabilidad * 0.52);
+    const sat = Math.min(99, Math.round(89 + estabilidad * 0.1));
+    const color = estabilidad >= 60 ? "#97b077" : estabilidad >= 35 ? "#d9b36a" : "#c9645a";
+    return `<g><rect x="196" y="8" width="76" height="30" rx="5" fill="#0b0f14" stroke="#3b3223"/>
+    <text x="204" y="21" font-size="8" fill="${color}" font-family="inherit">FC ${fc}  TA ${tas}</text>
+    <text x="204" y="32" font-size="8" fill="${color}" font-family="inherit">SatO₂ ${sat}%</text>
+    <circle class="alarma-led" cx="264" cy="15" r="2.4" fill="${color}"/></g>`;
+  }
   function estampa(evento, [x, y]) {
     if (/sangr|hemoperitoneo|ti[ñn]e|exang|coagul/i.test(evento)) {
       return `<ellipse class="sangre" cx="${x}" cy="${y + 6}" rx="16" ry="8" fill="#a41220" opacity=".85"/>
@@ -3375,7 +3714,7 @@ Ingresas a ${p.nombre} en observación. Prudente, aunque podía haberse ido de a
     }
     return "";
   }
-  function esquemaQuirurgico(patologiaId, etapa, totalEtapas, evento = "", imprevisto = false) {
+  function esquemaQuirurgico(patologiaId, etapa, totalEtapas, evento = "", imprevisto = false, estabilidad = 75) {
     const esquema = patologiaId ? ESQUEMAS[patologiaId] : void 0;
     if (!esquema) return null;
     const id = `anat${ids++}`;
@@ -3397,8 +3736,11 @@ Ingresas a ${p.nombre} en observación. Prudente, aunque podía haberse ido de a
              M0 30 H280 M0 70 H280 M0 110 H280 M0 150 H280" stroke="#171209" stroke-width="1"/>
     ${esquema.organos}
     ${completadas}
+    <path class="instrumento" d="M262 150 L${actual[0] + 14} ${actual[1] + 10}" stroke="#cfd8e2" stroke-width="4.5" stroke-linecap="round"/>
+    <path class="instrumento" d="M${actual[0] + 14} ${actual[1] + 10} l-7 -5" stroke="#8fa1b3" stroke-width="2.4"/>
     ${OBJETIVO(actual)}
     ${estampa(evento, actual)}
+    ${chipConstantes(evento, estabilidad)}
   </g>
   <text x="10" y="18" font-size="9.5" fill="#cfa257" letter-spacing="2" font-family="Georgia, serif">${esquema.titulo}</text>
   ${progreso}
@@ -3489,6 +3831,9 @@ Ingresas a ${p.nombre} en observación. Prudente, aunque podía haberse ido de a
     mesogastrio: { zona: "mesogastrio", puntos: [[60, 98]] },
     "inguinal-der": { zona: "región inguinal derecha", puntos: [[48, 126]] },
     "lumbar-der": { zona: "fosa lumbar derecha", puntos: [[40, 92]] },
+    "torax-der": { zona: "hemitórax derecho", puntos: [[46, 56]] },
+    cabeza: { zona: "región temporal derecha", puntos: [[52, 12]] },
+    "epigastrio-toracico": { zona: "epigastrio (opresivo)", puntos: [[60, 72]] },
     cinturon: { zona: "epigastrio, en cinturón", puntos: [[60, 80], [46, 86], [74, 86]] },
     difuso: { zona: "difuso", puntos: [[52, 92], [68, 100], [58, 112]] }
   };
@@ -3504,7 +3849,11 @@ Ingresas a ${p.nombre} en observación. Prudente, aunque podía haberse ido de a
     hernia: "inguinal-der",
     pancreatitis: "cinturon",
     gastroenteritis: "difuso",
-    colico_renal: "lumbar-der"
+    colico_renal: "lumbar-der",
+    neumotorax: "torax-der",
+    tce: "cabeza",
+    iam: "epigastrio-toracico",
+    cad: "difuso"
   };
   var QUEJAS = {
     apendicitis: "¡Ay! Aquí abajo, doctor... y no me deje apretar, que es peor.",
@@ -3518,7 +3867,11 @@ Ingresas a ${p.nombre} en observación. Prudente, aunque podía haberse ido de a
     hernia: "El bulto de siempre, doctor... pero hoy no entra y duele horrores.",
     pancreatitis: "Me atraviesa hasta la espalda... como un cinturón apretado.",
     gastroenteritis: "Retortijones, doctor... vengo del baño y ya querría volver.",
-    colico_renal: "¡No puedo estarme quieto! Me coge del riñón y baja hasta abajo..."
+    colico_renal: "¡No puedo estarme quieto! Me coge del riñón y baja hasta abajo...",
+    neumotorax: "No... puedo... respirar... doctor...",
+    tce: "Solo quiero dormir un rato... la cabeza me va a estallar...",
+    iam: "Es el estómago... me aprieta... y este sudor frío, ¿de qué es?",
+    cad: "La tripa entera, doctor... y una sed que no se me quita con nada..."
   };
   function cuerpoConDolor(zonaDolor, patologiaId) {
     const clave = zonaDolor ?? (patologiaId ? ZONA_POR_PATOLOGIA[patologiaId] : void 0);
@@ -3987,7 +4340,8 @@ Ingresas a ${p.nombre} en observación. Prudente, aunque podía haberse ido de a
             dato?.etapa ?? 1,
             dato?.totalEtapas ?? 3,
             dato?.evento,
-            dato?.imprevisto
+            dato?.imprevisto,
+            dato?.estabilidad
           );
           if (esquema) this.insertarArte(esquema, "anatomia");
           break;
@@ -4140,6 +4494,9 @@ Ingresas a ${p.nombre} en observación. Prudente, aunque podía haberse ido de a
         campo.focus();
         this.desplazarAlFinal();
       });
+    }
+    experiencia() {
+      return this.leerCarrera()?.xp ?? 0;
     }
     cerrar() {
       sonido.pararLatido();

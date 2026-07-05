@@ -36,6 +36,9 @@ export class SummaryState implements GameState {
     ctx.io.escribir(`  Ingresos en observación:  ${s.ingresosCorrectos} correctos, ${s.ingresosErroneos} discutibles`);
     ctx.io.escribir(`  Altas erróneas:           ${s.altasErroneas === 0 ? verde('0') : rojo(String(s.altasErroneas))}`);
     ctx.io.escribir(`  Complicaciones:           ${s.complicaciones === 0 ? verde('0') : amarillo(String(s.complicaciones))}`);
+    if (s.derivacionesCorrectas + s.derivacionesErroneas > 0) {
+      ctx.io.escribir(`  Derivaciones:             ${verde(String(s.derivacionesCorrectas))} con criterio, ${s.derivacionesErroneas === 0 ? verde('0') : rojo(String(s.derivacionesErroneas))} innecesarias`);
+    }
     ctx.io.escribir(`  Éxitus:                   ${s.exitus === 0 ? verde('0') : rojo(String(s.exitus))}`);
 
     // Cooperativo: desglose por cirujano y MVP de la noche.
@@ -82,6 +85,7 @@ export class SummaryState implements GameState {
       case 'operado': return verde('intervenido, en planta');
       case 'rea': return amarillo('intervenido, en REA');
       case 'alta': return verde('alta');
+      case 'derivado': return cian('derivado al centro de referencia');
       case 'ingresado': return amarillo('sigue ingresado (te lo dejas al de la mañana)');
       case 'espera': return rojo('¡SIGUE ESPERANDO EN URGENCIAS!');
     }
@@ -104,6 +108,8 @@ export class SummaryState implements GameState {
       cirugiasConExito * 120 +
       s.cirugiasPerfectas * 40 +
       s.altasCorrectas * 60 +
+      s.derivacionesCorrectas * 60 -
+      s.derivacionesErroneas * 40 +
       s.ingresosCorrectos * 30 -
       s.altasErroneas * 50 -
       s.ingresosErroneos * 30 -

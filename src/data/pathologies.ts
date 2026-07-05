@@ -442,6 +442,7 @@ export const PATOLOGIAS: Patologia[] = [
       analitica: 'Lactato 4,9 mmol/L, leucocitosis 17.000, acidosis metabólica incipiente. ¡Piensa en isquemia!',
       tc: 'TC sin fase arterial dedicada: asas de calibre normal con pared adelgazada. Estudio subóptimo para valorar la AMS.',
       eco: 'Ecografía: escaso líquido libre. No valorable el eje mesentérico.',
+      ecg: 'ECG: fibrilación auricular con respuesta ventricular rápida. Ahí tienes la fábrica de émbolos.',
     },
     deterioroPorHora: 12,
     estabilidadInicial: [50, 65],
@@ -811,6 +812,190 @@ export const PATOLOGIAS: Patologia[] = [
         },
       ],
     },
+  },
+  // ──────────────────────────────────────────────────────────────
+  {
+    id: 'neumotorax',
+    nombre: 'Neumotórax a tensión',
+    quirurgica: true,
+    frecuencia: 4,
+    presentacion: {
+      sintomas: [
+        'Costalada contra el bordillo con la bici hace una hora',
+        'Disnea que empeora por minutos; habla entrecortado',
+        'Dolor torácico derecho punzante que aumenta al respirar',
+      ],
+      exploracion:
+        'Hipofonesis franca en hemitórax derecho con timpanismo; ingurgitación yugular; tráquea desviada a la izquierda. Se está apagando delante de ti.',
+      constantes: 'TA 84/50, FC 132, Sat 84%, Tª 36,4 °C — ¡hipotenso, taquicárdico y desaturando!',
+    },
+    pruebaDiana: 'ecofast',
+    hallazgoDiana:
+      'Eco torácica a pie de cama: ausencia de deslizamiento pleural derecho con punto pulmonar. Neumotórax a tensión: esto se drena YA, sin esperar a más imagen.',
+    hallazgosParciales: {
+      analitica: 'Pedir analítica a un neumotórax a tensión es una forma educada de perder al paciente.',
+      tc: 'El TC confirmaría... si el paciente llegara vivo al escáner. La clínica ya te lo ha dicho todo.',
+      ecg: 'ECG: taquicardia sinusal con bajos voltajes derechos. Compatible, pero la clínica manda.',
+    },
+    deterioroPorHora: 20,
+    estabilidadInicial: [35, 50],
+    manejoCorrecto: 'cirugia',
+    notaDocente:
+      'El neumotórax a tensión es un diagnóstico CLÍNICO: hipofonesis + timpanismo + yugulares + shock. Se descomprime de inmediato (aguja en 2º espacio o dedo-drenaje en 5º) antes que cualquier prueba de imagen.',
+    cirugia: {
+      nombre: 'Descompresión torácica + drenaje',
+      duracionMin: 40,
+      pasos: [
+        {
+          titulo: 'Descompresión inmediata',
+          evento: 'El paciente se hipotensa más. La aguja o el dedo: algo tiene que entrar en ese tórax ahora.',
+          opciones: [
+            {
+              texto: 'Toracostomía con el dedo en 5º espacio, línea axilar media: aire que silba y TA que remonta',
+              correcta: true,
+              resultado: 'El sifón de aire confirma el diagnóstico. La tensión cede y las yugulares se vacían.',
+              deltaEstabilidad: +12,
+              deltaEstres: 3,
+            },
+            {
+              texto: 'Esperar al TC para confirmar antes de agujerear a nadie',
+              correcta: false,
+              resultado: 'Camino del escáner el paciente entra en disociación electromecánica. Vuelves corriendo.',
+              deltaEstabilidad: -22,
+              deltaEstres: 15,
+            },
+          ],
+        },
+        {
+          titulo: 'Colocación del drenaje',
+          evento: 'Toca el tubo torácico definitivo. El espacio pleural está a tu merced... y el paquete intercostal también.',
+          opciones: [
+            {
+              texto: 'Disección roma SOBRE el borde superior de la costilla inferior y tubo dirigido a vértice',
+              correcta: true,
+              resultado: 'El tubo burbujea y oscila. El pulmón vuelve a su sitio en la placa.',
+              deltaEstabilidad: +5,
+              deltaEstres: -2,
+            },
+            {
+              texto: 'Trocar a ciegas con empuje firme: "siempre ha funcionado"',
+              correcta: false,
+              resultado: 'El trocar sin control es el instrumento con más órganos en su currículum. Sangrado intercostal.',
+              deltaEstabilidad: -14,
+              deltaEstres: 10,
+            },
+          ],
+        },
+        {
+          titulo: 'Comprobación final',
+          evento: 'El drenaje burbujea de forma continua y masiva, más de lo esperado.',
+          opciones: [
+            {
+              texto: 'Sospechar lesión traqueobronquial: fijar el tubo, oxígeno y avisar a torácica para fibrobroncoscopia',
+              correcta: true,
+              resultado: 'Fuga aérea masiva bien encaminada: esto ya es asunto de cirugía torácica, y lo has visto a tiempo.',
+              deltaEstabilidad: 0,
+              deltaEstres: 2,
+            },
+            {
+              texto: 'Pinzar el drenaje "para que no pierda tanto aire"',
+              correcta: false,
+              resultado: 'Pinzar un drenaje que fuga es reconstruir el neumotórax a tensión con tus propias manos.',
+              deltaEstabilidad: -18,
+              deltaEstres: 12,
+            },
+          ],
+        },
+      ],
+    },
+  },
+  // ──────────────────────────────────────────────────────────────
+  {
+    id: 'tce',
+    nombre: 'TCE con hematoma epidural',
+    quirurgica: false,
+    frecuencia: 4,
+    presentacion: {
+      sintomas: [
+        'Caída de un andamio hace 3 h con golpe temporal derecho',
+        'Perdió el conocimiento, se recuperó "perfectamente"... y ahora está cada vez más torpe',
+        'Cefalea creciente y un vómito en la sala de espera',
+      ],
+      exploracion:
+        'Somnoliento, Glasgow 13 y bajando. Pupila derecha perezosa. Hematoma en cuero cabelludo temporal derecho. El intervalo lúcido de los libros, delante de ti.',
+      constantes: 'TA 158/92, FC 52, Sat 97%, Tª 36,6 °C',
+    },
+    pruebaDiana: 'tc',
+    hallazgoDiana:
+      'TC craneal: colección hiperdensa biconvexa temporal derecha con efecto masa y desviación de línea media. Hematoma epidural: esto es neurocirugía URGENTE.',
+    hallazgosParciales: {
+      analitica: 'Coagulación normal. La analítica no descarta nada dentro del cráneo.',
+      ecg: 'Bradicardia sinusal. Con esa TA en ascenso: reflejo de Cushing en marcha.',
+    },
+    deterioroPorHora: 14,
+    estabilidadInicial: [45, 60],
+    manejoCorrecto: 'conservador',
+    notaDocente:
+      'Intervalo lúcido + deterioro + anisocoria = hematoma epidural hasta que el TC diga otra cosa. El tratamiento es craneotomía urgente por NEUROCIRUGÍA: en un centro sin ella, la derivación inmediata es el acto quirúrgico más importante de la noche.',
+  },
+  // ──────────────────────────────────────────────────────────────
+  {
+    id: 'iam',
+    nombre: 'IAM inferior (disfrazado de abdomen)',
+    quirurgica: false,
+    frecuencia: 5,
+    presentacion: {
+      sintomas: [
+        'Dolor "de estómago" opresivo de 2 h, con náuseas y un vómito',
+        'Sudoración fría que él atribuye a "algo que ha cenado"',
+        'Fumador, hipertenso, y con un hermano "operado del corazón"',
+      ],
+      exploracion:
+        'Epigastrio apenas doloroso a la palpación profunda, sin defensa. Pálido, sudoroso, mal aspecto general que no cuadra con la tripa.',
+      constantes: 'TA 98/62, FC 58, Sat 96%, Tª 36,2 °C',
+    },
+    pruebaDiana: 'ecg',
+    hallazgoDiana:
+      'ECG: elevación del ST en II, III y aVF. Infarto agudo de cara inferior: el "dolor de estómago" era el corazón. Activa el código infarto.',
+    hallazgosParciales: {
+      analitica: 'Troponina en curso... pero el ECG tarda 10 minutos y no espera a nadie.',
+      eco: 'Abdomen anodino. A veces la mejor ecografía abdominal es la que te hace mirar más arriba.',
+      tc: 'TC abdominal normal. Irradiar el abdomen equivocado no diagnostica el tórax correcto.',
+    },
+    deterioroPorHora: 12,
+    estabilidadInicial: [50, 65],
+    manejoCorrecto: 'conservador',
+    notaDocente:
+      'El IAM inferior debuta como epigastralgia con cortejo vegetativo y bradicardia. Todo dolor epigástrico de perfil raro merece un ECG de 10 minutos ANTES que un TC de 60. El tratamiento es reperfusión urgente (hemodinámica), no bisturí.',
+  },
+  // ──────────────────────────────────────────────────────────────
+  {
+    id: 'cad',
+    nombre: 'Cetoacidosis diabética (abdomen agudo... que no lo es)',
+    quirurgica: false,
+    frecuencia: 4,
+    presentacion: {
+      sintomas: [
+        'Dolor abdominal difuso e intenso de 12 h con vómitos',
+        'Sed insaciable y micciones continuas estos días',
+        'Diabético tipo 1 "con la insulina un poco abandonada" tras un catarro',
+      ],
+      exploracion:
+        'Abdomen doloroso de forma difusa pero depresible, sin verdadera defensa. Respiración profunda y rápida; aliento afrutado inconfundible. Deshidratado.',
+      constantes: 'TA 102/64, FC 118, Sat 98%, Tª 37,1 °C — ¡taquicárdico!',
+    },
+    pruebaDiana: 'analitica',
+    hallazgoDiana:
+      'Analítica: glucemia 486 mg/dL, pH 7,12, bicarbonato 9, cetonemia intensa. Cetoacidosis diabética: el abdomen duele, pero el problema es metabólico.',
+    hallazgosParciales: {
+      tc: 'TC abdominal sin hallazgos. La CAD imita el abdomen quirúrgico y se ríe de los escáneres.',
+      ecg: 'Taquicardia sinusal con ondas T algo picudas: vigila ese potasio durante el tratamiento.',
+    },
+    deterioroPorHora: 8,
+    estabilidadInicial: [50, 68],
+    manejoCorrecto: 'conservador',
+    notaDocente:
+      'La cetoacidosis diabética produce dolor abdominal intenso que imita un abdomen agudo — y operarla puede ser mortal. Kussmaul + aliento cetósico + glucemia disparada: fluidos, insulina y potasio. El bisturí, enfundado.',
   },
   // ──────────────────────────────────────────────────────────────
   // Casos de manejo conservador: ingresar también es tratar.

@@ -68,6 +68,7 @@ export class SurgeryState implements GameState {
       if (!esImprevisto) etapa++;
       ctx.io.escena?.('paso', {
         patologiaId: p.patologia.id,
+        estabilidad: p.estabilidad,
         etapa,
         totalEtapas,
         evento: paso.evento,
@@ -149,6 +150,7 @@ export class SurgeryState implements GameState {
     if (this.paciente.estabilidad < 50) prob += 0.12;
     if (ctx.cirujano.energia < 40) prob += 0.08;
     if (ctx.modoNegra) prob += 0.12;
+    if (ctx.mejoras.has('equipo')) prob -= 0.06;
 
     const pasos = [...base];
     const imprevistos = new Set<PasoQuirurgico>();
@@ -175,7 +177,7 @@ export class SurgeryState implements GameState {
         etiqueta: op.texto,
         valor: op,
       }));
-      if (ctx.modoResidente && ctx.consultasAdjunto > 0) {
+      if (ctx.consultasAdjunto > 0) {
         menu.push({
           etiqueta: cian(`📞 Llamar al adjunto (quedan ${ctx.consultasAdjunto} llamadas)`),
           valor: 'adjunto',

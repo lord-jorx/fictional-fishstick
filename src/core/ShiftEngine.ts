@@ -11,6 +11,7 @@ import { TriageState } from '../engine/TriageState.js';
 import { cian, gris, negrita } from '../ui/ansi.js';
 import { lineaSeparadora } from '../ui/hud.js';
 import type { IO } from './io.js';
+import { HOSPITALES } from '../data/hospitales.js';
 import { fijarIdioma, IDIOMAS, t, type Idioma } from '../i18n.js';
 import type { Rasgos } from './io.js';
 import { crearRng, GameContext, type MiembroEquipo } from './GameContext.js';
@@ -50,6 +51,45 @@ export class ShiftEngine {
     this.pintarPortada();
     await this.prepararEquipo();
 
+    // ── Nivel de hospital: los recursos definen la guardia ──
+    const perfil = await this.io.elegir(
+      '¿En qué hospital toca esta noche?',
+      HOSPITALES.map((h) => ({ etiqueta: h.nombre, detalle: h.descripcion, valor: h })),
+    );
+    this.ctx.nombreHospital = perfil.nombre;
+    this.ctx.derivables = perfil.derivables;
+    this.ctx.pruebasNoDisponibles = perfil.pruebasNoDisponibles;
+    this.ctx.hospital.quirofanosTotales = this.ctx.hospital.quirofanosLibres = perfil.quirofanos;
+    this.ctx.hospital.camasReaTotales = this.ctx.hospital.camasReaLibres = perfil.camasRea;
+    if (perfil.pruebasNoDisponibles.length > 0) {
+      this.io.escribir(gris('\n  Aviso del jefe: esta noche no hay angio-TC. Lo vascular grave, a referencia.'));
+    }
+    if (perfil.derivables.length > 0) {
+      this.io.escribir(gris('  La ambulancia medicalizada está operativa: derivar con criterio también puntúa.'));
+    }
+
+    // ── Taquilla roguelite: la carrera desbloquea mejoras permanentes ──
+    const xp = this.io.experiencia?.() ?? 0;
+    const TAQUILLA: Array<{ id: string; xpMin: number; nombre: string }> = [
+      { id: 'termo', xpMin: 300, nombre: 'Termo del bueno (el café rinde el triple)' },
+      { id: 'ojo', xpMin: 800, nombre: 'Ojo clínico (todas las pruebas, 5 min más rápidas)' },
+      { id: 'busca', xpMin: 1500, nombre: 'El número personal del adjunto (1 llamada en cualquier modo)' },
+      { id: 'equipo', xpMin: 2500, nombre: 'Equipo compenetrado (menos imprevistos en quirófano)' },
+      { id: 'templanza', xpMin: 4000, nombre: 'Templanza (empiezas la guardia sin estrés)' },
+    ];
+    for (const mejora of TAQUILLA) {
+      if (xp >= mejora.xpMin) this.ctx.mejoras.add(mejora.id);
+    }
+    if (this.ctx.mejoras.size > 0) {
+      this.io.escribir(gris('\n  TAQUILLA — tu carrera te acompaña:'));
+      for (const mejora of TAQUILLA) {
+        if (this.ctx.mejoras.has(mejora.id)) this.io.escribir(gris(`   ✓ ${mejora.nombre}`));
+      }
+      if (this.ctx.mejoras.has('templanza')) {
+        for (const c of this.ctx.equipo) c.estres = 0;
+      }
+    }
+
     if (this.modo === undefined) {
       this.modo = await this.io.elegir<ModoJuego>('¿Con qué nivel sales a la guardia?', [
         {
@@ -78,8 +118,8 @@ export class ShiftEngine {
       );
     }
     if (this.ctx.modoNegra) {
-      this.ctx.hospital.camasReaTotales = 2;
-      this.ctx.hospital.camasReaLibres = 2;
+      this.ctx.hospital.camasReaTotales = Math.max(1, this.ctx.hospital.camasReaTotales - 1);
+      this.ctx.hospital.camasReaLibres = this.ctx.hospital.camasReaTotales;
       this.io.escribir(
         gris('\n  Guardia negra: la noche que se cuenta en el café de los cambios de turno.') +
           gris('\n  Más pacientes, presentaciones engañosas al doble, una cama de REA menos') +
@@ -90,7 +130,7 @@ export class ShiftEngine {
     // La guardia se genera tras elegir modo: en residente las atípicas bajan a
     // la mitad; en guardia negra se duplican y llegan más pacientes.
     const atipicidad = this.ctx.modoResidente ? 0.5 : this.ctx.modoNegra ? 2 : 1;
-    const fabrica = new PatientFactory(this.rng, atipicidad, this.ctx.modoNegra ? 2 : 0);
+    const fabrica = new PatientFactory(this.rng, atipicidad, (this.ctx.modoNegra ? 2 : 0) + perfil.pacientesExtra);
     this.ctx.programarLlegadas(fabrica.generarLlegadasDeGuardia());
 
     // El otro equipo también opera: franjas en las que roban quirófano.
@@ -134,6 +174,8 @@ export class ShiftEngine {
         );
       }
     }
+
+    this.ctx.consultasAdjunto = this.ctx.modoResidente ? 3 : this.ctx.mejoras.has('busca') ? 1 : 0;
 
     await this.io.pausa(t('fichar'));
     await new MaquinaEstados().ejecutar(new TriageState(), this.ctx);

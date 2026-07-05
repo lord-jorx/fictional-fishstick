@@ -108,6 +108,9 @@ const ZONAS: Record<string, ZonaDolor> = {
   mesogastrio: { zona: 'mesogastrio', puntos: [[60, 98]] },
   'inguinal-der': { zona: 'región inguinal derecha', puntos: [[48, 126]] },
   'lumbar-der': { zona: 'fosa lumbar derecha', puntos: [[40, 92]] },
+  'torax-der': { zona: 'hemitórax derecho', puntos: [[46, 56]] },
+  cabeza: { zona: 'región temporal derecha', puntos: [[52, 12]] },
+  'epigastrio-toracico': { zona: 'epigastrio (opresivo)', puntos: [[60, 72]] },
   cinturon: { zona: 'epigastrio, en cinturón', puntos: [[60, 80], [46, 86], [74, 86]] },
   difuso: { zona: 'difuso', puntos: [[52, 92], [68, 100], [58, 112]] },
 };
@@ -126,6 +129,10 @@ const ZONA_POR_PATOLOGIA: Record<string, string> = {
   pancreatitis: 'cinturon',
   gastroenteritis: 'difuso',
   colico_renal: 'lumbar-der',
+  neumotorax: 'torax-der',
+  tce: 'cabeza',
+  iam: 'epigastrio-toracico',
+  cad: 'difuso',
 };
 
 /** Lo que el paciente dice mientras se señala (bocadillo de la escena). */
@@ -142,6 +149,10 @@ export const QUEJAS: Record<string, string> = {
   pancreatitis: 'Me atraviesa hasta la espalda... como un cinturón apretado.',
   gastroenteritis: 'Retortijones, doctor... vengo del baño y ya querría volver.',
   colico_renal: '¡No puedo estarme quieto! Me coge del riñón y baja hasta abajo...',
+  neumotorax: 'No... puedo... respirar... doctor...',
+  tce: 'Solo quiero dormir un rato... la cabeza me va a estallar...',
+  iam: 'Es el estómago... me aprieta... y este sudor frío, ¿de qué es?',
+  cad: 'La tripa entera, doctor... y una sed que no se me quita con nada...',
 };
 
 /** Coordenadas y nombre de la zona dolorosa (para escenas que las necesiten). */

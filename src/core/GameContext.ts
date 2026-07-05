@@ -58,6 +58,12 @@ export class GameContext {
   modoResidente = false;
   /** Guardia negra: atípicas al doble, hospital saturado, más complicaciones. */
   modoNegra = false;
+  /** Nombre del centro y reglas de derivación del nivel elegido. */
+  nombreHospital = 'Hospital General';
+  derivables: string[] = [];
+  pruebasNoDisponibles: string[] = [];
+  /** Mejoras roguelite desbloqueadas por la carrera del cirujano. */
+  mejoras = new Set<string>();
   /** Llamadas al adjunto disponibles en quirófano (solo modo residente). */
   consultasAdjunto = 3;
 
@@ -86,6 +92,8 @@ export class GameContext {
 
   readonly stats: Estadisticas = {
     atendidos: 0,
+    derivacionesCorrectas: 0,
+    derivacionesErroneas: 0,
     cirugiasRealizadas: 0,
     cirugiasPerfectas: 0,
     altasCorrectas: 0,
