@@ -328,6 +328,61 @@
   .brazo { animation: palpar 1.4s ease-in-out infinite; }
   @keyframes palpar { 0%, 100% { transform: translate(0, 0); } 50% { transform: translate(0, 2.4px); } }
 
+  /* ── El plano de urgencias: muñequitos y pasillos ── */
+  #mapa {
+    position: relative; height: 230px; margin: 4px 0 10px;
+    background:
+      repeating-linear-gradient(0deg, transparent 0 34px, #1a140c 34px 35px),
+      repeating-linear-gradient(90deg, transparent 0 34px, #1a140c 34px 35px),
+      #14100a;
+    border: 1px solid var(--borde); border-radius: 4px;
+    overflow: hidden;
+  }
+  #mapa .box {
+    position: absolute; top: 4%; width: 15%; height: 47%;
+    border: 1px dashed #4a3f2c; border-radius: 3px;
+    display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px;
+    background: rgba(28, 22, 16, .6);
+    cursor: pointer; transition: border-color .15s, background .15s;
+  }
+  #mapa .box:hover { border-color: var(--acento); background: rgba(43, 33, 20, .8); }
+  #mapa .box-num { font-size: .62em; letter-spacing: 1px; color: #8a7f6a; }
+  #mapa .box-nombre { font-size: .68em; color: var(--tinta); }
+  #mapa .paciente-svg { width: 74%; height: auto; }
+  .cuerpo-paciente { animation: retorcer 2.6s ease-in-out infinite; transform-origin: 30px 18px; }
+  .paciente-svg.grave .cuerpo-paciente { animation-duration: 1s; }
+  .paciente-svg.grave { filter: drop-shadow(0 0 6px rgba(201, 84, 74, .7)); }
+  @keyframes retorcer { 0%, 100% { transform: rotate(0deg); } 50% { transform: rotate(-2.6deg) translateY(-1px); } }
+
+  #mapa .zona {
+    position: absolute; top: 62%; height: 34%;
+    border: 1px solid #3b3223; border-radius: 3px;
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    font-size: .62em; letter-spacing: 1px; color: #8a7f6a;
+    background: rgba(18, 13, 8, .7);
+  }
+  #mapa .zona.activa { cursor: pointer; }
+  #mapa .zona.activa:hover { border-color: var(--acento); color: var(--tinta); }
+  #mapa .zona.apagada { opacity: .35; }
+  #mapa .zona-planta { left: 2%; width: 15%; }
+  #mapa .zona-control { left: 36%; width: 26%; border-style: double; }
+  #mapa .zona-sofa { left: 64%; width: 15%; }
+  #mapa .zona-cafe { left: 81%; width: 16%; }
+  #mapa .zona-icono { font-size: 1.7em; }
+
+  #mapa .medico {
+    position: absolute; width: 30px; height: 48px; z-index: 5;
+    transition: left .95s ease-in-out, top .95s ease-in-out;
+    filter: drop-shadow(0 3px 4px rgba(0, 0, 0, .5));
+    pointer-events: none;
+  }
+  .medico .p1, .medico .p2 { transform-origin: center 34px; transform-box: fill-box; }
+  .medico.andando .cuerpo-medico { animation: trotar .32s ease-in-out infinite alternate; }
+  .medico.andando .p1 { animation: zancada .32s ease-in-out infinite alternate; }
+  .medico.andando .p2 { animation: zancada .32s ease-in-out infinite alternate-reverse; }
+  @keyframes trotar { from { transform: translateY(0); } to { transform: translateY(-2px); } }
+  @keyframes zancada { from { transform: rotate(16deg); } to { transform: rotate(-16deg); } }
+
   /* Esquema anatómico paso a paso */
   .anatomia-svg { display: block; width: 100%; max-width: 440px; margin: 6px auto; }
   .objetivo-anillo {

@@ -71,6 +71,18 @@ agudo que jamás debe operarse. El quirófano suma además un **monitor de
 constantes en vivo** en el esquema anatómico (FC/TA/SatO₂ del paciente,
 paso a paso) y el instrumental entrando al campo.
 
+## 🚶 El plano de urgencias: muñequitos que caminan
+
+La fase de sala ya no es una lista: es un **servicio que se recorre**. Un
+plano con los boxes, el control de enfermería, la puerta de planta y el
+rincón del café — y tu cirujano es un **muñequito con pijama y gorro que
+camina de verdad** hasta donde cliques, con pasos sonoros, balanceo y
+zancada animada. Los pacientes yacen en sus camillas **retorciéndose**
+(los críticos, más rápido y con halo rojo), con su monitor de estabilidad
+encima de la cama. Ir en persona al box **cuesta 5 minutos de guardia**:
+los pasillos también corren en el reloj. Los botones clásicos siguen debajo
+del plano, y la terminal conserva sus menús.
+
 ## 🕵️ El interrogatorio clínico
 
 Cada paciente **declara algo** al llegar («¿Alcohol? Una copita en las

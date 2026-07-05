@@ -11,6 +11,7 @@ import { horaGuardia } from '../ui/hud.js';
 import { esquemaQuirurgico } from './anatomia.js';
 import { ARTE_AMANECER, ARTE_PORTADA, BANNER_QUIROFANO, cuerpoConDolor, QUEJAS, SVG_AMBULANCIA } from './arte.js';
 import { t } from '../i18n.js';
+import { construirMapa } from './mapa.js';
 import { iconoHerramienta } from './quirofano.js';
 import { retratoDesdeRasgos, retratoPaciente } from './retrato.js';
 import { sonido } from './sonido.js';
@@ -69,6 +70,7 @@ export class WebIO implements IO {
   private autoRefresco: (() => void) | null = null;
   private ticker: number | null = null;
   private tarjetaEditor: HTMLElement | null = null;
+  private ultimoTablero: ComandaPaciente[] = [];
 
   constructor(raiz: HTMLElement) {
     this.salida = document.createElement('div');
@@ -171,7 +173,8 @@ export class WebIO implements IO {
       case 'triaje':
         document.body.classList.remove('en-quirofano');
         sonido.pararLatido();
-        this.pintarComandas(dato?.tablero ?? []);
+        this.ultimoTablero = dato?.tablero ?? [];
+        this.pintarComandas(this.ultimoTablero);
         break;
       case 'fin':
         document.body.classList.remove('en-quirofano');
@@ -228,6 +231,11 @@ export class WebIO implements IO {
         this.menu.appendChild(boton);
         botones.push(boton);
       });
+
+      // El plano de urgencias: en el menú de sala, el mapa es el mando.
+      if (titulo === t('salaCalma') || titulo.startsWith(t('salaTitulo').slice(0, 12))) {
+        this.montarMapa(botones, visibles.map((op) => sinAnsi(op.etiqueta)));
+      }
 
       // Teclas 1-9 como atajo de las primeras opciones.
       this.teclado = (ev) => {
@@ -328,6 +336,41 @@ export class WebIO implements IO {
   }
 
   // ────────────────────────────────────────────────────────────
+  /** El plano de urgencias: caminar hasta el box antes de decidir. */
+  private montarMapa(botones: HTMLButtonElement[], etiquetas: string[]): void {
+    const espera = this.ultimoTablero.filter((c) => c.lugar === 'espera');
+    const buscarIdx = (texto: string) => etiquetas.findIndex((e) => e.includes(texto));
+    const mapa = document.createElement('div');
+    mapa.id = 'mapa';
+    mapa.innerHTML = construirMapa(espera, {
+      cafe: buscarIdx(t('cafe')),
+      descansar: buscarIdx(t('descansar')),
+      ronda: buscarIdx(t('ronda')),
+    });
+    const cabecera = this.menu.querySelector('.menu-titulo');
+    cabecera?.after(mapa);
+
+    const avatar = mapa.querySelector<HTMLElement>('.medico');
+    mapa.querySelectorAll<HTMLElement>('[data-boton]').forEach((zona) => {
+      const idx = Number(zona.dataset.boton);
+      if (!Number.isInteger(idx) || idx < 0 || !botones[idx]) return;
+      zona.classList.add('activa');
+      zona.addEventListener('click', () => {
+        if (!avatar) return botones[idx]!.click();
+        sonido.pasos();
+        avatar.classList.add('andando');
+        const marco = mapa.getBoundingClientRect();
+        const destino = zona.getBoundingClientRect();
+        avatar.style.left = `${destino.left - marco.left + destino.width / 2 - 15}px`;
+        avatar.style.top = `${destino.top - marco.top + destino.height - 50}px`;
+        window.setTimeout(() => {
+          avatar.classList.remove('andando');
+          botones[idx]?.click();
+        }, 950);
+      });
+    });
+  }
+
   /** Expediente persistente del cirujano (XP, rango, mejor guardia). */
   private leerCarrera(): { guardias: number; mejor: number; xp: number } | null {
     try {

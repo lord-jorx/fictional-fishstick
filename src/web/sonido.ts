@@ -127,6 +127,13 @@ class MotorSonido {
     );
   }
 
+  /** Pasos por el pasillo: cuatro golpecitos sordos. */
+  pasos(): void {
+    for (let i = 0; i < 4; i++) {
+      this.tono({ freq: 95 + (i % 2) * 14, dur: 0.05, gain: 0.035, retraso: i * 0.21, tipo: 'triangle' });
+    }
+  }
+
   /** Quejido del paciente: un lamento breve y grave (nada teatral). */
   quejido(): void {
     const ctx = this.asegurarContexto();

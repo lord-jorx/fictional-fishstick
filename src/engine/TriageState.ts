@@ -125,6 +125,9 @@ export class TriageState implements GameState {
       ctx.cirujanoActivo = paciente.cirujanoIdx;
     }
 
+    // Ir en persona hasta el box: los pasillos también corren en el reloj.
+    this.mostrarAvisos(ctx, ctx.avanzarTiempo(5));
+
     ctx.io.escena?.('paciente', {
       patologiaId: paciente.patologia.id,
       pacienteId: paciente.id,
