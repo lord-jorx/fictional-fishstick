@@ -1,8 +1,11 @@
 /**
- * Base de datos de patologías de la guardia.
+ * Base de datos de patologías de la guardia (16), agrupadas por manejo:
  *
- * 6 patologías quirúrgicas clásicas + 2 distractores no quirúrgicos
- * (para que dar el alta también sea una decisión con riesgo).
+ *  - QUIRÚRGICAS (9): el quirófano es el tratamiento.
+ *  - CONSERVADORAS (4): ingresar (o derivar, según el hospital) es tratar;
+ *    operarlas sería el error.
+ *  - DE ALTA (3): distractores benignos — dar el alta también es una
+ *    decisión con riesgo.
  */
 import type { Patologia } from '../core/types.js';
 
@@ -629,6 +632,7 @@ export const PATOLOGIAS: Patologia[] = [
     hallazgoDiana:
       'TC: neumoperitoneo evidente subdiafragmático y periportal, líquido libre y engrosamiento de la región antropilórica. Perforación de víscera hueca: ulcus péptico perforado.',
     hallazgosParciales: {
+      rxtorax: 'Rx tórax en bipedestación: media luna de aire libre subdiafragmático bilateral. Víscera hueca perforada; el TC precisará el origen.',
       analitica: 'Leucocitosis 15.600 con neutrofilia. Amilasa discretamente elevada (el líquido gástrico libre la sube).',
       eco: 'Ecografía: líquido libre perihepático. El gas dificulta el resto del estudio.',
     },
@@ -833,6 +837,7 @@ export const PATOLOGIAS: Patologia[] = [
     hallazgoDiana:
       'Eco torácica a pie de cama: ausencia de deslizamiento pleural derecho con punto pulmonar. Neumotórax a tensión: esto se drena YA, sin esperar a más imagen.',
     hallazgosParciales: {
+      rxtorax: 'Rx tórax: pulmón derecho colapsado con desviación mediastínica contralateral. Si has esperado a la placa para creértelo, has tenido suerte.',
       analitica: 'Pedir analítica a un neumotórax a tensión es una forma educada de perder al paciente.',
       tc: 'El TC confirmaría... si el paciente llegara vivo al escáner. La clínica ya te lo ha dicho todo.',
       ecg: 'ECG: taquicardia sinusal con bajos voltajes derechos. Compatible, pero la clínica manda.',
@@ -910,6 +915,8 @@ export const PATOLOGIAS: Patologia[] = [
     },
   },
   // ──────────────────────────────────────────────────────────────
+  // Conservadoras: ingresar (o derivar a tiempo) también es tratar.
+  // ──────────────────────────────────────────────────────────────
   {
     id: 'tce',
     nombre: 'TCE con hematoma epidural',
@@ -925,11 +932,12 @@ export const PATOLOGIAS: Patologia[] = [
         'Somnoliento, Glasgow 13 y bajando. Pupila derecha perezosa. Hematoma en cuero cabelludo temporal derecho. El intervalo lúcido de los libros, delante de ti.',
       constantes: 'TA 158/92, FC 52, Sat 97%, Tª 36,6 °C',
     },
-    pruebaDiana: 'tc',
+    pruebaDiana: 'tccraneo',
     hallazgoDiana:
       'TC craneal: colección hiperdensa biconvexa temporal derecha con efecto masa y desviación de línea media. Hematoma epidural: esto es neurocirugía URGENTE.',
     hallazgosParciales: {
       analitica: 'Coagulación normal. La analítica no descarta nada dentro del cráneo.',
+      tc: 'TC abdominal anodino. El problema está un metro más arriba: pide el craneal.',
       ecg: 'Bradicardia sinusal. Con esa TA en ascenso: reflejo de Cushing en marcha.',
     },
     deterioroPorHora: 14,
@@ -997,9 +1005,6 @@ export const PATOLOGIAS: Patologia[] = [
     notaDocente:
       'La cetoacidosis diabética produce dolor abdominal intenso que imita un abdomen agudo — y operarla puede ser mortal. Kussmaul + aliento cetósico + glucemia disparada: fluidos, insulina y potasio. El bisturí, enfundado.',
   },
-  // ──────────────────────────────────────────────────────────────
-  // Casos de manejo conservador: ingresar también es tratar.
-  // ──────────────────────────────────────────────────────────────
   {
     id: 'pancreatitis',
     nombre: 'Pancreatitis aguda litiásica',
@@ -1028,7 +1033,7 @@ export const PATOLOGIAS: Patologia[] = [
       'La pancreatitis aguda NO se opera en fase aguda: el tratamiento es ingreso, fluidoterapia, analgesia y nutrición precoz. La colecistectomía se hace diferida en el mismo ingreso una vez resuelto el cuadro. Operar el páncreas inflamado de urgencia es un error clásico.',
   },
   // ──────────────────────────────────────────────────────────────
-  // Distractores no quirúrgicos: dar el alta también es medicina.
+  // De alta: distractores benignos — dar el alta también es medicina.
   // ──────────────────────────────────────────────────────────────
   {
     id: 'colico_renal',
@@ -1046,7 +1051,7 @@ export const PATOLOGIAS: Patologia[] = [
     },
     pruebaDiana: 'tc',
     hallazgoDiana:
-      'TC sin contraste: litiasis de 4 mm en uréter distal derecho con ectasia leve de la vía. Sin signos de complicación. Cólico renoureteral no complicado.',
+      'TC abdominal (protocolo litiasis, baja dosis): litiasis de 4 mm en uréter distal derecho con ectasia leve de la vía. Sin signos de complicación. Cólico renoureteral no complicado.',
     hallazgosParciales: {
       analitica: 'Función renal normal, sin leucocitosis. Microhematuria en el sedimento: pista clave.',
       eco: 'Ecografía: discreta ectasia pielocalicial derecha. No se visualiza la litiasis.',

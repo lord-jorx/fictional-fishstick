@@ -1,9 +1,13 @@
 /**
- * Niveles de hospital: los recursos mandan tanto como la clínica.
+ * Niveles de hospital, ordenados de menor a mayor complejidad (nivel 1 → 3):
+ * los recursos mandan tanto como la clínica.
  *
  * En un comarcal no hay angio-TC de madrugada ni cirugía vascular ni
  * neurocirugía: parte del oficio es saber QUÉ NO puedes asumir y derivarlo
- * a tiempo. En el de referencia no hay excusas: todo se queda en casa.
+ * a tiempo. Ojo: derivar solo es correcto si el paciente puede sobrevivir
+ * al traslado — una peritonitis séptica se opera donde está (control del
+ * foco primero), aunque el hospital sea pequeño. En el de referencia no
+ * hay excusas: todo se queda en casa.
  */
 import type { PruebaId } from '../core/types.js';
 
@@ -22,6 +26,16 @@ export interface PerfilHospital {
 
 export const HOSPITALES: PerfilHospital[] = [
   {
+    id: 'comarcal',
+    nombre: 'Hospital Comarcal (nivel 1)',
+    descripcion: '1 quirófano, 1 REA, sin angio-TC nocturno; saber derivar es sobrevivir',
+    quirofanos: 1,
+    camasRea: 1,
+    pacientesExtra: -2,
+    pruebasNoDisponibles: ['angiotc'],
+    derivables: ['isquemia', 'tce', 'iam'],
+  },
+  {
     id: 'general',
     nombre: 'Hospital General (nivel 2)',
     descripcion: '2 quirófanos, 3 REA, sin neurocirugía ni hemodinámica de guardia',
@@ -30,16 +44,6 @@ export const HOSPITALES: PerfilHospital[] = [
     pacientesExtra: 0,
     pruebasNoDisponibles: [],
     derivables: ['tce', 'iam'],
-  },
-  {
-    id: 'comarcal',
-    nombre: 'Hospital Comarcal (nivel 1)',
-    descripcion: '1 quirófano, 1 REA, sin angio-TC nocturno; saber derivar es sobrevivir',
-    quirofanos: 1,
-    camasRea: 1,
-    pacientesExtra: -2,
-    pruebasNoDisponibles: ['angiotc'],
-    derivables: ['isquemia', 'diverticulitis', 'tce', 'iam'],
   },
   {
     id: 'referencia',

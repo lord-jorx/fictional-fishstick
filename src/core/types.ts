@@ -3,7 +3,15 @@
  */
 
 /** Pruebas diagnósticas disponibles en urgencias. */
-export type PruebaId = 'analitica' | 'eco' | 'tc' | 'angiotc' | 'ecofast' | 'ecg';
+export type PruebaId =
+  | 'ecg'
+  | 'ecofast'
+  | 'rxtorax'
+  | 'eco'
+  | 'tccraneo'
+  | 'analitica'
+  | 'tc'
+  | 'angiotc';
 
 export interface PruebaDiagnostica {
   id: PruebaId;
