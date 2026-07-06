@@ -364,11 +364,43 @@
   #mapa .zona.activa { cursor: pointer; }
   #mapa .zona.activa:hover { border-color: var(--acento); color: var(--tinta); }
   #mapa .zona.apagada { opacity: .35; }
-  #mapa .zona-planta { left: 2%; width: 15%; }
+  #mapa .zona-planta { left: 2%; width: 12%; }
+  #mapa .zona-quirofano { left: 16%; width: 14%; border-color: #4a3040; }
   #mapa .zona-control { left: 36%; width: 26%; border-style: double; }
   #mapa .zona-sofa { left: 64%; width: 15%; }
   #mapa .zona-cafe { left: 81%; width: 16%; }
+  #mapa .zona-entrada { left: 84.5%; top: 4%; width: 13.5%; height: 47%; }
   #mapa .zona-icono { font-size: 1.7em; }
+
+  /* Recién llegados: el box parpadea y la camilla entra desde la ambulancia. */
+  #mapa .box.recien { animation: llegar-box 1.6s ease-out both; }
+  #mapa .box.recien .paciente-svg { animation: llegar-paciente 1.4s ease-out both; }
+  @keyframes llegar-box {
+    0% { border-color: var(--acento); background: rgba(60, 45, 24, .85); }
+    100% { border-color: #4a3f2c; background: rgba(28, 22, 16, .6); }
+  }
+  @keyframes llegar-paciente {
+    from { transform: translateX(70px); opacity: 0; }
+    to { transform: none; opacity: 1; }
+  }
+
+  /* El celador patrulla el pasillo a lo suyo. */
+  #mapa .celador {
+    position: absolute; width: 22px; height: 36px; z-index: 3; opacity: .8;
+    animation: patrulla 22s linear infinite;
+    filter: drop-shadow(0 2px 3px rgba(0, 0, 0, .5));
+    pointer-events: none;
+  }
+  @keyframes patrulla {
+    0% { left: 2%; top: 53%; }
+    28% { left: 74%; top: 53%; }
+    38% { left: 74%; top: 8%; }
+    52% { left: 74%; top: 53%; }
+    80% { left: 8%; top: 53%; }
+    100% { left: 2%; top: 53%; }
+  }
+
+  .mapa-pista { text-align: center; color: #6d6350; font-size: .72em; margin: -6px 0 8px; }
 
   #mapa .medico {
     position: absolute; width: 30px; height: 48px; z-index: 5;

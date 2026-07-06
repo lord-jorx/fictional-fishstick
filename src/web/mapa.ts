@@ -45,14 +45,27 @@ export interface AccionesMapa {
   cafe: number;
   descansar: number;
   ronda: number;
+  /** Nombres de pacientes que acaban de llegar (animación desde la entrada). */
+  recien?: Set<string>;
 }
+
+/** Celador que patrulla el servicio, a lo suyo. */
+const CELADOR = `
+<svg viewBox="0 0 26 42" width="22" height="36" aria-hidden="true">
+  <circle cx="13" cy="9" r="5.5" fill="#c99b72"/>
+  <path d="M8 5 a6 6 0 0 1 10 0 l-1 2 h-8 z" fill="#8a8f94"/>
+  <rect x="6" y="15" width="14" height="14" rx="3.5" fill="#9aa1a8"/>
+  <rect x="8" y="29" width="4" height="10" rx="2" fill="#6d7378"/>
+  <rect x="14" y="29" width="4" height="10" rx="2" fill="#6d7378"/>
+</svg>`;
 
 /** El plano completo: boxes arriba, control/planta/café abajo. */
 export function construirMapa(espera: ComandaPaciente[], acciones: AccionesMapa): string {
-  const boxes = espera.slice(0, 6).map((p, i) => {
+  const boxes = espera.slice(0, 5).map((p, i) => {
     const x = 2 + i * 16.4;
+    const nuevo = acciones.recien?.has(p.nombre) ? ' recien' : '';
     return `
-    <div class="box" data-boton="${i}" style="left:${x}%" title="${p.nombre}">
+    <div class="box${nuevo}" data-boton="${i}" style="left:${x}%" title="${p.nombre}">
       <span class="box-num">BOX ${i + 1}</span>
       ${munecoPaciente(p.estabilidad, !!p.alerta)}
       <span class="box-nombre">${p.nombre.split(' ')[0]}</span>
@@ -68,8 +81,11 @@ export function construirMapa(espera: ComandaPaciente[], acciones: AccionesMapa)
 
   return `
   ${boxes}
+  <div class="zona zona-entrada"><span class="zona-icono">🚑</span><span>ENTRADA</span></div>
   ${planta}
+  <div class="zona zona-quirofano"><span class="zona-icono">🔪</span><span>QUIRÓFANO</span></div>
   <div class="zona zona-control"><span class="zona-icono">🩺</span><span>CONTROL</span></div>
+  <div class="celador">${CELADOR}</div>
   ${sofa}
   <div class="zona zona-cafe" data-boton="${acciones.cafe}"><span class="zona-icono">☕</span><span>CAFÉ</span></div>
   <div class="medico" style="left:47%;top:56%">${MUNECO_CIRUJANO}</div>`;

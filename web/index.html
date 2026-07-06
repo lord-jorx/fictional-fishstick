@@ -364,11 +364,43 @@
   #mapa .zona.activa { cursor: pointer; }
   #mapa .zona.activa:hover { border-color: var(--acento); color: var(--tinta); }
   #mapa .zona.apagada { opacity: .35; }
-  #mapa .zona-planta { left: 2%; width: 15%; }
+  #mapa .zona-planta { left: 2%; width: 12%; }
+  #mapa .zona-quirofano { left: 16%; width: 14%; border-color: #4a3040; }
   #mapa .zona-control { left: 36%; width: 26%; border-style: double; }
   #mapa .zona-sofa { left: 64%; width: 15%; }
   #mapa .zona-cafe { left: 81%; width: 16%; }
+  #mapa .zona-entrada { left: 84.5%; top: 4%; width: 13.5%; height: 47%; }
   #mapa .zona-icono { font-size: 1.7em; }
+
+  /* Recién llegados: el box parpadea y la camilla entra desde la ambulancia. */
+  #mapa .box.recien { animation: llegar-box 1.6s ease-out both; }
+  #mapa .box.recien .paciente-svg { animation: llegar-paciente 1.4s ease-out both; }
+  @keyframes llegar-box {
+    0% { border-color: var(--acento); background: rgba(60, 45, 24, .85); }
+    100% { border-color: #4a3f2c; background: rgba(28, 22, 16, .6); }
+  }
+  @keyframes llegar-paciente {
+    from { transform: translateX(70px); opacity: 0; }
+    to { transform: none; opacity: 1; }
+  }
+
+  /* El celador patrulla el pasillo a lo suyo. */
+  #mapa .celador {
+    position: absolute; width: 22px; height: 36px; z-index: 3; opacity: .8;
+    animation: patrulla 22s linear infinite;
+    filter: drop-shadow(0 2px 3px rgba(0, 0, 0, .5));
+    pointer-events: none;
+  }
+  @keyframes patrulla {
+    0% { left: 2%; top: 53%; }
+    28% { left: 74%; top: 53%; }
+    38% { left: 74%; top: 8%; }
+    52% { left: 74%; top: 53%; }
+    80% { left: 8%; top: 53%; }
+    100% { left: 2%; top: 53%; }
+  }
+
+  .mapa-pista { text-align: center; color: #6d6350; font-size: .72em; margin: -6px 0 8px; }
 
   #mapa .medico {
     position: absolute; width: 30px; height: 48px; z-index: 5;
@@ -3993,11 +4025,20 @@ Derivas a ${p.nombre}... y a la hora llama el adjunto receptor: "Y esto, no lo p
   ${alerta ? '<text x="4" y="9" font-size="9" fill="#d9b36a">⚠</text>' : ""}
 </svg>`;
   }
+  var CELADOR = `
+<svg viewBox="0 0 26 42" width="22" height="36" aria-hidden="true">
+  <circle cx="13" cy="9" r="5.5" fill="#c99b72"/>
+  <path d="M8 5 a6 6 0 0 1 10 0 l-1 2 h-8 z" fill="#8a8f94"/>
+  <rect x="6" y="15" width="14" height="14" rx="3.5" fill="#9aa1a8"/>
+  <rect x="8" y="29" width="4" height="10" rx="2" fill="#6d7378"/>
+  <rect x="14" y="29" width="4" height="10" rx="2" fill="#6d7378"/>
+</svg>`;
   function construirMapa(espera, acciones) {
-    const boxes = espera.slice(0, 6).map((p, i) => {
+    const boxes = espera.slice(0, 5).map((p, i) => {
       const x = 2 + i * 16.4;
+      const nuevo = acciones.recien?.has(p.nombre) ? " recien" : "";
       return `
-    <div class="box" data-boton="${i}" style="left:${x}%" title="${p.nombre}">
+    <div class="box${nuevo}" data-boton="${i}" style="left:${x}%" title="${p.nombre}">
       <span class="box-num">BOX ${i + 1}</span>
       ${munecoPaciente(p.estabilidad, !!p.alerta)}
       <span class="box-nombre">${p.nombre.split(" ")[0]}</span>
@@ -4007,8 +4048,11 @@ Derivas a ${p.nombre}... y a la hora llama el adjunto receptor: "Y esto, no lo p
     const sofa = acciones.descansar >= 0 ? `<div class="zona zona-sofa" data-boton="${acciones.descansar}"><span class="zona-icono">💤</span><span>SOFÁ</span></div>` : "";
     return `
   ${boxes}
+  <div class="zona zona-entrada"><span class="zona-icono">🚑</span><span>ENTRADA</span></div>
   ${planta}
+  <div class="zona zona-quirofano"><span class="zona-icono">🔪</span><span>QUIRÓFANO</span></div>
   <div class="zona zona-control"><span class="zona-icono">🩺</span><span>CONTROL</span></div>
+  <div class="celador">${CELADOR}</div>
   ${sofa}
   <div class="zona zona-cafe" data-boton="${acciones.cafe}"><span class="zona-icono">☕</span><span>CAFÉ</span></div>
   <div class="medico" style="left:47%;top:56%">${MUNECO_CIRUJANO}</div>`;
@@ -4398,6 +4442,10 @@ Derivas a ${p.nombre}... y a la hora llama el adjunto receptor: "Y esto, no lo p
       __publicField(this, "ticker", null);
       __publicField(this, "tarjetaEditor", null);
       __publicField(this, "ultimoTablero", []);
+      /** Quién estaba ya en la sala en el plano anterior (para animar llegadas). */
+      __publicField(this, "nombresPrevios", /* @__PURE__ */ new Set());
+      /** Desmontaje del modo arcade (teclas + bucle de animación) del plano actual. */
+      __publicField(this, "limpiarMapa", null);
       this.salida = document.createElement("div");
       this.salida.id = "salida";
       this.comandas = document.createElement("div");
@@ -4637,15 +4685,21 @@ Derivas a ${p.nombre}... y a la hora llama el adjunto receptor: "Y esto, no lo p
     montarMapa(botones, etiquetas) {
       const espera = this.ultimoTablero.filter((c) => c.lugar === "espera");
       const buscarIdx = (texto) => etiquetas.findIndex((e) => e.includes(texto));
+      const recien = new Set(espera.map((c) => c.nombre).filter((n) => !this.nombresPrevios.has(n)));
+      this.nombresPrevios = new Set(espera.map((c) => c.nombre));
       const mapa = document.createElement("div");
       mapa.id = "mapa";
       mapa.innerHTML = construirMapa(espera, {
         cafe: buscarIdx(t("cafe")),
         descansar: buscarIdx(t("descansar")),
-        ronda: buscarIdx(t("ronda"))
+        ronda: buscarIdx(t("ronda")),
+        recien
       });
+      const pista = document.createElement("div");
+      pista.className = "mapa-pista";
+      pista.textContent = "🕹 muévete con WASD / flechas, o clica una zona";
       const cabecera = this.menu.querySelector(".menu-titulo");
-      cabecera?.after(mapa);
+      cabecera?.after(mapa, pista);
       const avatar = mapa.querySelector(".medico");
       mapa.querySelectorAll("[data-boton]").forEach((zona) => {
         const idx = Number(zona.dataset.boton);
@@ -4654,6 +4708,7 @@ Derivas a ${p.nombre}... y a la hora llama el adjunto receptor: "Y esto, no lo p
         zona.addEventListener("click", () => {
           if (!avatar) return botones[idx].click();
           sonido.pasos();
+          avatar.style.transition = "";
           avatar.classList.add("andando");
           const marco = mapa.getBoundingClientRect();
           const destino = zona.getBoundingClientRect();
@@ -4665,6 +4720,96 @@ Derivas a ${p.nombre}... y a la hora llama el adjunto receptor: "Y esto, no lo p
           }, 950);
         });
       });
+      if (avatar) this.activarMovimientoLibre(mapa, avatar, botones);
+    }
+    /**
+     * Modo arcade del plano: el muñequito se mueve libre con WASD/flechas y
+     * pisar una zona activa equivale a clicar su botón. Convive con el modo
+     * clic (que usa transición CSS); aquí la transición se apaga al primer
+     * paso para que el control sea directo.
+     */
+    activarMovimientoLibre(mapa, avatar, botones) {
+      const pulsadas = /* @__PURE__ */ new Set();
+      const DIRECCIONES = {
+        arrowup: [0, -1],
+        w: [0, -1],
+        arrowdown: [0, 1],
+        s: [0, 1],
+        arrowleft: [-1, 0],
+        a: [-1, 0],
+        arrowright: [1, 0],
+        d: [1, 0]
+      };
+      let rafId = null;
+      let ultimoPaso = 0;
+      let resuelto = false;
+      const alBajar = (ev) => {
+        const tecla = ev.key.toLowerCase();
+        if (!DIRECCIONES[tecla]) return;
+        ev.preventDefault();
+        pulsadas.add(tecla);
+        if (rafId === null) rafId = requestAnimationFrame(mover);
+      };
+      const alSubir = (ev) => {
+        pulsadas.delete(ev.key.toLowerCase());
+      };
+      const mover = () => {
+        rafId = null;
+        if (resuelto || !avatar.isConnected) return;
+        let dx = 0;
+        let dy = 0;
+        for (const tecla of pulsadas) {
+          const dir = DIRECCIONES[tecla];
+          if (dir) {
+            dx += dir[0];
+            dy += dir[1];
+          }
+        }
+        if (dx === 0 && dy === 0) {
+          avatar.classList.remove("andando");
+          return;
+        }
+        avatar.style.transition = "none";
+        avatar.classList.add("andando");
+        const marco = mapa.getBoundingClientRect();
+        const caja = avatar.getBoundingClientRect();
+        const PASO = 3.1;
+        const x = Math.max(0, Math.min(marco.width - caja.width, caja.left - marco.left + dx * PASO));
+        const y = Math.max(0, Math.min(marco.height - caja.height, caja.top - marco.top + dy * PASO));
+        avatar.style.left = `${x}px`;
+        avatar.style.top = `${y}px`;
+        const ahora = performance.now();
+        if (ahora - ultimoPaso > 420) {
+          sonido.pasos();
+          ultimoPaso = ahora;
+        }
+        const centroX = x + caja.width / 2;
+        const centroY = y + caja.height * 0.8;
+        for (const zona of mapa.querySelectorAll(".zona.activa[data-boton], .box[data-boton]")) {
+          const z = zona.getBoundingClientRect();
+          const zx = z.left - marco.left;
+          const zy = z.top - marco.top;
+          if (centroX >= zx && centroX <= zx + z.width && centroY >= zy && centroY <= zy + z.height) {
+            const idx = Number(zona.dataset.boton);
+            if (Number.isInteger(idx) && botones[idx]) {
+              resuelto = true;
+              avatar.classList.remove("andando");
+              botones[idx].click();
+              return;
+            }
+          }
+        }
+        rafId = requestAnimationFrame(mover);
+      };
+      document.addEventListener("keydown", alBajar);
+      document.addEventListener("keyup", alSubir);
+      this.limpiarMapa = () => {
+        resuelto = true;
+        document.removeEventListener("keydown", alBajar);
+        document.removeEventListener("keyup", alSubir);
+        if (rafId !== null) cancelAnimationFrame(rafId);
+        rafId = null;
+      };
     }
     /** Expediente persistente del cirujano (XP, rango, mejor guardia). */
     leerCarrera() {
@@ -4740,6 +4885,8 @@ Derivas a ${p.nombre}... y a la hora llama el adjunto receptor: "Y esto, no lo p
         document.removeEventListener("keydown", this.teclado);
         this.teclado = null;
       }
+      this.limpiarMapa?.();
+      this.limpiarMapa = null;
       this.autoRefresco = null;
       this.menu.classList.remove("quirurgico");
       this.menu.replaceChildren();

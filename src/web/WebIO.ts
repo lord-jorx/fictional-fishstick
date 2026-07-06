@@ -71,6 +71,10 @@ export class WebIO implements IO {
   private ticker: number | null = null;
   private tarjetaEditor: HTMLElement | null = null;
   private ultimoTablero: ComandaPaciente[] = [];
+  /** Quién estaba ya en la sala en el plano anterior (para animar llegadas). */
+  private nombresPrevios = new Set<string>();
+  /** Desmontaje del modo arcade (teclas + bucle de animación) del plano actual. */
+  private limpiarMapa: (() => void) | null = null;
 
   constructor(raiz: HTMLElement) {
     this.salida = document.createElement('div');
@@ -340,15 +344,24 @@ export class WebIO implements IO {
   private montarMapa(botones: HTMLButtonElement[], etiquetas: string[]): void {
     const espera = this.ultimoTablero.filter((c) => c.lugar === 'espera');
     const buscarIdx = (texto: string) => etiquetas.findIndex((e) => e.includes(texto));
+
+    // Los que no estaban en el plano anterior entran andando desde la ambulancia.
+    const recien = new Set(espera.map((c) => c.nombre).filter((n) => !this.nombresPrevios.has(n)));
+    this.nombresPrevios = new Set(espera.map((c) => c.nombre));
+
     const mapa = document.createElement('div');
     mapa.id = 'mapa';
     mapa.innerHTML = construirMapa(espera, {
       cafe: buscarIdx(t('cafe')),
       descansar: buscarIdx(t('descansar')),
       ronda: buscarIdx(t('ronda')),
+      recien,
     });
+    const pista = document.createElement('div');
+    pista.className = 'mapa-pista';
+    pista.textContent = '🕹 muévete con WASD / flechas, o clica una zona';
     const cabecera = this.menu.querySelector('.menu-titulo');
-    cabecera?.after(mapa);
+    cabecera?.after(mapa, pista);
 
     const avatar = mapa.querySelector<HTMLElement>('.medico');
     mapa.querySelectorAll<HTMLElement>('[data-boton]').forEach((zona) => {
@@ -358,6 +371,7 @@ export class WebIO implements IO {
       zona.addEventListener('click', () => {
         if (!avatar) return botones[idx]!.click();
         sonido.pasos();
+        avatar.style.transition = ''; // vuelve el tween si veníamos del modo arcade
         avatar.classList.add('andando');
         const marco = mapa.getBoundingClientRect();
         const destino = zona.getBoundingClientRect();
@@ -369,6 +383,102 @@ export class WebIO implements IO {
         }, 950);
       });
     });
+
+    if (avatar) this.activarMovimientoLibre(mapa, avatar, botones);
+  }
+
+  /**
+   * Modo arcade del plano: el muñequito se mueve libre con WASD/flechas y
+   * pisar una zona activa equivale a clicar su botón. Convive con el modo
+   * clic (que usa transición CSS); aquí la transición se apaga al primer
+   * paso para que el control sea directo.
+   */
+  private activarMovimientoLibre(mapa: HTMLElement, avatar: HTMLElement, botones: HTMLButtonElement[]): void {
+    const pulsadas = new Set<string>();
+    const DIRECCIONES: Record<string, [number, number]> = {
+      arrowup: [0, -1], w: [0, -1],
+      arrowdown: [0, 1], s: [0, 1],
+      arrowleft: [-1, 0], a: [-1, 0],
+      arrowright: [1, 0], d: [1, 0],
+    };
+    let rafId: number | null = null;
+    let ultimoPaso = 0;
+    let resuelto = false;
+
+    const alBajar = (ev: KeyboardEvent) => {
+      const tecla = ev.key.toLowerCase();
+      if (!DIRECCIONES[tecla]) return;
+      ev.preventDefault();
+      pulsadas.add(tecla);
+      if (rafId === null) rafId = requestAnimationFrame(mover);
+    };
+    const alSubir = (ev: KeyboardEvent) => {
+      pulsadas.delete(ev.key.toLowerCase());
+    };
+
+    const mover = () => {
+      rafId = null;
+      if (resuelto || !avatar.isConnected) return;
+      let dx = 0;
+      let dy = 0;
+      for (const tecla of pulsadas) {
+        const dir = DIRECCIONES[tecla];
+        if (dir) {
+          dx += dir[0];
+          dy += dir[1];
+        }
+      }
+      if (dx === 0 && dy === 0) {
+        avatar.classList.remove('andando');
+        return;
+      }
+
+      // Sin transición CSS: en arcade el pie manda, no el tween.
+      avatar.style.transition = 'none';
+      avatar.classList.add('andando');
+      const marco = mapa.getBoundingClientRect();
+      const caja = avatar.getBoundingClientRect();
+      const PASO = 3.1;
+      const x = Math.max(0, Math.min(marco.width - caja.width, caja.left - marco.left + dx * PASO));
+      const y = Math.max(0, Math.min(marco.height - caja.height, caja.top - marco.top + dy * PASO));
+      avatar.style.left = `${x}px`;
+      avatar.style.top = `${y}px`;
+
+      const ahora = performance.now();
+      if (ahora - ultimoPaso > 420) {
+        sonido.pasos();
+        ultimoPaso = ahora;
+      }
+
+      // ¿Hemos pisado una zona activa? Pisar = elegir.
+      const centroX = x + caja.width / 2;
+      const centroY = y + caja.height * 0.8;
+      for (const zona of mapa.querySelectorAll<HTMLElement>('.zona.activa[data-boton], .box[data-boton]')) {
+        const z = zona.getBoundingClientRect();
+        const zx = z.left - marco.left;
+        const zy = z.top - marco.top;
+        if (centroX >= zx && centroX <= zx + z.width && centroY >= zy && centroY <= zy + z.height) {
+          const idx = Number(zona.dataset.boton);
+          if (Number.isInteger(idx) && botones[idx]) {
+            resuelto = true;
+            avatar.classList.remove('andando');
+            botones[idx]!.click();
+            return;
+          }
+        }
+      }
+      rafId = requestAnimationFrame(mover);
+    };
+
+    document.addEventListener('keydown', alBajar);
+    document.addEventListener('keyup', alSubir);
+    this.limpiarMapa = () => {
+      resuelto = true;
+      document.removeEventListener('keydown', alBajar);
+      document.removeEventListener('keyup', alSubir);
+      if (rafId !== null) cancelAnimationFrame(rafId);
+      rafId = null;
+    };
   }
 
   /** Expediente persistente del cirujano (XP, rango, mejor guardia). */
@@ -451,6 +561,8 @@ export class WebIO implements IO {
       document.removeEventListener('keydown', this.teclado);
       this.teclado = null;
     }
+    this.limpiarMapa?.();
+    this.limpiarMapa = null;
     this.autoRefresco = null;
     this.menu.classList.remove('quirurgico');
     this.menu.replaceChildren();
