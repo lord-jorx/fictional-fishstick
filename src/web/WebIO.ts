@@ -11,7 +11,7 @@ import { horaGuardia } from '../ui/hud.js';
 import { esquemaQuirurgico } from './anatomia.js';
 import { ARTE_AMANECER, ARTE_PORTADA, BANNER_QUIROFANO, cuerpoConDolor, QUEJAS, SVG_AMBULANCIA } from './arte.js';
 import { t } from '../i18n.js';
-import { construirMapa } from './mapa.js';
+import { construirMapa, construirQuirofano } from './mapa.js';
 import { iconoHerramienta } from './quirofano.js';
 import { retratoDesdeRasgos, retratoPaciente } from './retrato.js';
 import { sonido } from './sonido.js';
@@ -240,6 +240,10 @@ export class WebIO implements IO {
       if (titulo === t('salaCalma') || titulo.startsWith(t('salaTitulo').slice(0, 12))) {
         this.montarMapa(botones, visibles.map((op) => sinAnsi(op.etiqueta)));
       }
+      // Y en quirófano, el plano de la mesa: caminas hasta la bandeja.
+      if (visual) {
+        this.montarQuirofano(botones, visibles.map((op) => sinAnsi(op.etiqueta)));
+      }
 
       // Teclas 1-9 como atajo de las primeras opciones.
       this.teclado = (ev) => {
@@ -357,12 +361,33 @@ export class WebIO implements IO {
       ronda: buscarIdx(t('ronda')),
       recien,
     });
+    const cabecera = this.menu.querySelector('.menu-titulo');
+    cabecera?.after(mapa, this.crearPista());
+    this.conectarZonas(mapa, botones);
+  }
+
+  /** El plano del quirófano: mesa, anestesia y bandejas de instrumental pisables. */
+  private montarQuirofano(botones: HTMLButtonElement[], etiquetas: string[]): void {
+    const mapa = document.createElement('div');
+    mapa.id = 'mapa';
+    mapa.classList.add('plano-quirofano');
+    mapa.innerHTML = construirQuirofano(etiquetas);
+    const cabecera = this.menu.querySelector('.menu-titulo');
+    cabecera?.after(mapa, this.crearPista());
+    this.conectarZonas(mapa, botones);
+  }
+
+  /** La línea de ayuda bajo el plano, según haya teclado o pantalla táctil. */
+  private crearPista(): HTMLElement {
     const pista = document.createElement('div');
     pista.className = 'mapa-pista';
-    pista.textContent = '🕹 muévete con WASD / flechas, o clica una zona';
-    const cabecera = this.menu.querySelector('.menu-titulo');
-    cabecera?.after(mapa, pista);
+    const tactil = matchMedia('(pointer: coarse)').matches;
+    pista.textContent = `${tactil ? '👆' : '🕹'} ${t(tactil ? 'mapaPistaTactil' : 'mapaPista')}`;
+    return pista;
+  }
 
+  /** Cablea un plano: clic = caminar hasta la zona; teclas/cruceta = ir a pie. */
+  private conectarZonas(mapa: HTMLElement, botones: HTMLButtonElement[]): void {
     const avatar = mapa.querySelector<HTMLElement>('.medico');
     mapa.querySelectorAll<HTMLElement>('[data-boton]').forEach((zona) => {
       const idx = Number(zona.dataset.boton);
@@ -395,10 +420,11 @@ export class WebIO implements IO {
    */
   private activarMovimientoLibre(mapa: HTMLElement, avatar: HTMLElement, botones: HTMLButtonElement[]): void {
     const pulsadas = new Set<string>();
+    // WASD, flechas y ZQSD (teclados AZERTY franceses).
     const DIRECCIONES: Record<string, [number, number]> = {
-      arrowup: [0, -1], w: [0, -1],
+      arrowup: [0, -1], w: [0, -1], z: [0, -1],
       arrowdown: [0, 1], s: [0, 1],
-      arrowleft: [-1, 0], a: [-1, 0],
+      arrowleft: [-1, 0], a: [-1, 0], q: [-1, 0],
       arrowright: [1, 0], d: [1, 0],
     };
     let rafId: number | null = null;
@@ -472,12 +498,33 @@ export class WebIO implements IO {
 
     document.addEventListener('keydown', alBajar);
     document.addEventListener('keyup', alSubir);
+
+    // Cruceta táctil para quien juega sin teclado (solo visible en móvil).
+    const pad = document.createElement('div');
+    pad.className = 'mapa-pad';
+    for (const [tecla, flecha] of [['arrowleft', '◀'], ['arrowup', '▲'], ['arrowdown', '▼'], ['arrowright', '▶']] as const) {
+      const b = document.createElement('button');
+      b.type = 'button';
+      b.textContent = flecha;
+      b.addEventListener('pointerdown', (ev) => {
+        ev.preventDefault();
+        pulsadas.add(tecla);
+        if (rafId === null) rafId = requestAnimationFrame(mover);
+      });
+      for (const fin of ['pointerup', 'pointercancel', 'pointerleave'] as const) {
+        b.addEventListener(fin, () => pulsadas.delete(tecla));
+      }
+      pad.appendChild(b);
+    }
+    mapa.after(pad);
+
     this.limpiarMapa = () => {
       resuelto = true;
       document.removeEventListener('keydown', alBajar);
       document.removeEventListener('keyup', alSubir);
       if (rafId !== null) cancelAnimationFrame(rafId);
       rafId = null;
+      pad.remove();
     };
   }
 

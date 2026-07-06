@@ -83,6 +83,17 @@ encima de la cama. Ir en persona al box **cuesta 5 minutos de guardia**:
 los pasillos también corren en el reloj. Los botones clásicos siguen debajo
 del plano, y la terminal conserva sus menús.
 
+Y el plano se juega **en modo arcade**: mueve al muñequito con **WASD,
+las flechas o ZQSD** (o la **cruceta táctil** en móvil) y *pisa* la zona
+que quieras activar — entrar al box de un paciente, plantarte en el café
+o tirarte al sofá. Cuando llega un caso nuevo, **el celador sale de la
+ambulancia empujando la camilla** hasta su box, que destella al recibirla;
+otro celador patrulla los pasillos a lo suyo. Dentro del quirófano, la
+decisión también se camina: un **plano de la mesa quirúrgica** —paciente
+entallado, torre de anestesia con su traza latiendo— rodeado de **bandejas
+de instrumental**: ve andando hasta la bandeja de la técnica que quieras
+(o clícala) para ejecutarla.
+
 ## 🕵️ El interrogatorio clínico
 
 Cada paciente **declara algo** al llegar («¿Alcohol? Una copita en las

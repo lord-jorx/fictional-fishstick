@@ -66,6 +66,8 @@ const C: Catalogo = {
   llevaElCaso: ['Lleva el caso', 'Case lead', 'Responsable du cas', 'Porta el cas', 'Fallführung'],
   opera: ['Opera', 'Operating', 'Opère', 'Opera', 'Es operiert'],
   derivar: ['Derivar en ambulancia medicalizada al centro de referencia', 'Transfer by ambulance to the referral centre', 'Transférer en ambulance vers le centre de référence', 'Derivar en ambulància medicalitzada al centre de referència', 'Mit Notarztwagen ins Referenzzentrum verlegen'],
+  mapaPista: ['Muévete con WASD / flechas, o clica una zona', 'Move with WASD / arrow keys, or click a zone', 'Déplacez-vous avec ZQSD / flèches, ou cliquez une zone', 'Mou-te amb WASD / fletxes, o clica una zona', 'Bewege dich mit WASD / Pfeiltasten oder klicke eine Zone an'],
+  mapaPistaTactil: ['Usa la cruceta para moverte, o toca una zona', 'Use the pad to move, or tap a zone', 'Utilisez la croix pour vous déplacer, ou touchez une zone', 'Fes servir la creueta per moure’t, o toca una zona', 'Steuerkreuz zum Bewegen oder Zone antippen'],
 };
 
 /** Texto de interfaz en el idioma activo. */

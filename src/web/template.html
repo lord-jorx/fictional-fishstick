@@ -372,9 +372,10 @@
   #mapa .zona-entrada { left: 84.5%; top: 4%; width: 13.5%; height: 47%; }
   #mapa .zona-icono { font-size: 1.7em; }
 
-  /* Recién llegados: el box parpadea y la camilla entra desde la ambulancia. */
-  #mapa .box.recien { animation: llegar-box 1.6s ease-out both; }
-  #mapa .box.recien .paciente-svg { animation: llegar-paciente 1.4s ease-out both; }
+  /* Recién llegados: el celador trae la camilla desde la ambulancia y el
+     box destella al recibirla (la llegada espera a que llegue el celador). */
+  #mapa .box.recien { animation: llegar-box 1.8s ease-out .9s both; }
+  #mapa .box.recien .paciente-svg { animation: llegar-paciente 1.1s ease-out .9s both; }
   @keyframes llegar-box {
     0% { border-color: var(--acento); background: rgba(60, 45, 24, .85); }
     100% { border-color: #4a3f2c; background: rgba(28, 22, 16, .6); }
@@ -383,6 +384,14 @@
     from { transform: translateX(70px); opacity: 0; }
     to { transform: none; opacity: 1; }
   }
+  #mapa .celador.escolta {
+    animation: escoltar 1.8s ease-out both, esfumar .8s 2.6s ease-in forwards;
+  }
+  @keyframes escoltar {
+    from { left: 86%; top: 16%; }
+    to { left: var(--cx, 10%); top: 12%; }
+  }
+  @keyframes esfumar { to { opacity: 0; } }
 
   /* El celador patrulla el pasillo a lo suyo. */
   #mapa .celador {
@@ -401,6 +410,46 @@
   }
 
   .mapa-pista { text-align: center; color: #6d6350; font-size: .72em; margin: -6px 0 8px; }
+
+  /* Cruceta táctil: solo aparece cuando el puntero es un dedo. */
+  .mapa-pad { display: none; justify-content: center; gap: 10px; margin: 2px 0 6px; }
+  @media (pointer: coarse) { .mapa-pad { display: flex; } }
+  .mapa-pad button {
+    width: 46px; height: 46px; font-size: 18px;
+    background: rgba(20, 15, 9, .85); color: var(--tinta);
+    border: 1px solid var(--borde); border-radius: 8px;
+    touch-action: none; user-select: none; -webkit-user-select: none;
+  }
+  .mapa-pad button:active { border-color: var(--acento); background: rgba(43, 33, 20, .95); }
+
+  /* ── El plano del quirófano: la mesa en el centro, bandejas pisables ── */
+  #mapa.plano-quirofano {
+    height: 250px;
+    background:
+      repeating-linear-gradient(0deg, transparent 0 34px, #0d1614 34px 35px),
+      repeating-linear-gradient(90deg, transparent 0 34px, #0d1614 34px 35px),
+      #0f1a17;
+    border-color: #24382f;
+  }
+  .plano-quirofano .mesa-quirofano {
+    position: absolute; left: 26%; top: 12%; width: 48%;
+    pointer-events: none;
+  }
+  .plano-quirofano .anestesia { position: absolute; left: 5%; top: 14%; width: 9%; min-width: 34px; pointer-events: none; }
+  .traza-anestesia { stroke-dasharray: 90; animation: latir-traza 2.2s linear infinite; }
+  @keyframes latir-traza { from { stroke-dashoffset: 180; } to { stroke-dashoffset: 0; } }
+  .plano-quirofano .zona.bandeja {
+    top: 58%; height: 38%;
+    border-color: #2e4a40; background: rgba(12, 22, 18, .8);
+    gap: 3px; padding: 3px;
+  }
+  .plano-quirofano .zona.bandeja:hover { border-color: #9ed7f2; color: var(--tinta); }
+  .bandeja-icono { width: 30px; height: 30px; }
+  .bandeja-icono .icono-svg { width: 100%; height: 100%; }
+  .bandeja-texto {
+    font-size: .6em; line-height: 1.25; text-align: center;
+    letter-spacing: .4px; overflow: hidden; max-height: 2.6em;
+  }
 
   #mapa .medico {
     position: absolute; width: 30px; height: 48px; z-index: 5;

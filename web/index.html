@@ -372,9 +372,10 @@
   #mapa .zona-entrada { left: 84.5%; top: 4%; width: 13.5%; height: 47%; }
   #mapa .zona-icono { font-size: 1.7em; }
 
-  /* Recién llegados: el box parpadea y la camilla entra desde la ambulancia. */
-  #mapa .box.recien { animation: llegar-box 1.6s ease-out both; }
-  #mapa .box.recien .paciente-svg { animation: llegar-paciente 1.4s ease-out both; }
+  /* Recién llegados: el celador trae la camilla desde la ambulancia y el
+     box destella al recibirla (la llegada espera a que llegue el celador). */
+  #mapa .box.recien { animation: llegar-box 1.8s ease-out .9s both; }
+  #mapa .box.recien .paciente-svg { animation: llegar-paciente 1.1s ease-out .9s both; }
   @keyframes llegar-box {
     0% { border-color: var(--acento); background: rgba(60, 45, 24, .85); }
     100% { border-color: #4a3f2c; background: rgba(28, 22, 16, .6); }
@@ -383,6 +384,14 @@
     from { transform: translateX(70px); opacity: 0; }
     to { transform: none; opacity: 1; }
   }
+  #mapa .celador.escolta {
+    animation: escoltar 1.8s ease-out both, esfumar .8s 2.6s ease-in forwards;
+  }
+  @keyframes escoltar {
+    from { left: 86%; top: 16%; }
+    to { left: var(--cx, 10%); top: 12%; }
+  }
+  @keyframes esfumar { to { opacity: 0; } }
 
   /* El celador patrulla el pasillo a lo suyo. */
   #mapa .celador {
@@ -401,6 +410,46 @@
   }
 
   .mapa-pista { text-align: center; color: #6d6350; font-size: .72em; margin: -6px 0 8px; }
+
+  /* Cruceta táctil: solo aparece cuando el puntero es un dedo. */
+  .mapa-pad { display: none; justify-content: center; gap: 10px; margin: 2px 0 6px; }
+  @media (pointer: coarse) { .mapa-pad { display: flex; } }
+  .mapa-pad button {
+    width: 46px; height: 46px; font-size: 18px;
+    background: rgba(20, 15, 9, .85); color: var(--tinta);
+    border: 1px solid var(--borde); border-radius: 8px;
+    touch-action: none; user-select: none; -webkit-user-select: none;
+  }
+  .mapa-pad button:active { border-color: var(--acento); background: rgba(43, 33, 20, .95); }
+
+  /* ── El plano del quirófano: la mesa en el centro, bandejas pisables ── */
+  #mapa.plano-quirofano {
+    height: 250px;
+    background:
+      repeating-linear-gradient(0deg, transparent 0 34px, #0d1614 34px 35px),
+      repeating-linear-gradient(90deg, transparent 0 34px, #0d1614 34px 35px),
+      #0f1a17;
+    border-color: #24382f;
+  }
+  .plano-quirofano .mesa-quirofano {
+    position: absolute; left: 26%; top: 12%; width: 48%;
+    pointer-events: none;
+  }
+  .plano-quirofano .anestesia { position: absolute; left: 5%; top: 14%; width: 9%; min-width: 34px; pointer-events: none; }
+  .traza-anestesia { stroke-dasharray: 90; animation: latir-traza 2.2s linear infinite; }
+  @keyframes latir-traza { from { stroke-dashoffset: 180; } to { stroke-dashoffset: 0; } }
+  .plano-quirofano .zona.bandeja {
+    top: 58%; height: 38%;
+    border-color: #2e4a40; background: rgba(12, 22, 18, .8);
+    gap: 3px; padding: 3px;
+  }
+  .plano-quirofano .zona.bandeja:hover { border-color: #9ed7f2; color: var(--tinta); }
+  .bandeja-icono { width: 30px; height: 30px; }
+  .bandeja-icono .icono-svg { width: 100%; height: 100%; }
+  .bandeja-texto {
+    font-size: .6em; line-height: 1.25; text-align: center;
+    letter-spacing: .4px; overflow: hidden; max-height: 2.6em;
+  }
 
   #mapa .medico {
     position: absolute; width: 30px; height: 48px; z-index: 5;
@@ -2282,7 +2331,9 @@
     quienLoLleva: ["¿Quién lleva este caso?", "Who takes this case?", "Qui prend ce cas ?", "Qui porta aquest cas?", "Wer übernimmt den Fall?"],
     llevaElCaso: ["Lleva el caso", "Case lead", "Responsable du cas", "Porta el cas", "Fallführung"],
     opera: ["Opera", "Operating", "Opère", "Opera", "Es operiert"],
-    derivar: ["Derivar en ambulancia medicalizada al centro de referencia", "Transfer by ambulance to the referral centre", "Transférer en ambulance vers le centre de référence", "Derivar en ambulància medicalitzada al centre de referència", "Mit Notarztwagen ins Referenzzentrum verlegen"]
+    derivar: ["Derivar en ambulancia medicalizada al centro de referencia", "Transfer by ambulance to the referral centre", "Transférer en ambulance vers le centre de référence", "Derivar en ambulància medicalitzada al centre de referència", "Mit Notarztwagen ins Referenzzentrum verlegen"],
+    mapaPista: ["Muévete con WASD / flechas, o clica una zona", "Move with WASD / arrow keys, or click a zone", "Déplacez-vous avec ZQSD / flèches, ou cliquez une zone", "Mou-te amb WASD / fletxes, o clica una zona", "Bewege dich mit WASD / Pfeiltasten oder klicke eine Zone an"],
+    mapaPistaTactil: ["Usa la cruceta para moverte, o toca una zona", "Use the pad to move, or tap a zone", "Utilisez la croix pour vous déplacer, ou touchez une zone", "Fes servir la creueta per moure’t, o toca una zona", "Steuerkreuz zum Bewegen oder Zone antippen"]
   };
   function t(clave) {
     const fila = C[clave];
@@ -3993,71 +4044,6 @@ Derivas a ${p.nombre}... y a la hora llama el adjunto receptor: "Y esto, no lo p
 </div>`;
   }
 
-  // src/web/mapa.ts
-  var MUNECO_CIRUJANO = `
-<svg viewBox="0 0 30 48" width="30" height="48" aria-hidden="true">
-  <g class="cuerpo-medico">
-    <path d="M8 6 a7 7 0 0 1 14 0 l-1 3 h-12 z" fill="#4f7a63"/>
-    <circle cx="15" cy="12" r="6.5" fill="#d9ab7f"/>
-    <path d="M10 15 h10 v3 h-10 z" fill="#e8e2d2"/>
-    <rect x="7" y="18" width="16" height="16" rx="4" fill="#5d8a72"/>
-    <rect x="12" y="20" width="6" height="9" rx="2" fill="#4f7a63"/>
-    <rect x="4" y="19" width="4" height="12" rx="2" fill="#5d8a72"/>
-    <rect x="22" y="19" width="4" height="12" rx="2" fill="#5d8a72"/>
-  </g>
-  <rect class="p1" x="9" y="34" width="5" height="12" rx="2.4" fill="#3e6252"/>
-  <rect class="p2" x="16" y="34" width="5" height="12" rx="2.4" fill="#3e6252"/>
-</svg>`;
-  function munecoPaciente(estabilidad, alerta) {
-    const nivel = estabilidad >= 60 ? "#97b077" : estabilidad >= 35 ? "#d9b36a" : "#c9645a";
-    const grave = estabilidad < 35;
-    return `
-<svg viewBox="0 0 64 40" class="paciente-svg${grave ? " grave" : ""}" aria-hidden="true">
-  <rect x="4" y="20" width="56" height="10" rx="3" fill="#6d6046"/>
-  <rect x="8" y="30" width="4" height="8" fill="#4a4232"/><rect x="52" y="30" width="4" height="8" fill="#4a4232"/>
-  <g class="cuerpo-paciente">
-    <circle cx="14" cy="15" r="6" fill="#d9ab7f"/>
-    <path d="M20 12 Q40 6 56 14 L56 22 Q38 16 20 20 Z" fill="#9fb4c4"/>
-    <path d="M20 20 Q38 16 56 22" stroke="#7d94a6" stroke-width="1.4" fill="none"/>
-  </g>
-  <rect x="46" y="4" width="14" height="7" rx="2" fill="#0b0f14" stroke="#3b3223"/>
-  <rect x="48" y="6" width="${Math.max(1, Math.round(estabilidad / 10))}" height="3" fill="${nivel}"/>
-  ${alerta ? '<text x="4" y="9" font-size="9" fill="#d9b36a">⚠</text>' : ""}
-</svg>`;
-  }
-  var CELADOR = `
-<svg viewBox="0 0 26 42" width="22" height="36" aria-hidden="true">
-  <circle cx="13" cy="9" r="5.5" fill="#c99b72"/>
-  <path d="M8 5 a6 6 0 0 1 10 0 l-1 2 h-8 z" fill="#8a8f94"/>
-  <rect x="6" y="15" width="14" height="14" rx="3.5" fill="#9aa1a8"/>
-  <rect x="8" y="29" width="4" height="10" rx="2" fill="#6d7378"/>
-  <rect x="14" y="29" width="4" height="10" rx="2" fill="#6d7378"/>
-</svg>`;
-  function construirMapa(espera, acciones) {
-    const boxes = espera.slice(0, 5).map((p, i) => {
-      const x = 2 + i * 16.4;
-      const nuevo = acciones.recien?.has(p.nombre) ? " recien" : "";
-      return `
-    <div class="box${nuevo}" data-boton="${i}" style="left:${x}%" title="${p.nombre}">
-      <span class="box-num">BOX ${i + 1}</span>
-      ${munecoPaciente(p.estabilidad, !!p.alerta)}
-      <span class="box-nombre">${p.nombre.split(" ")[0]}</span>
-    </div>`;
-    }).join("");
-    const planta = acciones.ronda >= 0 ? `<div class="zona zona-planta" data-boton="${acciones.ronda}"><span class="zona-icono">🛏</span><span>PLANTA</span></div>` : `<div class="zona zona-planta apagada"><span class="zona-icono">🛏</span><span>PLANTA</span></div>`;
-    const sofa = acciones.descansar >= 0 ? `<div class="zona zona-sofa" data-boton="${acciones.descansar}"><span class="zona-icono">💤</span><span>SOFÁ</span></div>` : "";
-    return `
-  ${boxes}
-  <div class="zona zona-entrada"><span class="zona-icono">🚑</span><span>ENTRADA</span></div>
-  ${planta}
-  <div class="zona zona-quirofano"><span class="zona-icono">🔪</span><span>QUIRÓFANO</span></div>
-  <div class="zona zona-control"><span class="zona-icono">🩺</span><span>CONTROL</span></div>
-  <div class="celador">${CELADOR}</div>
-  ${sofa}
-  <div class="zona zona-cafe" data-boton="${acciones.cafe}"><span class="zona-icono">☕</span><span>CAFÉ</span></div>
-  <div class="medico" style="left:47%;top:56%">${MUNECO_CIRUJANO}</div>`;
-  }
-
   // src/web/quirofano.ts
   var I = (cuerpo) => `<svg viewBox="0 0 40 40" class="icono-svg" aria-hidden="true"><g fill="none" stroke="#b9cbdc" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">${cuerpo}</g></svg>`;
   var ICONOS = {
@@ -4101,6 +4087,115 @@ Derivas a ${p.nombre}... y a la hora llama el adjunto receptor: "Y esto, no lo p
       if (re.test(textoOpcion)) return ICONOS[icono];
     }
     return ICONOS["bisturi"];
+  }
+
+  // src/web/mapa.ts
+  var MUNECO_CIRUJANO = `
+<svg viewBox="0 0 30 48" width="30" height="48" aria-hidden="true">
+  <g class="cuerpo-medico">
+    <path d="M8 6 a7 7 0 0 1 14 0 l-1 3 h-12 z" fill="#4f7a63"/>
+    <circle cx="15" cy="12" r="6.5" fill="#d9ab7f"/>
+    <path d="M10 15 h10 v3 h-10 z" fill="#e8e2d2"/>
+    <rect x="7" y="18" width="16" height="16" rx="4" fill="#5d8a72"/>
+    <rect x="12" y="20" width="6" height="9" rx="2" fill="#4f7a63"/>
+    <rect x="4" y="19" width="4" height="12" rx="2" fill="#5d8a72"/>
+    <rect x="22" y="19" width="4" height="12" rx="2" fill="#5d8a72"/>
+  </g>
+  <rect class="p1" x="9" y="34" width="5" height="12" rx="2.4" fill="#3e6252"/>
+  <rect class="p2" x="16" y="34" width="5" height="12" rx="2.4" fill="#3e6252"/>
+</svg>`;
+  function munecoPaciente(estabilidad, alerta) {
+    const nivel = estabilidad >= 60 ? "#97b077" : estabilidad >= 35 ? "#d9b36a" : "#c9645a";
+    const grave = estabilidad < 35;
+    return `
+<svg viewBox="0 0 64 40" class="paciente-svg${grave ? " grave" : ""}" aria-hidden="true">
+  <rect x="4" y="20" width="56" height="10" rx="3" fill="#6d6046"/>
+  <rect x="8" y="30" width="4" height="8" fill="#4a4232"/><rect x="52" y="30" width="4" height="8" fill="#4a4232"/>
+  <g class="cuerpo-paciente">
+    <circle cx="14" cy="15" r="6" fill="#d9ab7f"/>
+    <path d="M20 12 Q40 6 56 14 L56 22 Q38 16 20 20 Z" fill="#9fb4c4"/>
+    <path d="M20 20 Q38 16 56 22" stroke="#7d94a6" stroke-width="1.4" fill="none"/>
+  </g>
+  <rect x="46" y="4" width="14" height="7" rx="2" fill="#0b0f14" stroke="#3b3223"/>
+  <rect x="48" y="6" width="${Math.max(1, Math.round(estabilidad / 10))}" height="3" fill="${nivel}"/>
+  ${alerta ? '<text x="4" y="9" font-size="9" fill="#d9b36a">⚠</text>' : ""}
+</svg>`;
+  }
+  var CELADOR = `
+<svg viewBox="0 0 26 42" width="22" height="36" aria-hidden="true">
+  <circle cx="13" cy="9" r="5.5" fill="#c99b72"/>
+  <path d="M8 5 a6 6 0 0 1 10 0 l-1 2 h-8 z" fill="#8a8f94"/>
+  <rect x="6" y="15" width="14" height="14" rx="3.5" fill="#9aa1a8"/>
+  <rect x="8" y="29" width="4" height="10" rx="2" fill="#6d7378"/>
+  <rect x="14" y="29" width="4" height="10" rx="2" fill="#6d7378"/>
+</svg>`;
+  function construirMapa(espera, acciones) {
+    let escolta = "";
+    const boxes = espera.slice(0, 5).map((p, i) => {
+      const x = 2 + i * 16.4;
+      const nuevo = acciones.recien?.has(p.nombre) ? " recien" : "";
+      if (nuevo && !escolta) {
+        escolta = `<div class="celador escolta" style="--cx:${x + 4.5}%">${CELADOR}</div>`;
+      }
+      return `
+    <div class="box${nuevo}" data-boton="${i}" style="left:${x}%" title="${p.nombre}">
+      <span class="box-num">BOX ${i + 1}</span>
+      ${munecoPaciente(p.estabilidad, !!p.alerta)}
+      <span class="box-nombre">${p.nombre.split(" ")[0]}</span>
+    </div>`;
+    }).join("");
+    const planta = acciones.ronda >= 0 ? `<div class="zona zona-planta" data-boton="${acciones.ronda}"><span class="zona-icono">🛏</span><span>PLANTA</span></div>` : `<div class="zona zona-planta apagada"><span class="zona-icono">🛏</span><span>PLANTA</span></div>`;
+    const sofa = acciones.descansar >= 0 ? `<div class="zona zona-sofa" data-boton="${acciones.descansar}"><span class="zona-icono">💤</span><span>SOFÁ</span></div>` : "";
+    return `
+  ${boxes}
+  <div class="zona zona-entrada"><span class="zona-icono">🚑</span><span>ENTRADA</span></div>
+  ${planta}
+  <div class="zona zona-quirofano"><span class="zona-icono">🔪</span><span>QUIRÓFANO</span></div>
+  <div class="zona zona-control"><span class="zona-icono">🩺</span><span>CONTROL</span></div>
+  ${escolta || `<div class="celador">${CELADOR}</div>`}
+  ${sofa}
+  <div class="zona zona-cafe" data-boton="${acciones.cafe}"><span class="zona-icono">☕</span><span>CAFÉ</span></div>
+  <div class="medico" style="left:47%;top:56%">${MUNECO_CIRUJANO}</div>`;
+  }
+  var MESA_QUIROFANO = `
+<svg viewBox="0 0 160 70" aria-hidden="true">
+  <ellipse cx="80" cy="30" rx="64" ry="22" fill="#f5edc9" opacity=".12"/>
+  <ellipse cx="80" cy="30" rx="44" ry="14" fill="#f5edc9" opacity=".1"/>
+  <rect x="22" y="18" width="116" height="28" rx="9" fill="#2b3f3a" stroke="#1c2b27" stroke-width="2"/>
+  <rect x="30" y="22" width="100" height="20" rx="7" fill="#3c5a52"/>
+  <circle cx="38" cy="32" r="7" fill="#d9ab7f"/>
+  <path d="M33 27 a7 7 0 0 1 10 0 l-1 2 h-8 z" fill="#5d8a72"/>
+  <ellipse cx="88" cy="32" rx="13" ry="7" fill="#c96b66" stroke="#8e4640" stroke-width="1.4"/>
+  <ellipse cx="88" cy="32" rx="6" ry="3" fill="#a44743"/>
+  <path d="M74 26 l-5 -4 M102 26 l5 -4" stroke="#cfd8e2" stroke-width="2"/>
+  <rect x="20" y="46" width="8" height="12" fill="#1c2b27"/><rect x="132" y="46" width="8" height="12" fill="#1c2b27"/>
+</svg>`;
+  var TORRE_ANESTESIA = `
+<svg viewBox="0 0 44 60" aria-hidden="true">
+  <rect x="6" y="4" width="34" height="24" rx="3" fill="#0b1420" stroke="#33465f"/>
+  <path class="traza-anestesia" d="M9 16 h7 l3 -8 3 14 3 -9 3 5 h11" stroke="#69c98f" stroke-width="1.8" fill="none"/>
+  <rect x="10" y="30" width="26" height="22" rx="2" fill="#25303c" stroke="#33465f"/>
+  <circle cx="16" cy="36" r="2" fill="#d9b36a"/><circle cx="24" cy="36" r="2" fill="#69c98f"/>
+  <path d="M36 30 q8 6 4 16" stroke="#7d94a6" stroke-width="2" fill="none"/>
+</svg>`;
+  function construirQuirofano(etiquetas) {
+    const n = Math.max(1, etiquetas.length);
+    const hueco = 96 / n;
+    const ancho = Math.min(23, hueco - 1);
+    const bandejas = etiquetas.map((texto, i) => {
+      const x = 2 + i * hueco + (hueco - 1 - ancho) / 2;
+      const corto = texto.length > 30 ? `${texto.slice(0, 28)}…` : texto;
+      return `
+    <div class="zona bandeja" data-boton="${i}" style="left:${x}%;width:${ancho}%" title="${texto}">
+      <span class="bandeja-icono">${iconoHerramienta(texto)}</span>
+      <span class="bandeja-texto">${corto}</span>
+    </div>`;
+    }).join("");
+    return `
+  <div class="mesa-quirofano">${MESA_QUIROFANO}</div>
+  <div class="anestesia">${TORRE_ANESTESIA}</div>
+  ${bandejas}
+  <div class="medico" style="left:47%;top:6%">${MUNECO_CIRUJANO}</div>`;
   }
 
   // src/web/retrato.ts
@@ -4592,6 +4687,9 @@ Derivas a ${p.nombre}... y a la hora llama el adjunto receptor: "Y esto, no lo p
         if (titulo === t("salaCalma") || titulo.startsWith(t("salaTitulo").slice(0, 12))) {
           this.montarMapa(botones, visibles.map((op) => sinAnsi(op.etiqueta)));
         }
+        if (visual) {
+          this.montarQuirofano(botones, visibles.map((op) => sinAnsi(op.etiqueta)));
+        }
         this.teclado = (ev) => {
           const n = Number.parseInt(ev.key, 10);
           if (Number.isInteger(n) && n >= 1 && n <= Math.min(9, botones.length)) {
@@ -4695,11 +4793,30 @@ Derivas a ${p.nombre}... y a la hora llama el adjunto receptor: "Y esto, no lo p
         ronda: buscarIdx(t("ronda")),
         recien
       });
+      const cabecera = this.menu.querySelector(".menu-titulo");
+      cabecera?.after(mapa, this.crearPista());
+      this.conectarZonas(mapa, botones);
+    }
+    /** El plano del quirófano: mesa, anestesia y bandejas de instrumental pisables. */
+    montarQuirofano(botones, etiquetas) {
+      const mapa = document.createElement("div");
+      mapa.id = "mapa";
+      mapa.classList.add("plano-quirofano");
+      mapa.innerHTML = construirQuirofano(etiquetas);
+      const cabecera = this.menu.querySelector(".menu-titulo");
+      cabecera?.after(mapa, this.crearPista());
+      this.conectarZonas(mapa, botones);
+    }
+    /** La línea de ayuda bajo el plano, según haya teclado o pantalla táctil. */
+    crearPista() {
       const pista = document.createElement("div");
       pista.className = "mapa-pista";
-      pista.textContent = "🕹 muévete con WASD / flechas, o clica una zona";
-      const cabecera = this.menu.querySelector(".menu-titulo");
-      cabecera?.after(mapa, pista);
+      const tactil = matchMedia("(pointer: coarse)").matches;
+      pista.textContent = `${tactil ? "👆" : "🕹"} ${t(tactil ? "mapaPistaTactil" : "mapaPista")}`;
+      return pista;
+    }
+    /** Cablea un plano: clic = caminar hasta la zona; teclas/cruceta = ir a pie. */
+    conectarZonas(mapa, botones) {
       const avatar = mapa.querySelector(".medico");
       mapa.querySelectorAll("[data-boton]").forEach((zona) => {
         const idx = Number(zona.dataset.boton);
@@ -4733,10 +4850,12 @@ Derivas a ${p.nombre}... y a la hora llama el adjunto receptor: "Y esto, no lo p
       const DIRECCIONES = {
         arrowup: [0, -1],
         w: [0, -1],
+        z: [0, -1],
         arrowdown: [0, 1],
         s: [0, 1],
         arrowleft: [-1, 0],
         a: [-1, 0],
+        q: [-1, 0],
         arrowright: [1, 0],
         d: [1, 0]
       };
@@ -4803,12 +4922,30 @@ Derivas a ${p.nombre}... y a la hora llama el adjunto receptor: "Y esto, no lo p
       };
       document.addEventListener("keydown", alBajar);
       document.addEventListener("keyup", alSubir);
+      const pad = document.createElement("div");
+      pad.className = "mapa-pad";
+      for (const [tecla, flecha] of [["arrowleft", "◀"], ["arrowup", "▲"], ["arrowdown", "▼"], ["arrowright", "▶"]]) {
+        const b = document.createElement("button");
+        b.type = "button";
+        b.textContent = flecha;
+        b.addEventListener("pointerdown", (ev) => {
+          ev.preventDefault();
+          pulsadas.add(tecla);
+          if (rafId === null) rafId = requestAnimationFrame(mover);
+        });
+        for (const fin of ["pointerup", "pointercancel", "pointerleave"]) {
+          b.addEventListener(fin, () => pulsadas.delete(tecla));
+        }
+        pad.appendChild(b);
+      }
+      mapa.after(pad);
       this.limpiarMapa = () => {
         resuelto = true;
         document.removeEventListener("keydown", alBajar);
         document.removeEventListener("keyup", alSubir);
         if (rafId !== null) cancelAnimationFrame(rafId);
         rafId = null;
+        pad.remove();
       };
     }
     /** Expediente persistente del cirujano (XP, rango, mejor guardia). */

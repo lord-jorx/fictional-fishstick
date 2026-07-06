@@ -5,6 +5,7 @@
  * pacientes yacen en sus camillas retorciéndose según lo mal que estén.
  */
 import type { ComandaPaciente } from '../core/io.js';
+import { iconoHerramienta } from './quirofano.js';
 
 /** El cirujano de pijama y gorro, de una pieza, listo para andar. */
 export const MUNECO_CIRUJANO = `
@@ -61,9 +62,15 @@ const CELADOR = `
 
 /** El plano completo: boxes arriba, control/planta/café abajo. */
 export function construirMapa(espera: ComandaPaciente[], acciones: AccionesMapa): string {
+  let escolta = '';
   const boxes = espera.slice(0, 5).map((p, i) => {
     const x = 2 + i * 16.4;
     const nuevo = acciones.recien?.has(p.nombre) ? ' recien' : '';
+    // El primer recién llegado viene escoltado: el celador empuja la
+    // camilla desde la ambulancia hasta el box y se vuelve a lo suyo.
+    if (nuevo && !escolta) {
+      escolta = `<div class="celador escolta" style="--cx:${x + 4.5}%">${CELADOR}</div>`;
+    }
     return `
     <div class="box${nuevo}" data-boton="${i}" style="left:${x}%" title="${p.nombre}">
       <span class="box-num">BOX ${i + 1}</span>
@@ -85,8 +92,59 @@ export function construirMapa(espera: ComandaPaciente[], acciones: AccionesMapa)
   ${planta}
   <div class="zona zona-quirofano"><span class="zona-icono">🔪</span><span>QUIRÓFANO</span></div>
   <div class="zona zona-control"><span class="zona-icono">🩺</span><span>CONTROL</span></div>
-  <div class="celador">${CELADOR}</div>
+  ${escolta || `<div class="celador">${CELADOR}</div>`}
   ${sofa}
   <div class="zona zona-cafe" data-boton="${acciones.cafe}"><span class="zona-icono">☕</span><span>CAFÉ</span></div>
   <div class="medico" style="left:47%;top:56%">${MUNECO_CIRUJANO}</div>`;
+}
+
+/** Mesa de quirófano vista desde arriba: paciente entallado, campo abierto y lámpara. */
+const MESA_QUIROFANO = `
+<svg viewBox="0 0 160 70" aria-hidden="true">
+  <ellipse cx="80" cy="30" rx="64" ry="22" fill="#f5edc9" opacity=".12"/>
+  <ellipse cx="80" cy="30" rx="44" ry="14" fill="#f5edc9" opacity=".1"/>
+  <rect x="22" y="18" width="116" height="28" rx="9" fill="#2b3f3a" stroke="#1c2b27" stroke-width="2"/>
+  <rect x="30" y="22" width="100" height="20" rx="7" fill="#3c5a52"/>
+  <circle cx="38" cy="32" r="7" fill="#d9ab7f"/>
+  <path d="M33 27 a7 7 0 0 1 10 0 l-1 2 h-8 z" fill="#5d8a72"/>
+  <ellipse cx="88" cy="32" rx="13" ry="7" fill="#c96b66" stroke="#8e4640" stroke-width="1.4"/>
+  <ellipse cx="88" cy="32" rx="6" ry="3" fill="#a44743"/>
+  <path d="M74 26 l-5 -4 M102 26 l5 -4" stroke="#cfd8e2" stroke-width="2"/>
+  <rect x="20" y="46" width="8" height="12" fill="#1c2b27"/><rect x="132" y="46" width="8" height="12" fill="#1c2b27"/>
+</svg>`;
+
+/** Torre de anestesia con su traza latiendo. */
+const TORRE_ANESTESIA = `
+<svg viewBox="0 0 44 60" aria-hidden="true">
+  <rect x="6" y="4" width="34" height="24" rx="3" fill="#0b1420" stroke="#33465f"/>
+  <path class="traza-anestesia" d="M9 16 h7 l3 -8 3 14 3 -9 3 5 h11" stroke="#69c98f" stroke-width="1.8" fill="none"/>
+  <rect x="10" y="30" width="26" height="22" rx="2" fill="#25303c" stroke="#33465f"/>
+  <circle cx="16" cy="36" r="2" fill="#d9b36a"/><circle cx="24" cy="36" r="2" fill="#69c98f"/>
+  <path d="M36 30 q8 6 4 16" stroke="#7d94a6" stroke-width="2" fill="none"/>
+</svg>`;
+
+/**
+ * El plano del quirófano: la mesa en el centro y el instrumental repartido
+ * en bandejas. Cada bandeja es una opción del menú de técnica: caminas (o
+ * clicas) hasta ella para decidir cómo sigues la cirugía.
+ */
+export function construirQuirofano(etiquetas: string[]): string {
+  const n = Math.max(1, etiquetas.length);
+  const hueco = 96 / n;
+  const ancho = Math.min(23, hueco - 1);
+  const bandejas = etiquetas.map((texto, i) => {
+    const x = 2 + i * hueco + (hueco - 1 - ancho) / 2;
+    const corto = texto.length > 30 ? `${texto.slice(0, 28)}…` : texto;
+    return `
+    <div class="zona bandeja" data-boton="${i}" style="left:${x}%;width:${ancho}%" title="${texto}">
+      <span class="bandeja-icono">${iconoHerramienta(texto)}</span>
+      <span class="bandeja-texto">${corto}</span>
+    </div>`;
+  }).join('');
+
+  return `
+  <div class="mesa-quirofano">${MESA_QUIROFANO}</div>
+  <div class="anestesia">${TORRE_ANESTESIA}</div>
+  ${bandejas}
+  <div class="medico" style="left:47%;top:6%">${MUNECO_CIRUJANO}</div>`;
 }
