@@ -94,6 +94,28 @@ entallado, torre de anestesia con su traza latiendo— rodeado de **bandejas
 de instrumental**: ve andando hasta la bandeja de la técnica que quieras
 (o clícala) para ejecutarla.
 
+## 🚨 El teléfono rojo: incidente de múltiples víctimas
+
+Algunas noches (y en guardia negra, todas), el 061 llama de verdad:
+**atropello múltiple a la salida de un concierto**, ambulancias en cascada
+y tú en la puerta con la tarjeta de etiquetas en la mano. A cada víctima,
+con sus constantes y una mirada, le cuelgas la suya: **ROJO** inmediato,
+**AMARILLO** diferido, **VERDE** herido que camina, **NEGRO** expectante.
+Infratriar le cuesta terreno a la víctima; sobretriar quema recursos que
+otro necesitaba. Y la etiqueta negra bien puesta es medicina — mal puesta,
+una sentencia que te persigue el resto de la guardia. El parte final
+recoge tu triaje de catástrofe, etiqueta a etiqueta.
+
+## 😤 La sala de espera existe, y se cansa
+
+Los pacientes no esperan en el limbo: esperan en sillas. A partir de las
+dos horas, los leves empiezan a **marcharse sin ser vistos** — y admisión
+lo apunta todo para la encuesta de satisfacción. Si el que se fue llevaba
+dentro un abdomen quirúrgico, **volverá en ambulancia y volverá peor**.
+Cuando la sala se calienta, la **supervisora de control** te lo hace saber
+desde el mostrador, con ese tono que solo tienen las supervisoras de
+urgencias a las cuatro de la mañana.
+
 ## 🕵️ El interrogatorio clínico
 
 Cada paciente **declara algo** al llegar («¿Alcohol? Una copita en las

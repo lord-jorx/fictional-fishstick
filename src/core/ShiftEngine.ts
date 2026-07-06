@@ -12,6 +12,7 @@ import { cian, gris, negrita } from '../ui/ansi.js';
 import { lineaSeparadora } from '../ui/hud.js';
 import type { IO } from './io.js';
 import { HOSPITALES } from '../data/hospitales.js';
+import { patologiaPorId } from '../data/pathologies.js';
 import { fijarIdioma, IDIOMAS, t, type Idioma } from '../i18n.js';
 import type { Rasgos } from './io.js';
 import { crearRng, GameContext, type MiembroEquipo } from './GameContext.js';
@@ -132,6 +133,23 @@ export class ShiftEngine {
     const atipicidad = this.ctx.modoResidente ? 0.5 : this.ctx.modoNegra ? 2 : 1;
     const fabrica = new PatientFactory(this.rng, atipicidad, (this.ctx.modoNegra ? 2 : 0) + perfil.pacientesExtra);
     this.ctx.programarLlegadas(fabrica.generarLlegadasDeGuardia());
+
+    // ── El incidente de múltiples víctimas: algunas noches, el teléfono
+    // rojo suena de verdad (en guardia negra, siempre) ──
+    if (this.ctx.modoNegra || this.rng() < 0.45) {
+      const minutoImv = 240 + Math.floor(this.rng() * 600);
+      const pool = ['trauma', 'trauma', 'trauma', 'neumotorax', 'tce'];
+      const cuantas = 4 + Math.floor(this.rng() * 3);
+      const victimas = Array.from({ length: cuantas }, () => {
+        const patologia = patologiaPorId(pool[Math.floor(this.rng() * pool.length)]!)!;
+        return fabrica.crearPaciente(minutoImv, patologia);
+      });
+      // Que el triaje tenga textura: un agónico (etiqueta negra) y un
+      // herido leve que llega andando (etiqueta verde).
+      victimas[0]!.estabilidad = 8 + Math.floor(this.rng() * 8);
+      victimas[victimas.length - 1]!.estabilidad = 72 + Math.floor(this.rng() * 14);
+      this.ctx.programarImv(minutoImv, victimas);
+    }
 
     // El otro equipo también opera: franjas en las que roban quirófano.
     const inicio1 = 180 + Math.floor(this.rng() * 300);

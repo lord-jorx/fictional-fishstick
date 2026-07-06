@@ -132,7 +132,11 @@ export type EstadoPaciente =
   | 'operado'     // intervenido con éxito, en planta
   | 'rea'         // intervenido, ocupa cama de reanimación
   | 'derivado'    // trasladado en ambulancia al centro de referencia
+  | 'fugado'      // se marchó de la sala de espera sin ser visto
   | 'exitus';     // fallecido
+
+/** Etiqueta de triaje de catástrofe (incidente de múltiples víctimas). */
+export type EtiquetaTriaje = 'rojo' | 'amarillo' | 'verde' | 'negro';
 
 export interface Paciente {
   id: number;
@@ -180,6 +184,10 @@ export interface Paciente {
   reingresado: boolean;
   /** true si el equipo de planta ya ha avisado de que empeora. */
   alertaPlanta: boolean;
+  /** Etiqueta asignada en el triaje de catástrofe (si llegó en un IMV). */
+  etiquetaTriaje?: EtiquetaTriaje;
+  /** true si se marchó de la sala sin ser visto (y puede volver peor). */
+  seFue?: boolean;
 }
 
 export interface Cirujano {
@@ -209,4 +217,8 @@ export interface Estadisticas {
   complicaciones: number;
   derivacionesCorrectas: number;
   derivacionesErroneas: number;
+  /** Pacientes que se hartaron de esperar y se fueron sin ser vistos. */
+  seFueronSinSerVistos: number;
+  etiquetasImvCorrectas: number;
+  etiquetasImvTotales: number;
 }

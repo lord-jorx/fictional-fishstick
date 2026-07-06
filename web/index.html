@@ -1168,6 +1168,7 @@
       pruebaDiana: "tc",
       hallazgoDiana: "TC: neumoperitoneo evidente subdiafragmático y periportal, líquido libre y engrosamiento de la región antropilórica. Perforación de víscera hueca: ulcus péptico perforado.",
       hallazgosParciales: {
+        rxtorax: "Rx tórax en bipedestación: media luna de aire libre subdiafragmático bilateral. Víscera hueca perforada; el TC precisará el origen.",
         analitica: "Leucocitosis 15.600 con neutrofilia. Amilasa discretamente elevada (el líquido gástrico libre la sube).",
         eco: "Ecografía: líquido libre perihepático. El gas dificulta el resto del estudio."
       },
@@ -1366,6 +1367,7 @@
       pruebaDiana: "ecofast",
       hallazgoDiana: "Eco torácica a pie de cama: ausencia de deslizamiento pleural derecho con punto pulmonar. Neumotórax a tensión: esto se drena YA, sin esperar a más imagen.",
       hallazgosParciales: {
+        rxtorax: "Rx tórax: pulmón derecho colapsado con desviación mediastínica contralateral. Si has esperado a la placa para creértelo, has tenido suerte.",
         analitica: "Pedir analítica a un neumotórax a tensión es una forma educada de perder al paciente.",
         tc: "El TC confirmaría... si el paciente llegara vivo al escáner. La clínica ya te lo ha dicho todo.",
         ecg: "ECG: taquicardia sinusal con bajos voltajes derechos. Compatible, pero la clínica manda."
@@ -1442,6 +1444,8 @@
       }
     },
     // ──────────────────────────────────────────────────────────────
+    // Conservadoras: ingresar (o derivar a tiempo) también es tratar.
+    // ──────────────────────────────────────────────────────────────
     {
       id: "tce",
       nombre: "TCE con hematoma epidural",
@@ -1456,10 +1460,11 @@
         exploracion: "Somnoliento, Glasgow 13 y bajando. Pupila derecha perezosa. Hematoma en cuero cabelludo temporal derecho. El intervalo lúcido de los libros, delante de ti.",
         constantes: "TA 158/92, FC 52, Sat 97%, Tª 36,6 °C"
       },
-      pruebaDiana: "tc",
+      pruebaDiana: "tccraneo",
       hallazgoDiana: "TC craneal: colección hiperdensa biconvexa temporal derecha con efecto masa y desviación de línea media. Hematoma epidural: esto es neurocirugía URGENTE.",
       hallazgosParciales: {
         analitica: "Coagulación normal. La analítica no descarta nada dentro del cráneo.",
+        tc: "TC abdominal anodino. El problema está un metro más arriba: pide el craneal.",
         ecg: "Bradicardia sinusal. Con esa TA en ascenso: reflejo de Cushing en marcha."
       },
       deterioroPorHora: 14,
@@ -1520,9 +1525,6 @@
       manejoCorrecto: "conservador",
       notaDocente: "La cetoacidosis diabética produce dolor abdominal intenso que imita un abdomen agudo — y operarla puede ser mortal. Kussmaul + aliento cetósico + glucemia disparada: fluidos, insulina y potasio. El bisturí, enfundado."
     },
-    // ──────────────────────────────────────────────────────────────
-    // Casos de manejo conservador: ingresar también es tratar.
-    // ──────────────────────────────────────────────────────────────
     {
       id: "pancreatitis",
       nombre: "Pancreatitis aguda litiásica",
@@ -1549,7 +1551,7 @@
       notaDocente: "La pancreatitis aguda NO se opera en fase aguda: el tratamiento es ingreso, fluidoterapia, analgesia y nutrición precoz. La colecistectomía se hace diferida en el mismo ingreso una vez resuelto el cuadro. Operar el páncreas inflamado de urgencia es un error clásico."
     },
     // ──────────────────────────────────────────────────────────────
-    // Distractores no quirúrgicos: dar el alta también es medicina.
+    // De alta: distractores benignos — dar el alta también es medicina.
     // ──────────────────────────────────────────────────────────────
     {
       id: "colico_renal",
@@ -1566,7 +1568,7 @@
         constantes: "TA 135/85, FC 95, Sat 99%, Tª 36,8 °C"
       },
       pruebaDiana: "tc",
-      hallazgoDiana: "TC sin contraste: litiasis de 4 mm en uréter distal derecho con ectasia leve de la vía. Sin signos de complicación. Cólico renoureteral no complicado.",
+      hallazgoDiana: "TC abdominal (protocolo litiasis, baja dosis): litiasis de 4 mm en uréter distal derecho con ectasia leve de la vía. Sin signos de complicación. Cólico renoureteral no complicado.",
       hallazgosParciales: {
         analitica: "Función renal normal, sin leucocitosis. Microhematuria en el sedimento: pista clave.",
         eco: "Ecografía: discreta ectasia pielocalicial derecha. No se visualiza la litiasis."
@@ -1627,6 +1629,9 @@
       notaDocente: "El cólico biliar sin signos inflamatorios se trata con analgesia y alta, remitiendo al paciente a consultas para colecistectomía programada. Operarlo de urgencia esta noche sería sobretratar."
     }
   ];
+  function patologiaPorId(id) {
+    return PATOLOGIAS.find((p) => p.id === id);
+  }
 
   // src/data/variantes.ts
   var VARIANTES = {
@@ -2246,20 +2251,24 @@
 
   // src/data/pruebas.ts
   var PRUEBAS = {
-    analitica: { id: "analitica", nombre: "Analítica completa (hemograma, PCR, lactato)", duracionMin: 45 },
-    eco: { id: "eco", nombre: "Ecografía abdominal", duracionMin: 30 },
-    tc: { id: "tc", nombre: "TC abdominal con contraste", duracionMin: 60 },
-    angiotc: { id: "angiotc", nombre: "Angio-TC abdominal", duracionMin: 75 },
+    ecg: { id: "ecg", nombre: "Electrocardiograma", duracionMin: 10 },
     ecofast: { id: "ecofast", nombre: "Eco-FAST", duracionMin: 10 },
-    ecg: { id: "ecg", nombre: "Electrocardiograma", duracionMin: 10 }
+    rxtorax: { id: "rxtorax", nombre: "Radiografía de tórax (bipedestación)", duracionMin: 15 },
+    eco: { id: "eco", nombre: "Ecografía abdominal", duracionMin: 30 },
+    tccraneo: { id: "tccraneo", nombre: "TC craneal sin contraste", duracionMin: 35 },
+    analitica: { id: "analitica", nombre: "Analítica completa (hemograma, PCR, lactato)", duracionMin: 45 },
+    tc: { id: "tc", nombre: "TC abdominal con contraste", duracionMin: 60 },
+    angiotc: { id: "angiotc", nombre: "Angio-TC abdominal", duracionMin: 75 }
   };
   var INFORME_INESPECIFICO = {
-    analitica: "Analítica sin alteraciones relevantes.",
-    eco: "Ecografía sin hallazgos significativos. Gas interpuesto limita el estudio.",
-    tc: "TC sin hallazgos agudos relevantes.",
-    angiotc: "Angio-TC: ejes vasculares permeables, sin otros hallazgos.",
+    ecg: "ECG: ritmo sinusal sin alteraciones agudas de la repolarización.",
     ecofast: "Eco-FAST negativa: no se objetiva líquido libre.",
-    ecg: "ECG: ritmo sinusal sin alteraciones agudas de la repolarización."
+    rxtorax: "Rx tórax: sin neumoperitoneo, sin condensaciones ni derrame. Índice cardiotorácico normal.",
+    eco: "Ecografía sin hallazgos significativos. Gas interpuesto limita el estudio.",
+    tccraneo: "TC craneal: sin sangrado intra ni extraaxial, sin efecto masa. Línea media centrada.",
+    analitica: "Analítica sin alteraciones relevantes.",
+    tc: "TC sin hallazgos agudos relevantes.",
+    angiotc: "Angio-TC: ejes vasculares permeables, sin otros hallazgos."
   };
 
   // src/engine/calificacion.ts
@@ -2440,6 +2449,13 @@ ${negrita("Balance:")}`);
       if (s.derivacionesCorrectas + s.derivacionesErroneas > 0) {
         ctx.io.escribir(`  Derivaciones:             ${verde(String(s.derivacionesCorrectas))} con criterio, ${s.derivacionesErroneas === 0 ? verde("0") : rojo(String(s.derivacionesErroneas))} innecesarias`);
       }
+      if (s.etiquetasImvTotales > 0) {
+        const aciertos = s.etiquetasImvCorrectas;
+        ctx.io.escribir(`  Triaje de catástrofe:     ${aciertos === s.etiquetasImvTotales ? verde(`${aciertos}/${s.etiquetasImvTotales}`) : amarillo(`${aciertos}/${s.etiquetasImvTotales}`)} etiquetas correctas`);
+      }
+      if (s.seFueronSinSerVistos > 0) {
+        ctx.io.escribir(`  Se fueron sin ser vistos: ${rojo(String(s.seFueronSinSerVistos))} ${gris("(admisión ya te ha reenviado la queja)")}`);
+      }
       ctx.io.escribir(`  Éxitus:                   ${s.exitus === 0 ? verde("0") : rojo(String(s.exitus))}`);
       if (ctx.equipo.length > 1) {
         ctx.io.escribir(`
@@ -2489,6 +2505,8 @@ ${negrita("Puntuación final:")} ${negrita(puntos >= 0 ? verde(String(puntos)) :
           return cian("derivado al centro de referencia");
         case "ingresado":
           return amarillo("sigue ingresado (te lo dejas al de la mañana)");
+        case "fugado":
+          return amarillo("se fue sin ser visto, harto de esperar");
         case "espera":
           return rojo("¡SIGUE ESPERANDO EN URGENCIAS!");
       }
@@ -2504,7 +2522,7 @@ ${negrita("Puntuación final:")} ${negrita(puntos >= 0 ? verde(String(puntos)) :
         (p) => (p.estado === "operado" || p.estado === "rea") && p.patologia.quirurgica
       ).length;
       const abandonados = ctx.historial.filter((p) => p.estado === "espera").length;
-      return cirugiasConExito * 120 + s.cirugiasPerfectas * 40 + s.altasCorrectas * 60 + s.derivacionesCorrectas * 60 - s.derivacionesErroneas * 40 + s.ingresosCorrectos * 30 - s.altasErroneas * 50 - s.ingresosErroneos * 30 - s.complicaciones * 40 - s.exitus * 200 - abandonados * 60;
+      return cirugiasConExito * 120 + s.cirugiasPerfectas * 40 + s.altasCorrectas * 60 + s.derivacionesCorrectas * 60 - s.derivacionesErroneas * 40 + s.ingresosCorrectos * 30 - s.altasErroneas * 50 - s.ingresosErroneos * 30 - s.complicaciones * 40 + s.etiquetasImvCorrectas * 25 - (s.etiquetasImvTotales - s.etiquetasImvCorrectas) * 30 - s.seFueronSinSerVistos * 40 - s.exitus * 200 - abandonados * 60;
     }
     veredicto(puntos) {
       if (puntos >= 700)
@@ -2844,6 +2862,7 @@ ${cian("🩺 El adjunto, con voz de dormido:")} ${gris(`«Yo lo tengo claro: ${c
     }
     async run(ctx) {
       if (ctx.guardiaTerminada) return new SummaryState();
+      if (ctx.imvPendiente) return this.triajeDeCatastrofe(ctx);
       ctx.io.escena?.("triaje", { tablero: ctx.tablero() });
       pintarHUD(ctx);
       const accion = await this.elegirAccionDeSala(ctx);
@@ -2889,6 +2908,85 @@ ${cian("🩺 El adjunto, con voz de dormido:")} ${gris(`«Yo lo tengo claro: ${c
       const titulo = ctx.salaEspera.length > 0 ? `${t("salaTitulo")} (${ctx.salaEspera.length})` : t("salaCalma");
       return ctx.io.elegir(titulo, opciones);
     }
+    // ────────────────────────────────────────────────────────────
+    /**
+     * Triaje de catástrofe: las víctimas del IMV esperan en la puerta y a
+     * cada una hay que colgarle su etiqueta con lo puesto — constantes, una
+     * mirada y oficio. Etiquetar de menos cuesta estabilidad; la etiqueta
+     * negra bien puesta es medicina; mal puesta, una sentencia.
+     */
+    async triajeDeCatastrofe(ctx) {
+      const victimas = ctx.imvPendiente;
+      ctx.imvPendiente = null;
+      ctx.io.escribir("\n" + lineaSeparadora());
+      ctx.io.escribir(negrita(rojo("  🚨 INCIDENTE DE MÚLTIPLES VÍCTIMAS — TRIAJE EN LA PUERTA")));
+      ctx.io.escribir(lineaSeparadora());
+      ctx.io.escribir(
+        gris("  Las sirenas llegan escalonadas. Sales a la puerta de ambulancias con la\n") + gris("  tarjeta de etiquetas en la mano: ROJO inmediato, AMARILLO diferido,\n") + gris("  VERDE puede esperar, NEGRO expectante. Nadie más va a decidirlo por ti.")
+      );
+      await ctx.io.pausa("Pulsa Intro para salir a la puerta de ambulancias...");
+      for (const v of victimas) {
+        const correcta = this.etiquetaQueTocaba(v);
+        const elegida = await ctx.io.elegir(
+          `Etiqueta para ${v.nombre}, ${v.edad} años — ${v.constantes}`,
+          [
+            { etiqueta: rojo("ROJO — inmediato"), detalle: "no puede esperar ni un minuto", valor: "rojo" },
+            { etiqueta: amarillo("AMARILLO — diferido"), detalle: "grave, pero aguanta un rato", valor: "amarillo" },
+            { etiqueta: verde("VERDE — leve"), detalle: "herido que camina", valor: "verde" },
+            { etiqueta: gris("NEGRO — expectante"), detalle: "irrecuperable: confort y dignidad", valor: "negro" }
+          ]
+        );
+        v.etiquetaTriaje = elegida;
+        ctx.stats.etiquetasImvTotales++;
+        this.mostrarAvisos(ctx, ctx.avanzarTiempo(2));
+        ctx.registrarPaciente(v);
+        if (elegida === "negro") {
+          v.estado = "exitus";
+          v.estabilidad = 0;
+          if (correcta === "negro") {
+            ctx.stats.etiquetasImvCorrectas++;
+            ctx.io.escribir(
+              gris(`  Le coges la mano a ${v.nombre} mientras queda alguien libre para acompañarle. Era la decisión correcta, y aun así pesa.`)
+            );
+            ctx.cirujano.estres = Math.min(100, ctx.cirujano.estres + 6);
+          } else {
+            ctx.stats.exitus++;
+            ctx.cirujano.estres = Math.min(100, ctx.cirujano.estres + 18);
+            ctx.io.escribir(
+              rojo(`  ✝ ${v.nombre} era recuperable y lo has dejado en expectante. Fallece en la puerta. Esa etiqueta te va a durar años.`)
+            );
+          }
+          continue;
+        }
+        if (elegida === correcta) {
+          ctx.stats.etiquetasImvCorrectas++;
+          ctx.io.escribir(verde("  ✔ Etiqueta correcta."));
+        } else if (this.gravedadEtiqueta(elegida) < this.gravedadEtiqueta(correcta)) {
+          v.estabilidad = Math.max(5, v.estabilidad - 8);
+          ctx.io.escribir(amarillo(`  ⚠ Infratriaje: era ${correcta.toUpperCase()}. ${v.nombre} pierde terreno mientras espera su turno.`));
+        } else {
+          ctx.io.escribir(amarillo(`  ⚠ Sobretriaje: era ${correcta.toUpperCase()}. Recursos y minutos que otro necesitaba más.`));
+        }
+        v.minutoLlegada = ctx.minuto;
+        ctx.salaEspera.push(v);
+      }
+      ctx.io.escribir(
+        `
+  ${negrita("Triaje de catástrofe cerrado:")} ${ctx.stats.etiquetasImvCorrectas}/${ctx.stats.etiquetasImvTotales} etiquetas correctas. Las víctimas pasan a tus boxes.`
+      );
+      await ctx.io.pausa();
+      return this;
+    }
+    /** La etiqueta que el estado real de la víctima pedía. */
+    etiquetaQueTocaba(v) {
+      if (v.estabilidad < 18) return "negro";
+      if (v.estabilidad < 45) return "rojo";
+      if (v.estabilidad < 70) return "amarillo";
+      return "verde";
+    }
+    gravedadEtiqueta(e) {
+      return { verde: 0, amarillo: 1, rojo: 2, negro: 3 }[e];
+    }
     pasarVisita(ctx) {
       ctx.io.escribir(`
 ${negrita("Ronda de planta:")}`);
@@ -2920,6 +3018,14 @@ ${negrita("Ronda de planta:")}`);
         estabilidad: paciente.estabilidad,
         zonaDolor: paciente.zonaDolor
       });
+      ctx.pacienteEnAtencion = paciente;
+      try {
+        return await this.bucleDePaciente(ctx, paciente);
+      } finally {
+        ctx.pacienteEnAtencion = null;
+      }
+    }
+    async bucleDePaciente(ctx, paciente) {
       for (; ; ) {
         if (ctx.guardiaTerminada) return new SummaryState();
         if (paciente.estado === "exitus") return this;
@@ -3254,6 +3360,16 @@ Derivas a ${p.nombre}... y a la hora llama el adjunto receptor: "Y esto, no lo p
   // src/data/hospitales.ts
   var HOSPITALES = [
     {
+      id: "comarcal",
+      nombre: "Hospital Comarcal (nivel 1)",
+      descripcion: "1 quirófano, 1 REA, sin angio-TC nocturno; saber derivar es sobrevivir",
+      quirofanos: 1,
+      camasRea: 1,
+      pacientesExtra: -2,
+      pruebasNoDisponibles: ["angiotc"],
+      derivables: ["isquemia", "tce", "iam"]
+    },
+    {
       id: "general",
       nombre: "Hospital General (nivel 2)",
       descripcion: "2 quirófanos, 3 REA, sin neurocirugía ni hemodinámica de guardia",
@@ -3262,16 +3378,6 @@ Derivas a ${p.nombre}... y a la hora llama el adjunto receptor: "Y esto, no lo p
       pacientesExtra: 0,
       pruebasNoDisponibles: [],
       derivables: ["tce", "iam"]
-    },
-    {
-      id: "comarcal",
-      nombre: "Hospital Comarcal (nivel 1)",
-      descripcion: "1 quirófano, 1 REA, sin angio-TC nocturno; saber derivar es sobrevivir",
-      quirofanos: 1,
-      camasRea: 1,
-      pacientesExtra: -2,
-      pruebasNoDisponibles: ["angiotc"],
-      derivables: ["isquemia", "diverticulitis", "tce", "iam"]
     },
     {
       id: "referencia",
@@ -3286,6 +3392,12 @@ Derivas a ${p.nombre}... y a la hora llama el adjunto receptor: "Y esto, no lo p
   ];
 
   // src/core/GameContext.ts
+  var FRASES_SUPERVISORA = [
+    "Tengo {n} en la sala y dos preguntando cada cinco minutos. Tú sabrás el orden, pero que se note que hay orden.",
+    "El de la silla tres lleva rato mirándome mal. O ves a alguien pronto o el próximo aviso no te lo doy yo, te lo da seguridad.",
+    "{n} pendientes. No te digo cómo hacer tu trabajo; te digo cuántos te están esperando mientras lo haces.",
+    "La sala está que arde. Y admisión pasa la encuesta de satisfacción a TODOS, también a los que se van."
+  ];
   function crearRng(semilla2) {
     let a = semilla2 >>> 0;
     return () => {
@@ -3341,8 +3453,18 @@ Derivas a ${p.nombre}... y a la hora llama el adjunto receptor: "Y esto, no lo p
         ingresosCorrectos: 0,
         ingresosErroneos: 0,
         exitus: 0,
-        complicaciones: 0
+        complicaciones: 0,
+        seFueronSinSerVistos: 0,
+        etiquetasImvCorrectas: 0,
+        etiquetasImvTotales: 0
       });
+      /** Incidente de múltiples víctimas programado para esta guardia (si toca). */
+      __publicField(this, "imv", null);
+      /** Víctimas del IMV esperando su etiqueta de triaje en la puerta. */
+      __publicField(this, "imvPendiente", null);
+      /** Paciente cuyo box está ocupando el jugador ahora mismo (no se fuga). */
+      __publicField(this, "pacienteEnAtencion", null);
+      __publicField(this, "ultimoAvisoSupervisora", -999);
       /** Cola de llegadas pendientes, ordenada por minuto. */
       __publicField(this, "llegadas", []);
       __publicField(this, "camasRea", []);
@@ -3355,6 +3477,10 @@ Derivas a ${p.nombre}... y a la hora llama el adjunto receptor: "Y esto, no lo p
     programarLlegadas(llegadas) {
       this.llegadas.push(...llegadas);
       this.llegadas.sort((a, b) => a.minuto - b.minuto);
+    }
+    /** Programa el incidente de múltiples víctimas de la noche. */
+    programarImv(minuto, victimas) {
+      this.imv = { minuto, victimas };
     }
     /** El otro equipo de guardia ocupa un quirófano durante una franja. */
     programarOcupacionExterna(desde, hasta, motivo) {
@@ -3414,11 +3540,47 @@ Derivas a ${p.nombre}... y a la hora llama el adjunto receptor: "Y esto, no lo p
           const { paciente } = this.llegadas.shift();
           this.salaEspera.push(paciente);
           this.registrarPaciente(paciente);
-          const etiqueta = paciente.reingresado ? `⚠ AMBULANCIA: vuelve ${paciente.nombre} (le diste el alta) — mucho peor que antes.` : `🚑 Llega un nuevo paciente a urgencias: ${paciente.nombre}, ${paciente.edad} años.`;
+          const etiqueta = paciente.reingresado ? paciente.seFue ? `⚠ AMBULANCIA: vuelve ${paciente.nombre} — se fue sin ser visto y ahora entra en camilla.` : `⚠ AMBULANCIA: vuelve ${paciente.nombre} (le diste el alta) — mucho peor que antes.` : `🚑 Llega un nuevo paciente a urgencias: ${paciente.nombre}, ${paciente.edad} años.`;
           avisos.push(etiqueta);
+        }
+        if (this.imv && this.imv.minuto <= this.minuto) {
+          this.imvPendiente = this.imv.victimas;
+          this.imv = null;
+          avisos.push(
+            `🚨 LLAMADA DEL 061: atropello múltiple a la salida de un concierto. ${this.imvPendiente.length} víctimas en camino — 🚑 ambulancias en cascada. Te esperan en la puerta para el triaje.`
+          );
         }
         for (const p of this.salaEspera) {
           p.estabilidad -= p.deterioroPorHora * (dt / 60);
+        }
+        for (const p of [...this.salaEspera]) {
+          if (p === this.pacienteEnAtencion || p.reingresado || p.etiquetaTriaje) continue;
+          const esperaMin = this.minuto - p.minutoLlegada;
+          const benigno = p.patologia.manejoCorrecto === "alta";
+          if (esperaMin < (benigno ? 120 : 180) || p.estabilidad < 62) continue;
+          if (this.rng() >= (benigno ? 0.1 : 0.035) * (dt / 15)) continue;
+          this.salaEspera.splice(this.salaEspera.indexOf(p), 1);
+          this.stats.seFueronSinSerVistos++;
+          p.seFue = true;
+          const horas = (esperaMin / 60).toFixed(1).replace(".", ",");
+          if (p.patologia.quirurgica) {
+            p.estado = "espera";
+            p.reingresado = true;
+            p.estabilidad = Math.max(12, p.estabilidad - 25);
+            this.programarLlegadas([
+              { minuto: this.minuto + 120 + Math.floor(this.rng() * 180), paciente: p }
+            ]);
+          } else {
+            p.estado = "fugado";
+          }
+          avisos.push(
+            `😤 ${p.nombre} se marcha sin ser visto tras ${horas} h de espera. Admisión toma nota para la encuesta de satisfacción.`
+          );
+        }
+        if (this.salaEspera.length >= 4 && this.minuto - this.ultimoAvisoSupervisora >= 90 && this.rng() < 0.6) {
+          this.ultimoAvisoSupervisora = this.minuto;
+          const frase = FRASES_SUPERVISORA[Math.floor(this.rng() * FRASES_SUPERVISORA.length)];
+          avisos.push(`🩺 La supervisora, desde el control: «${frase.replace("{n}", String(this.salaEspera.length))}»`);
         }
         for (const p of this.ingresados) {
           if (p.patologia.quirurgica) {
@@ -3586,6 +3748,18 @@ Derivas a ${p.nombre}... y a la hora llama el adjunto receptor: "Y esto, no lo p
       const atipicidad = this.ctx.modoResidente ? 0.5 : this.ctx.modoNegra ? 2 : 1;
       const fabrica = new PatientFactory(this.rng, atipicidad, (this.ctx.modoNegra ? 2 : 0) + perfil.pacientesExtra);
       this.ctx.programarLlegadas(fabrica.generarLlegadasDeGuardia());
+      if (this.ctx.modoNegra || this.rng() < 0.45) {
+        const minutoImv = 240 + Math.floor(this.rng() * 600);
+        const pool = ["trauma", "trauma", "trauma", "neumotorax", "tce"];
+        const cuantas = 4 + Math.floor(this.rng() * 3);
+        const victimas = Array.from({ length: cuantas }, () => {
+          const patologia = patologiaPorId(pool[Math.floor(this.rng() * pool.length)]);
+          return fabrica.crearPaciente(minutoImv, patologia);
+        });
+        victimas[0].estabilidad = 8 + Math.floor(this.rng() * 8);
+        victimas[victimas.length - 1].estabilidad = 72 + Math.floor(this.rng() * 14);
+        this.ctx.programarImv(minutoImv, victimas);
+      }
       const inicio1 = 180 + Math.floor(this.rng() * 300);
       const inicio2 = 720 + Math.floor(this.rng() * 300);
       this.ctx.programarOcupacionExterna(inicio1, inicio1 + 120, "politraumatizado de tráfico");

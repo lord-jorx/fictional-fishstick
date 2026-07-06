@@ -39,6 +39,13 @@ export class SummaryState implements GameState {
     if (s.derivacionesCorrectas + s.derivacionesErroneas > 0) {
       ctx.io.escribir(`  Derivaciones:             ${verde(String(s.derivacionesCorrectas))} con criterio, ${s.derivacionesErroneas === 0 ? verde('0') : rojo(String(s.derivacionesErroneas))} innecesarias`);
     }
+    if (s.etiquetasImvTotales > 0) {
+      const aciertos = s.etiquetasImvCorrectas;
+      ctx.io.escribir(`  Triaje de catástrofe:     ${aciertos === s.etiquetasImvTotales ? verde(`${aciertos}/${s.etiquetasImvTotales}`) : amarillo(`${aciertos}/${s.etiquetasImvTotales}`)} etiquetas correctas`);
+    }
+    if (s.seFueronSinSerVistos > 0) {
+      ctx.io.escribir(`  Se fueron sin ser vistos: ${rojo(String(s.seFueronSinSerVistos))} ${gris('(admisión ya te ha reenviado la queja)')}`);
+    }
     ctx.io.escribir(`  Éxitus:                   ${s.exitus === 0 ? verde('0') : rojo(String(s.exitus))}`);
 
     // Cooperativo: desglose por cirujano y MVP de la noche.
@@ -87,6 +94,7 @@ export class SummaryState implements GameState {
       case 'alta': return verde('alta');
       case 'derivado': return cian('derivado al centro de referencia');
       case 'ingresado': return amarillo('sigue ingresado (te lo dejas al de la mañana)');
+      case 'fugado': return amarillo('se fue sin ser visto, harto de esperar');
       case 'espera': return rojo('¡SIGUE ESPERANDO EN URGENCIAS!');
     }
   }
@@ -113,7 +121,10 @@ export class SummaryState implements GameState {
       s.ingresosCorrectos * 30 -
       s.altasErroneas * 50 -
       s.ingresosErroneos * 30 -
-      s.complicaciones * 40 -
+      s.complicaciones * 40 +
+      s.etiquetasImvCorrectas * 25 -
+      (s.etiquetasImvTotales - s.etiquetasImvCorrectas) * 30 -
+      s.seFueronSinSerVistos * 40 -
       s.exitus * 200 -
       abandonados * 60
     );

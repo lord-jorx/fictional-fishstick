@@ -7,7 +7,7 @@
  */
 import { GameContext } from '../core/GameContext.js';
 import type { GameState } from '../core/StateMachine.js';
-import type { ManejoCorrecto, Paciente, PruebaId, RespuestaInterrogatorio } from '../core/types.js';
+import type { EtiquetaTriaje, ManejoCorrecto, Paciente, PruebaId, RespuestaInterrogatorio } from '../core/types.js';
 import { INTERROGATORIOS } from '../data/interrogatorios.js';
 import { INFORME_INESPECIFICO, PRUEBAS } from '../data/pruebas.js';
 import { calificarCaso, pintarEstrellas } from './calificacion.js';
@@ -45,6 +45,7 @@ export class TriageState implements GameState {
 
   async run(ctx: GameContext): Promise<GameState | null> {
     if (ctx.guardiaTerminada) return new SummaryState();
+    if (ctx.imvPendiente) return this.triajeDeCatastrofe(ctx);
 
     ctx.io.escena?.('triaje', { tablero: ctx.tablero() });
     pintarHUD(ctx);
@@ -101,6 +102,95 @@ export class TriageState implements GameState {
     return ctx.io.elegir(titulo, opciones);
   }
 
+  // ────────────────────────────────────────────────────────────
+  /**
+   * Triaje de catástrofe: las víctimas del IMV esperan en la puerta y a
+   * cada una hay que colgarle su etiqueta con lo puesto — constantes, una
+   * mirada y oficio. Etiquetar de menos cuesta estabilidad; la etiqueta
+   * negra bien puesta es medicina; mal puesta, una sentencia.
+   */
+  private async triajeDeCatastrofe(ctx: GameContext): Promise<GameState> {
+    const victimas = ctx.imvPendiente!;
+    ctx.imvPendiente = null;
+
+    ctx.io.escribir('\n' + lineaSeparadora());
+    ctx.io.escribir(negrita(rojo('  🚨 INCIDENTE DE MÚLTIPLES VÍCTIMAS — TRIAJE EN LA PUERTA')));
+    ctx.io.escribir(lineaSeparadora());
+    ctx.io.escribir(
+      gris('  Las sirenas llegan escalonadas. Sales a la puerta de ambulancias con la\n') +
+        gris('  tarjeta de etiquetas en la mano: ROJO inmediato, AMARILLO diferido,\n') +
+        gris('  VERDE puede esperar, NEGRO expectante. Nadie más va a decidirlo por ti.'),
+    );
+    await ctx.io.pausa('Pulsa Intro para salir a la puerta de ambulancias...');
+
+    for (const v of victimas) {
+      const correcta = this.etiquetaQueTocaba(v);
+      const elegida = await ctx.io.elegir<EtiquetaTriaje>(
+        `Etiqueta para ${v.nombre}, ${v.edad} años — ${v.constantes}`,
+        [
+          { etiqueta: rojo('ROJO — inmediato'), detalle: 'no puede esperar ni un minuto', valor: 'rojo' },
+          { etiqueta: amarillo('AMARILLO — diferido'), detalle: 'grave, pero aguanta un rato', valor: 'amarillo' },
+          { etiqueta: verde('VERDE — leve'), detalle: 'herido que camina', valor: 'verde' },
+          { etiqueta: gris('NEGRO — expectante'), detalle: 'irrecuperable: confort y dignidad', valor: 'negro' },
+        ],
+      );
+      v.etiquetaTriaje = elegida;
+      ctx.stats.etiquetasImvTotales++;
+      this.mostrarAvisos(ctx, ctx.avanzarTiempo(2));
+      ctx.registrarPaciente(v);
+
+      if (elegida === 'negro') {
+        v.estado = 'exitus';
+        v.estabilidad = 0;
+        if (correcta === 'negro') {
+          ctx.stats.etiquetasImvCorrectas++;
+          ctx.io.escribir(
+            gris(`  Le coges la mano a ${v.nombre} mientras queda alguien libre para acompañarle. Era la decisión correcta, y aun así pesa.`),
+          );
+          ctx.cirujano.estres = Math.min(100, ctx.cirujano.estres + 6);
+        } else {
+          ctx.stats.exitus++;
+          ctx.cirujano.estres = Math.min(100, ctx.cirujano.estres + 18);
+          ctx.io.escribir(
+            rojo(`  ✝ ${v.nombre} era recuperable y lo has dejado en expectante. Fallece en la puerta. Esa etiqueta te va a durar años.`),
+          );
+        }
+        continue;
+      }
+
+      if (elegida === correcta) {
+        ctx.stats.etiquetasImvCorrectas++;
+        ctx.io.escribir(verde('  ✔ Etiqueta correcta.'));
+      } else if (this.gravedadEtiqueta(elegida) < this.gravedadEtiqueta(correcta)) {
+        v.estabilidad = Math.max(5, v.estabilidad - 8);
+        ctx.io.escribir(amarillo(`  ⚠ Infratriaje: era ${correcta.toUpperCase()}. ${v.nombre} pierde terreno mientras espera su turno.`));
+      } else {
+        ctx.io.escribir(amarillo(`  ⚠ Sobretriaje: era ${correcta.toUpperCase()}. Recursos y minutos que otro necesitaba más.`));
+      }
+
+      v.minutoLlegada = ctx.minuto;
+      ctx.salaEspera.push(v);
+    }
+
+    ctx.io.escribir(
+      `\n  ${negrita('Triaje de catástrofe cerrado:')} ${ctx.stats.etiquetasImvCorrectas}/${ctx.stats.etiquetasImvTotales} etiquetas correctas. Las víctimas pasan a tus boxes.`,
+    );
+    await ctx.io.pausa();
+    return this;
+  }
+
+  /** La etiqueta que el estado real de la víctima pedía. */
+  private etiquetaQueTocaba(v: Paciente): EtiquetaTriaje {
+    if (v.estabilidad < 18) return 'negro';
+    if (v.estabilidad < 45) return 'rojo';
+    if (v.estabilidad < 70) return 'amarillo';
+    return 'verde';
+  }
+
+  private gravedadEtiqueta(e: EtiquetaTriaje): number {
+    return { verde: 0, amarillo: 1, rojo: 2, negro: 3 }[e];
+  }
+
   private pasarVisita(ctx: GameContext): void {
     ctx.io.escribir(`\n${negrita('Ronda de planta:')}`);
     for (const p of ctx.ingresados) {
@@ -136,6 +226,16 @@ export class TriageState implements GameState {
       estabilidad: paciente.estabilidad,
       zonaDolor: paciente.zonaDolor,
     });
+    // Mientras estés en su box, este paciente no se cansa de esperar.
+    ctx.pacienteEnAtencion = paciente;
+    try {
+      return await this.bucleDePaciente(ctx, paciente);
+    } finally {
+      ctx.pacienteEnAtencion = null;
+    }
+  }
+
+  private async bucleDePaciente(ctx: GameContext, paciente: Paciente): Promise<GameState> {
     for (;;) {
       if (ctx.guardiaTerminada) return new SummaryState();
       if (paciente.estado === 'exitus') return this; // falleció mientras decidías

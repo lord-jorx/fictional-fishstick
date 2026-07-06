@@ -10,6 +10,14 @@
 import type { ComandaPaciente, IO, Rasgos } from './io.js';
 import type { Cirujano, Estadisticas, Hospital, Paciente } from './types.js';
 
+/** Frases de la supervisora de control cuando la sala se calienta. */
+const FRASES_SUPERVISORA = [
+  'Tengo {n} en la sala y dos preguntando cada cinco minutos. Tú sabrás el orden, pero que se note que hay orden.',
+  'El de la silla tres lleva rato mirándome mal. O ves a alguien pronto o el próximo aviso no te lo doy yo, te lo da seguridad.',
+  '{n} pendientes. No te digo cómo hacer tu trabajo; te digo cuántos te están esperando mientras lo haces.',
+  'La sala está que arde. Y admisión pasa la encuesta de satisfacción a TODOS, también a los que se van.',
+];
+
 /** Un cirujano del equipo de guardia (1 en solitario, 2 en cooperativo local). */
 export interface MiembroEquipo extends Cirujano {
   nombre: string;
@@ -102,7 +110,18 @@ export class GameContext {
     ingresosErroneos: 0,
     exitus: 0,
     complicaciones: 0,
+    seFueronSinSerVistos: 0,
+    etiquetasImvCorrectas: 0,
+    etiquetasImvTotales: 0,
   };
+
+  /** Incidente de múltiples víctimas programado para esta guardia (si toca). */
+  private imv: { minuto: number; victimas: Paciente[] } | null = null;
+  /** Víctimas del IMV esperando su etiqueta de triaje en la puerta. */
+  imvPendiente: Paciente[] | null = null;
+  /** Paciente cuyo box está ocupando el jugador ahora mismo (no se fuga). */
+  pacienteEnAtencion: Paciente | null = null;
+  private ultimoAvisoSupervisora = -999;
 
   /** Cola de llegadas pendientes, ordenada por minuto. */
   private llegadas: LlegadaProgramada[] = [];
@@ -117,6 +136,11 @@ export class GameContext {
   programarLlegadas(llegadas: LlegadaProgramada[]): void {
     this.llegadas.push(...llegadas);
     this.llegadas.sort((a, b) => a.minuto - b.minuto);
+  }
+
+  /** Programa el incidente de múltiples víctimas de la noche. */
+  programarImv(minuto: number, victimas: Paciente[]): void {
+    this.imv = { minuto, victimas };
   }
 
   /** El otro equipo de guardia ocupa un quirófano durante una franja. */
@@ -189,14 +213,64 @@ export class GameContext {
         this.salaEspera.push(paciente);
         this.registrarPaciente(paciente);
         const etiqueta = paciente.reingresado
-          ? `⚠ AMBULANCIA: vuelve ${paciente.nombre} (le diste el alta) — mucho peor que antes.`
+          ? paciente.seFue
+            ? `⚠ AMBULANCIA: vuelve ${paciente.nombre} — se fue sin ser visto y ahora entra en camilla.`
+            : `⚠ AMBULANCIA: vuelve ${paciente.nombre} (le diste el alta) — mucho peor que antes.`
           : `🚑 Llega un nuevo paciente a urgencias: ${paciente.nombre}, ${paciente.edad} años.`;
         avisos.push(etiqueta);
+      }
+
+      // ── Incidente de múltiples víctimas: suena el teléfono rojo ──
+      if (this.imv && this.imv.minuto <= this.minuto) {
+        this.imvPendiente = this.imv.victimas;
+        this.imv = null;
+        avisos.push(
+          `🚨 LLAMADA DEL 061: atropello múltiple a la salida de un concierto. ${this.imvPendiente.length} víctimas en camino — 🚑 ambulancias en cascada. Te esperan en la puerta para el triaje.`,
+        );
       }
 
       // ── Deterioro de los pacientes no tratados ──
       for (const p of this.salaEspera) {
         p.estabilidad -= p.deterioroPorHora * (dt / 60);
+      }
+
+      // ── La sala de espera se cansa: horas de espera y se van sin ser vistos ──
+      for (const p of [...this.salaEspera]) {
+        if (p === this.pacienteEnAtencion || p.reingresado || p.etiquetaTriaje) continue;
+        const esperaMin = this.minuto - p.minutoLlegada;
+        const benigno = p.patologia.manejoCorrecto === 'alta';
+        if (esperaMin < (benigno ? 120 : 180) || p.estabilidad < 62) continue;
+        if (this.rng() >= (benigno ? 0.1 : 0.035) * (dt / 15)) continue;
+
+        this.salaEspera.splice(this.salaEspera.indexOf(p), 1);
+        this.stats.seFueronSinSerVistos++;
+        p.seFue = true;
+        const horas = (esperaMin / 60).toFixed(1).replace('.', ',');
+        if (p.patologia.quirurgica) {
+          // Se va con un abdomen que no perdona: volverá, y volverá peor.
+          p.estado = 'espera';
+          p.reingresado = true;
+          p.estabilidad = Math.max(12, p.estabilidad - 25);
+          this.programarLlegadas([
+            { minuto: this.minuto + 120 + Math.floor(this.rng() * 180), paciente: p },
+          ]);
+        } else {
+          p.estado = 'fugado';
+        }
+        avisos.push(
+          `😤 ${p.nombre} se marcha sin ser visto tras ${horas} h de espera. Admisión toma nota para la encuesta de satisfacción.`,
+        );
+      }
+
+      // ── La supervisora de control, cuando la sala se calienta ──
+      if (
+        this.salaEspera.length >= 4 &&
+        this.minuto - this.ultimoAvisoSupervisora >= 90 &&
+        this.rng() < 0.6
+      ) {
+        this.ultimoAvisoSupervisora = this.minuto;
+        const frase = FRASES_SUPERVISORA[Math.floor(this.rng() * FRASES_SUPERVISORA.length)]!;
+        avisos.push(`🩺 La supervisora, desde el control: «${frase.replace('{n}', String(this.salaEspera.length))}»`);
       }
       for (const p of this.ingresados) {
         if (p.patologia.quirurgica) {
