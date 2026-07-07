@@ -26,7 +26,9 @@ export class SummaryState implements GameState {
     for (const p of ctx.historial) {
       const atipica = !p.varianteId.startsWith('tipic') ? gris(` [presentación atípica: ${p.varianteId}]`) : '';
       const estrellas = p.estrellas !== undefined ? ` ${amarillo(pintarEstrellas(p.estrellas))}` : '';
-      ctx.io.escribir(`  ${this.iconoDestino(p)} ${p.nombre} — ${p.patologia.nombre} → ${this.destino(p)}${estrellas}${atipica}`);
+      // El código CIE-10 solo si el diagnóstico llegó a confirmarse.
+      const cie = p.diagnosticoConfirmado && p.patologia.cie10 ? gris(` (${p.patologia.cie10})`) : '';
+      ctx.io.escribir(`  ${this.iconoDestino(p)} ${p.nombre} — ${p.patologia.nombre}${cie} → ${this.destino(p)}${estrellas}${atipica}`);
     }
 
     ctx.io.escribir(`\n${negrita('Balance:')}`);

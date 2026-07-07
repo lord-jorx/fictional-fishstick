@@ -13,6 +13,7 @@ export const PATOLOGIAS: Patologia[] = [
   // ──────────────────────────────────────────────────────────────
   {
     id: 'apendicitis',
+    cie10: 'K35.80',
     nombre: 'Apendicitis aguda',
     quirurgica: true,
     frecuencia: 10,
@@ -122,6 +123,7 @@ export const PATOLOGIAS: Patologia[] = [
   // ──────────────────────────────────────────────────────────────
   {
     id: 'colecistitis',
+    cie10: 'K80.00',
     nombre: 'Colecistitis aguda litiásica',
     quirurgica: true,
     frecuencia: 9,
@@ -230,6 +232,7 @@ export const PATOLOGIAS: Patologia[] = [
   // ──────────────────────────────────────────────────────────────
   {
     id: 'obstruccion',
+    cie10: 'K56.52',
     nombre: 'Obstrucción intestinal por bridas (estrangulada)',
     quirurgica: true,
     frecuencia: 7,
@@ -332,6 +335,7 @@ export const PATOLOGIAS: Patologia[] = [
   // ──────────────────────────────────────────────────────────────
   {
     id: 'diverticulitis',
+    cie10: 'K57.20',
     nombre: 'Diverticulitis aguda perforada (Hinchey IV)',
     quirurgica: true,
     frecuencia: 6,
@@ -426,6 +430,7 @@ export const PATOLOGIAS: Patologia[] = [
   // ──────────────────────────────────────────────────────────────
   {
     id: 'isquemia',
+    cie10: 'K55.019',
     nombre: 'Isquemia mesentérica aguda (embolia de AMS)',
     quirurgica: true,
     frecuencia: 4,
@@ -522,6 +527,7 @@ export const PATOLOGIAS: Patologia[] = [
   // ──────────────────────────────────────────────────────────────
   {
     id: 'trauma',
+    cie10: 'S36.032A',
     nombre: 'Trauma abdominal cerrado (lesión esplénica)',
     quirurgica: true,
     frecuencia: 5,
@@ -617,6 +623,7 @@ export const PATOLOGIAS: Patologia[] = [
   // ──────────────────────────────────────────────────────────────
   {
     id: 'ulcus',
+    cie10: 'K27.1',
     nombre: 'Ulcus péptico perforado',
     quirurgica: true,
     frecuencia: 5,
@@ -719,6 +726,7 @@ export const PATOLOGIAS: Patologia[] = [
   // ──────────────────────────────────────────────────────────────
   {
     id: 'hernia',
+    cie10: 'K40.40',
     nombre: 'Hernia inguinal incarcerada (estrangulada)',
     quirurgica: true,
     frecuencia: 6,
@@ -821,6 +829,7 @@ export const PATOLOGIAS: Patologia[] = [
   // ──────────────────────────────────────────────────────────────
   {
     id: 'neumotorax',
+    cie10: 'S27.0XXA',
     nombre: 'Neumotórax a tensión',
     quirurgica: true,
     frecuencia: 4,
@@ -921,6 +930,7 @@ export const PATOLOGIAS: Patologia[] = [
   // ──────────────────────────────────────────────────────────────
   {
     id: 'tce',
+    cie10: 'S06.4X1A',
     nombre: 'TCE con hematoma epidural',
     quirurgica: false,
     frecuencia: 4,
@@ -950,6 +960,7 @@ export const PATOLOGIAS: Patologia[] = [
   // ──────────────────────────────────────────────────────────────
   {
     id: 'iam',
+    cie10: 'I21.19',
     nombre: 'IAM inferior (disfrazado de abdomen)',
     quirurgica: false,
     frecuencia: 5,
@@ -980,6 +991,7 @@ export const PATOLOGIAS: Patologia[] = [
   // ──────────────────────────────────────────────────────────────
   {
     id: 'cad',
+    cie10: 'E10.10',
     nombre: 'Cetoacidosis diabética (abdomen agudo... que no lo es)',
     quirurgica: false,
     frecuencia: 4,
@@ -1008,6 +1020,7 @@ export const PATOLOGIAS: Patologia[] = [
   },
   {
     id: 'pancreatitis',
+    cie10: 'K85.10',
     nombre: 'Pancreatitis aguda litiásica',
     quirurgica: false,
     frecuencia: 6,
@@ -1038,6 +1051,7 @@ export const PATOLOGIAS: Patologia[] = [
   // ──────────────────────────────────────────────────────────────
   {
     id: 'colico_renal',
+    cie10: 'N23',
     nombre: 'Cólico renoureteral',
     quirurgica: false,
     frecuencia: 5,
@@ -1065,6 +1079,7 @@ export const PATOLOGIAS: Patologia[] = [
   },
   {
     id: 'gastroenteritis',
+    cie10: 'A09',
     nombre: 'Gastroenteritis aguda',
     quirurgica: false,
     frecuencia: 6,
@@ -1092,6 +1107,7 @@ export const PATOLOGIAS: Patologia[] = [
   // ──────────────────────────────────────────────────────────────
   {
     id: 'colico_biliar',
+    cie10: 'K80.20',
     nombre: 'Cólico biliar simple',
     quirurgica: false,
     frecuencia: 5,

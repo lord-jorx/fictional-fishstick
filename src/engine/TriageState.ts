@@ -438,7 +438,8 @@ export class TriageState implements GameState {
       ctx.io.escribir(`  ${negrita(`${PRUEBAS[id].nombre}:`)} ${gris(this.informeDePrueba(p, id))}`);
     }
     if (p.diagnosticoConfirmado) {
-      ctx.io.escribir(`  ${verde(`✔ Diagnóstico confirmado: ${p.patologia.nombre}`)}`);
+      const cie = p.patologia.cie10 ? gris(`  [CIE-10: ${p.patologia.cie10}]`) : '';
+      ctx.io.escribir(`  ${verde(`✔ Diagnóstico confirmado: ${p.patologia.nombre}`)}${cie}`);
     } else if (ctx.modoResidente) {
       ctx.io.escribir(
         `  ${cian('🩺 Tu adjunto, por teléfono:')} ${gris(`«Con esa clínica, yo pediría ${PRUEBAS[p.patologia.pruebaDiana].nombre.toLowerCase()}.»`)}`,
