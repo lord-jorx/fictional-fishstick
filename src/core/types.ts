@@ -123,6 +123,15 @@ export interface Patologia {
   notaDocente: string;
   /** Peso relativo en la generación aleatoria (más peso = más frecuente). */
   frecuencia: number;
+  /**
+   * Emergencia vital que se actúa sin la secuencia normal: se puede pedir
+   * cualquier prueba relevante y plantear cirugía/procedimiento de entrada,
+   * sin exigir exploración ni analítica previas (trauma inestable, neumotórax
+   * a tensión). Es el «menos en ciertos pacientes» de la regla del orden.
+   */
+  vitalInmediato?: boolean;
+  /** Código CIE-10-CM (ICD-10) del diagnóstico, para el expediente. */
+  cie10?: string;
 }
 
 export type EstadoPaciente =

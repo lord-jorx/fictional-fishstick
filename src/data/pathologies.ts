@@ -525,6 +525,7 @@ export const PATOLOGIAS: Patologia[] = [
     nombre: 'Trauma abdominal cerrado (lesión esplénica)',
     quirurgica: true,
     frecuencia: 5,
+    vitalInmediato: true,
     presentacion: {
       sintomas: [
         'Accidente de motocicleta a alta velocidad hace 40 minutos',
@@ -823,6 +824,7 @@ export const PATOLOGIAS: Patologia[] = [
     nombre: 'Neumotórax a tensión',
     quirurgica: true,
     frecuencia: 4,
+    vitalInmediato: true,
     presentacion: {
       sintomas: [
         'Costalada contra el bordillo con la bici hace una hora',
@@ -937,7 +939,6 @@ export const PATOLOGIAS: Patologia[] = [
       'TC craneal: colección hiperdensa biconvexa temporal derecha con efecto masa y desviación de línea media. Hematoma epidural: esto es neurocirugía URGENTE.',
     hallazgosParciales: {
       analitica: 'Coagulación normal. La analítica no descarta nada dentro del cráneo.',
-      tc: 'TC abdominal anodino. El problema está un metro más arriba: pide el craneal.',
       ecg: 'Bradicardia sinusal. Con esa TA en ascenso: reflejo de Cushing en marcha.',
     },
     deterioroPorHora: 14,

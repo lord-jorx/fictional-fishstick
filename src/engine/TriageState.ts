@@ -36,6 +36,24 @@ type AccionPaciente =
   | { tipo: 'volver' }
   | { tipo: 'reevaluar' };
 
+/** El escáner (TC/angio-TC abdominal): va después de la analítica. La eco
+ *  clínica, la eco-FAST, el ECG, la Rx y el TC craneal son de primera línea. */
+const ESCANER_ABDOMINAL = new Set<PruebaId>(['tc', 'angiotc']);
+
+/** Orden en que se ofrecen las pruebas: analítica y cabecera antes que el escáner. */
+const ORDEN_PRUEBAS: PruebaId[] = ['analitica', 'eco', 'ecofast', 'ecg', 'rxtorax', 'tccraneo', 'tc', 'angiotc'];
+
+/**
+ * Pruebas que tienen sentido clínico en un cuadro: la diana más aquellas
+ * para las que la patología define un informe propio. Todo lo demás (un TC
+ * abdominal en un TCE, un ECG en una hernia) no se ofrece siquiera.
+ */
+function pruebasRelevantes(pat: { pruebaDiana: PruebaId; hallazgosParciales: Partial<Record<PruebaId, string>> }): Set<PruebaId> {
+  const set = new Set<PruebaId>([pat.pruebaDiana]);
+  for (const id of Object.keys(pat.hallazgosParciales) as PruebaId[]) set.add(id);
+  return set;
+}
+
 export class TriageState implements GameState {
   readonly nombre = 'triaje';
   /** Pacientes ya explorados en esta guardia (revela la exploración física). */
@@ -348,20 +366,52 @@ export class TriageState implements GameState {
         valor: { tipo: 'interrogar' },
       });
     }
-    for (const prueba of Object.values(PRUEBAS)) {
-      if (ctx.pruebasNoDisponibles.includes(prueba.id)) continue;
-      if (!paciente.pruebasRealizadas.includes(prueba.id)) {
-        opciones.push({
-          etiqueta: `${t('solicitar')} ${prueba.nombre}`,
-          detalle: `${prueba.duracionMin} min`,
-          valor: { tipo: 'prueba', prueba: prueba.id },
-        });
-      }
+    // El orden de la valoración: recibir → anamnesis → exploración (± eco
+    // clínica) → analítica → imagen. Solo se ofrecen las pruebas que TIENEN
+    // sentido en este cuadro, y el TC/angio-TC va después de la analítica —
+    // salvo en la emergencia vital, que se salta la cola.
+    const vital = !!paciente.patologia.vitalInmediato;
+    const explorado = TriageState.explorados.has(paciente.id);
+    const analiticaHecha = paciente.pruebasRealizadas.includes('analitica');
+    const relevantes = pruebasRelevantes(paciente.patologia);
+    let faltaExplorar = false;
+    let faltaAnalitica = false;
+
+    for (const id of ORDEN_PRUEBAS) {
+      if (!relevantes.has(id)) continue;                          // sin sentido en este cuadro
+      if (ctx.pruebasNoDisponibles.includes(id)) continue;        // no la hay en este hospital
+      if (paciente.pruebasRealizadas.includes(id)) continue;      // ya hecha
+      if (!vital && !explorado) { faltaExplorar = true; continue; }             // explora primero
+      if (!vital && ESCANER_ABDOMINAL.has(id) && !analiticaHecha) { faltaAnalitica = true; continue; } // analítica antes del escáner
+      const prueba = PRUEBAS[id];
+      opciones.push({
+        etiqueta: `${t('solicitar')} ${prueba.nombre}`,
+        detalle: `${prueba.duracionMin} min`,
+        valor: { tipo: 'prueba', prueba: id },
+      });
     }
+
+    // Pistas del orden (por qué no aparece algo), sin ser condescendiente.
+    if (faltaExplorar) {
+      ctx.io.escribir(gris('  Explora al paciente antes de pedir pruebas complementarias.'));
+    } else if (faltaAnalitica) {
+      ctx.io.escribir(gris('  El TC/angio-TC va después de la analítica (salvo urgencia vital).'));
+    }
+
     opciones.push(
       { etiqueta: negrita(t('alta')), valor: { tipo: 'alta' } },
       { etiqueta: negrita(t('ingresar')), valor: { tipo: 'ingreso' } },
-      { etiqueta: negrita(rojo(t('cirugiaUrgente'))), detalle: `quirófanos libres: ${ctx.hospital.quirofanosLibres}`, valor: { tipo: 'cirugia' } },
+    );
+    // No a todo el mundo se le plantea quirófano: hay que haberlo valorado
+    // (exploración + alguna prueba), salvo que sea una emergencia vital.
+    if (vital || (explorado && paciente.pruebasRealizadas.length > 0)) {
+      opciones.push({
+        etiqueta: negrita(rojo(t('cirugiaUrgente'))),
+        detalle: `quirófanos libres: ${ctx.hospital.quirofanosLibres}`,
+        valor: { tipo: 'cirugia' },
+      });
+    }
+    opciones.push(
       { etiqueta: cian(t('derivar')), detalle: '30 min', valor: { tipo: 'derivar' } },
       { etiqueta: gris(t('volverControl')), valor: { tipo: 'volver' } },
       { etiqueta: '⟳', oculta: true, valor: { tipo: 'reevaluar' } },
