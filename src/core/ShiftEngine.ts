@@ -18,7 +18,7 @@ import type { Rasgos } from './io.js';
 import { crearRng, GameContext, type MiembroEquipo } from './GameContext.js';
 import { MaquinaEstados } from './StateMachine.js';
 
-export type ModoJuego = 'adjunto' | 'residente' | 'negra';
+export type ModoJuego = 'adjunto' | 'residente' | 'negra' | 'festival';
 export type RitmoJuego = 'turnos' | 'real';
 
 const NOMBRES_DEFECTO = ['Dra. Ríos', 'Dr. Baró'];
@@ -108,17 +108,25 @@ export class ShiftEngine {
           detalle: 'atípicas ×2, hospital saturado, más complicaciones; puntuación ×1,2',
           valor: 'negra',
         },
+        {
+          etiqueta: 'Noche de fiestas mayores',
+          detalle: 'evento: aluvión de urgencias y un incidente de múltiples víctimas garantizado; puntuación ×1,35',
+          valor: 'festival',
+        },
       ]);
     }
     this.ctx.modoResidente = this.modo === 'residente';
-    this.ctx.modoNegra = this.modo === 'negra';
+    // La noche de fiestas comparte el motor duro de la guardia negra.
+    this.ctx.modoNegra = this.modo === 'negra' || this.modo === 'festival';
+    const modoFestival = this.modo === 'festival';
     if (this.ctx.modoResidente) {
       this.io.escribir(
         gris('\n  Modo residente: tu adjunto sugerirá pruebas, dudará en voz alta si te') +
           gris('\n  equivocas de destino y atenderá hasta 3 llamadas en quirófano.'),
       );
     }
-    if (this.ctx.modoNegra) {
+    this.ctx.modoFestival = modoFestival;
+    if (this.ctx.modoNegra && !modoFestival) {
       this.ctx.hospital.camasReaTotales = Math.max(1, this.ctx.hospital.camasReaTotales - 1);
       this.ctx.hospital.camasReaLibres = this.ctx.hospital.camasReaTotales;
       this.io.escribir(
@@ -127,19 +135,27 @@ export class ShiftEngine {
           gris('\n  y el quirófano más disputado. Suerte. La necesitarás.'),
       );
     }
+    if (modoFestival) {
+      this.io.escribir(
+        gris('\n  Fiestas mayores: verbena, litros de alcohol, peleas a la salida y un') +
+          gris('\n  escenario con demasiada gente. La calle entera acabará pasando por tu') +
+          gris('\n  puerta. En algún momento de la noche, sonará el teléfono rojo. Prepárate.'),
+      );
+    }
 
     // La guardia se genera tras elegir modo: en residente las atípicas bajan a
-    // la mitad; en guardia negra se duplican y llegan más pacientes.
+    // la mitad; en guardia negra/festival se duplican y llegan más pacientes.
     const atipicidad = this.ctx.modoResidente ? 0.5 : this.ctx.modoNegra ? 2 : 1;
-    const fabrica = new PatientFactory(this.rng, atipicidad, (this.ctx.modoNegra ? 2 : 0) + perfil.pacientesExtra);
+    const extra = (modoFestival ? 4 : this.ctx.modoNegra ? 2 : 0) + perfil.pacientesExtra;
+    const fabrica = new PatientFactory(this.rng, atipicidad, extra);
     this.ctx.programarLlegadas(fabrica.generarLlegadasDeGuardia());
 
     // ── El incidente de múltiples víctimas: algunas noches, el teléfono
-    // rojo suena de verdad (en guardia negra, siempre) ──
+    // rojo suena de verdad (en negra/festival, siempre; en festival, más grande) ──
     if (this.ctx.modoNegra || this.rng() < 0.45) {
       const minutoImv = 240 + Math.floor(this.rng() * 600);
       const pool = ['trauma', 'trauma', 'trauma', 'neumotorax', 'tce'];
-      const cuantas = 4 + Math.floor(this.rng() * 3);
+      const cuantas = (modoFestival ? 7 : 4) + Math.floor(this.rng() * 3);
       const victimas = Array.from({ length: cuantas }, () => {
         const patologia = patologiaPorId(pool[Math.floor(this.rng() * pool.length)]!)!;
         return fabrica.crearPaciente(minutoImv, patologia);

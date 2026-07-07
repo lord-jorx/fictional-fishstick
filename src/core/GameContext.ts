@@ -66,6 +66,8 @@ export class GameContext {
   modoResidente = false;
   /** Guardia negra: atípicas al doble, hospital saturado, más complicaciones. */
   modoNegra = false;
+  /** Noche de fiestas mayores: aluvión + IMV garantizado y mayor. */
+  modoFestival = false;
   /** Nombre del centro y reglas de derivación del nivel elegido. */
   nombreHospital = 'Hospital General';
   derivables: string[] = [];

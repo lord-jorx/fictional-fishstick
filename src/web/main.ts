@@ -20,7 +20,7 @@ const semilla =
 
 const modoParam = parametros.get('modo');
 const modo: ModoJuego | undefined =
-  modoParam === 'residente' || modoParam === 'adjunto' || modoParam === 'negra'
+  modoParam === 'residente' || modoParam === 'adjunto' || modoParam === 'negra' || modoParam === 'festival'
     ? modoParam
     : undefined;
 

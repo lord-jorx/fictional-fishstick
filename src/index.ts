@@ -22,6 +22,7 @@ function leerModo(argv: string[]): ModoJuego | undefined {
   if (argv.includes('--residente')) return 'residente';
   if (argv.includes('--adjunto')) return 'adjunto';
   if (argv.includes('--negra')) return 'negra';
+  if (argv.includes('--festival')) return 'festival';
   return undefined;
 }
 
