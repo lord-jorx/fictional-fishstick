@@ -7,6 +7,22 @@ Un **noir de hospital**: detective procedural de los 40 donde el crimen es
 la patología, el interrogatorio es la anamnesis y el veredicto se firma con
 bisturí.
 
+## 🎮 Hecho con Phaser
+
+El plano de urgencias no son divs: es una **escena de Phaser** (el motor 2D
+con el que se publican juegos en web y en Steam). El cirujano es un sprite
+con **físicas arcade** que recorre el servicio con WASD/flechas/ZQSD, cruceta
+táctil o clic-para-caminar, y *pisar* una zona dispara esa acción. Todas las
+texturas se dibujan proceduralmente en tiempo de ejecución
+(`Graphics → generateTexture`): cero ficheros de imagen, todo en un único
+`web/index.html` autocontenido. El motor clínico sigue siendo puro TypeScript
+sin dependencias (arquitectura de puertos y adaptadores): Phaser es solo el
+adaptador visual, y la versión de terminal ni se entera de que existe.
+
+> **Página de venta**: en `web/store.html` hay una store page estilo Steam
+> (héroe noir con ECG en vivo, galería de gameplay real y ficha técnica) para
+> presentar el juego a jugadores y prensa.
+
 ## 🌍 Idiomas
 
 La interfaz está disponible en **español, inglés, francés, catalán y
@@ -221,6 +237,11 @@ Al arrancar eliges cómo vivir la guardia (o con `?ritmo=` en la URL):
   turno: presentaciones atípicas al doble, dos pacientes más, una cama de
   REA menos, el quirófano más disputado y más complicaciones imprevistas.
   Puntuación ×1,2.
+- **Noche de fiestas mayores** (`--festival`) — evento de catástrofe:
+  verbena, alcohol y peleas a la salida del escenario. Aluvión de urgencias
+  (cuatro pacientes extra) y un **incidente de múltiples víctimas
+  garantizado y más grande** (7-9 víctimas). Comparte el motor duro de la
+  guardia negra y recompensa el riesgo: puntuación ×1,35.
 - **Residente** — sales de guardia con un adjunto localizable:
   - En cada ficha te sugiere por teléfono la **prueba diana** del cuadro.
   - Si con el diagnóstico confirmado eliges un destino que contradice el
