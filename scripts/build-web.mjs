@@ -12,7 +12,9 @@ const resultado = await build({
   format: 'iife',
   target: ['es2020'],
   charset: 'utf8',
-  minify: false,
+  // Con Phaser dentro, minificar es obligatorio: baja de ~5,8 MB a ~1,5 MB.
+  minify: true,
+  legalComments: 'none',
   write: false,
 });
 

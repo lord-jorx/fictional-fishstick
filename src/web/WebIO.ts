@@ -11,7 +11,8 @@ import { horaGuardia } from '../ui/hud.js';
 import { esquemaQuirurgico } from './anatomia.js';
 import { ARTE_AMANECER, ARTE_PORTADA, BANNER_QUIROFANO, cuerpoConDolor, QUEJAS, SVG_AMBULANCIA } from './arte.js';
 import { t } from '../i18n.js';
-import { construirMapa, construirQuirofano } from './mapa.js';
+import { construirQuirofano } from './mapa.js';
+import { PhaserSala, type ZonaJuego } from './juego/PhaserSala.js';
 import { iconoHerramienta } from './quirofano.js';
 import { retratoDesdeRasgos, retratoPaciente } from './retrato.js';
 import { sonido } from './sonido.js';
@@ -75,6 +76,8 @@ export class WebIO implements IO {
   private nombresPrevios = new Set<string>();
   /** Desmontaje del modo arcade (teclas + bucle de animación) del plano actual. */
   private limpiarMapa: (() => void) | null = null;
+  /** El juego Phaser del plano de urgencias (se crea perezosamente). */
+  private phaserSala: PhaserSala | null = null;
 
   constructor(raiz: HTMLElement) {
     this.salida = document.createElement('div');
@@ -344,26 +347,69 @@ export class WebIO implements IO {
   }
 
   // ────────────────────────────────────────────────────────────
-  /** El plano de urgencias: caminar hasta el box antes de decidir. */
+  /**
+   * El plano de urgencias, renderizado con Phaser: el cirujano es un sprite
+   * con físicas que recorre el servicio y pisar una zona elige esa acción.
+   */
   private montarMapa(botones: HTMLButtonElement[], etiquetas: string[]): void {
-    const espera = this.ultimoTablero.filter((c) => c.lugar === 'espera');
+    const espera = this.ultimoTablero.filter((c) => c.lugar === 'espera').slice(0, 5);
     const buscarIdx = (texto: string) => etiquetas.findIndex((e) => e.includes(texto));
 
     // Los que no estaban en el plano anterior entran andando desde la ambulancia.
     const recien = new Set(espera.map((c) => c.nombre).filter((n) => !this.nombresPrevios.has(n)));
     this.nombresPrevios = new Set(espera.map((c) => c.nombre));
 
-    const mapa = document.createElement('div');
-    mapa.id = 'mapa';
-    mapa.innerHTML = construirMapa(espera, {
-      cafe: buscarIdx(t('cafe')),
-      descansar: buscarIdx(t('descansar')),
-      ronda: buscarIdx(t('ronda')),
-      recien,
+    const zonas: ZonaJuego[] = espera.map((c, i) => ({
+      idx: i,
+      etiqueta: `BOX ${i + 1}`,
+      icono: '',
+      clase: 'box' as const,
+      estabilidad: c.estabilidad,
+      alerta: !!c.alerta,
+      recien: recien.has(c.nombre),
+    }));
+    zonas.push(
+      { idx: buscarIdx(t('ronda')), etiqueta: 'PLANTA', icono: '🛏', clase: 'planta' },
+      { idx: -1, etiqueta: 'QUIRÓFANO', icono: '🔪', clase: 'quirofano' },
+      { idx: -1, etiqueta: 'CONTROL', icono: '🩺', clase: 'control' },
+      { idx: -1, etiqueta: 'ENTRADA', icono: '🚑', clase: 'entrada' },
+      { idx: buscarIdx(t('descansar')), etiqueta: 'SOFÁ', icono: '💤', clase: 'sofa' },
+      { idx: buscarIdx(t('cafe')), etiqueta: 'CAFÉ', icono: '☕', clase: 'cafe' },
+    );
+
+    this.phaserSala ??= new PhaserSala();
+    const juego = this.phaserSala;
+    const tactil = matchMedia('(pointer: coarse)').matches;
+    juego.montar({
+      zonas,
+      onElegir: (idx) => botones[idx]?.click(),
     });
+
     const cabecera = this.menu.querySelector('.menu-titulo');
-    cabecera?.after(mapa, this.crearPista());
-    this.conectarZonas(mapa, botones);
+    const pista = this.crearPista();
+    cabecera?.after(juego.contenedor, pista);
+    if (tactil) pista.after(this.crearPadPhaser(juego));
+
+    // La escena Phaser sigue viva mientras el menú exista; al limpiarlo se detiene.
+    this.limpiarMapa = () => juego.fijarTactil(0, 0);
+  }
+
+  /** Cruceta táctil que empuja la dirección al sprite Phaser. */
+  private crearPadPhaser(juego: PhaserSala): HTMLElement {
+    const pad = document.createElement('div');
+    pad.className = 'mapa-pad';
+    const dirs: Array<[string, number, number]> = [['◀', -1, 0], ['▲', 0, -1], ['▼', 0, 1], ['▶', 1, 0]];
+    for (const [flecha, dx, dy] of dirs) {
+      const b = document.createElement('button');
+      b.type = 'button';
+      b.textContent = flecha;
+      b.addEventListener('pointerdown', (ev) => { ev.preventDefault(); juego.fijarTactil(dx, dy); });
+      for (const fin of ['pointerup', 'pointercancel', 'pointerleave'] as const) {
+        b.addEventListener(fin, () => juego.fijarTactil(0, 0));
+      }
+      pad.appendChild(b);
+    }
+    return pad;
   }
 
   /** El plano del quirófano: mesa, anestesia y bandejas de instrumental pisables. */
