@@ -13,6 +13,7 @@ import { ARTE_AMANECER, ARTE_PORTADA, BANNER_QUIROFANO, cuerpoConDolor, QUEJAS, 
 import { t } from '../i18n.js';
 import { construirQuirofano } from './mapa.js';
 import { PhaserSala, type ZonaJuego } from './juego/PhaserSala.js';
+import { PhaserTriaje } from './juego/PhaserTriaje.js';
 import { iconoHerramienta } from './quirofano.js';
 import { retratoDesdeRasgos, retratoPaciente } from './retrato.js';
 import { sonido } from './sonido.js';
@@ -78,6 +79,8 @@ export class WebIO implements IO {
   private limpiarMapa: (() => void) | null = null;
   /** El juego Phaser del plano de urgencias (se crea perezosamente). */
   private phaserSala: PhaserSala | null = null;
+  /** El canvas Phaser de la puerta de ambulancias durante un IMV. */
+  private phaserTriaje: PhaserTriaje | null = null;
 
   constructor(raiz: HTMLElement) {
     this.salida = document.createElement('div');
@@ -115,7 +118,19 @@ export class WebIO implements IO {
   }
 
   escena(escena: EscenaId, dato?: EscenaDato): void {
+    // Al salir del incidente de múltiples víctimas, se desmonta su canvas.
+    if (escena !== 'imv' && this.phaserTriaje) {
+      this.phaserTriaje.destruir();
+      this.phaserTriaje = null;
+    }
     switch (escena) {
+      case 'imv': {
+        this.phaserTriaje ??= new PhaserTriaje();
+        if (!this.phaserTriaje.contenedor.isConnected) this.menu.before(this.phaserTriaje.contenedor);
+        this.phaserTriaje.montar(dato?.victimasImv ?? []);
+        this.desplazarAlFinal();
+        break;
+      }
       case 'portada': {
         this.insertarArte(ARTE_PORTADA, 'portada');
         const carrera = this.leerCarrera();

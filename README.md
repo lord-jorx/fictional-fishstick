@@ -122,6 +122,11 @@ otro necesitaba. Y la etiqueta negra bien puesta es medicina — mal puesta,
 una sentencia que te persigue el resto de la guardia. El parte final
 recoge tu triaje de catástrofe, etiqueta a etiqueta.
 
+En la web, la puerta de ambulancias se ve: una **escena de Phaser** con las
+víctimas alineadas en sus camillas y una tarjeta de etiqueta colgando sobre
+cada una. Según decides, la tarjeta se **colorea** (rojo/amarillo/verde/negro)
+y la víctima entra rodando al servicio; la que estás valorando parpadea.
+
 ## 😤 La sala de espera existe, y se cansa
 
 Los pacientes no esperan en el limbo: esperan en sillas. A partir de las

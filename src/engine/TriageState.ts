@@ -139,10 +139,20 @@ export class TriageState implements GameState {
         gris('  tarjeta de etiquetas en la mano: ROJO inmediato, AMARILLO diferido,\n') +
         gris('  VERDE puede esperar, NEGRO expectante. Nadie más va a decidirlo por ti.'),
     );
+    // Foto para el canvas Phaser de la puerta de ambulancias.
+    const fotoImv = (activaIdx: number) =>
+      victimas.map((v, i) => ({
+        nombre: v.nombre,
+        estabilidad: v.estabilidad,
+        etiqueta: v.etiquetaTriaje,
+        activa: i === activaIdx,
+      }));
+    ctx.io.escena?.('imv', { victimasImv: fotoImv(-1) });
     await ctx.io.pausa('Pulsa Intro para salir a la puerta de ambulancias...');
 
-    for (const v of victimas) {
+    for (const [indice, v] of victimas.entries()) {
       const correcta = this.etiquetaQueTocaba(v);
+      ctx.io.escena?.('imv', { victimasImv: fotoImv(indice) });
       const elegida = await ctx.io.elegir<EtiquetaTriaje>(
         `Etiqueta para ${v.nombre}, ${v.edad} años — ${v.constantes}`,
         [
@@ -154,6 +164,7 @@ export class TriageState implements GameState {
       );
       v.etiquetaTriaje = elegida;
       ctx.stats.etiquetasImvTotales++;
+      ctx.io.escena?.('imv', { victimasImv: fotoImv(indice) }); // colorea la tarjeta recién puesta
       this.mostrarAvisos(ctx, ctx.avanzarTiempo(2));
       ctx.registrarPaciente(v);
 

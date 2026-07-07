@@ -34,7 +34,16 @@ export interface LatidoTiempoReal {
 }
 
 /** Momentos visuales del juego, para adaptadores que sepan ilustrarlos. */
-export type EscenaId = 'portada' | 'triaje' | 'paciente' | 'quirofano' | 'paso' | 'fin' | 'editor';
+export type EscenaId = 'portada' | 'triaje' | 'paciente' | 'quirofano' | 'paso' | 'fin' | 'editor' | 'imv';
+
+/** Una víctima del IMV en la puerta de ambulancias, con su etiqueta si ya la tiene. */
+export interface VictimaImv {
+  nombre: string;
+  estabilidad: number;
+  etiqueta?: 'rojo' | 'amarillo' | 'verde' | 'negro';
+  /** true si es la víctima que se está etiquetando ahora mismo. */
+  activa?: boolean;
+}
 
 /** Rasgos elegibles del retrato (editor de personaje y pacientes). */
 export interface Rasgos {
@@ -78,6 +87,8 @@ export interface EscenaDato {
   rasgos?: Rasgos;
   /** Escena 'paciente': queja hablada del paciente (bocadillo). */
   queja?: string;
+  /** Escena 'imv': víctimas en la puerta de ambulancias y sus etiquetas. */
+  victimasImv?: VictimaImv[];
 }
 
 export interface IO {
