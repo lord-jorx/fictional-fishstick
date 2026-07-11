@@ -69,12 +69,22 @@ Al empezar eliges dónde te toca la noche:
 
 ## 🎖 Roguelite: la taquilla del cirujano
 
-La XP de tu expediente desbloquea **mejoras permanentes** que se aplican
-solas al fichar: *Termo del bueno* (300 XP), *Ojo clínico* (800: pruebas 5
-min más rápidas), *El número personal del adjunto* (1.500: una llamada en
-cualquier modo), *Equipo compenetrado* (2.500: menos imprevistos) y
-*Templanza* (4.000: empiezas sin estrés). Cada guardia alimenta la
-siguiente.
+Cada guardia da XP (la puntuación positiva de la noche) y esa XP alimenta la
+siguiente. Al fichar se abre **la TAQUILLA**: una pantalla propia con las
+cinco mejoras y su estado —desbloqueada o *faltan N XP*—, tu rango actual y
+el siguiente. En la web es un panel de tarjetas; en la terminal, una lista.
+
+- *Termo del bueno* (300 XP) — el café recupera el triple de energía.
+- *Ojo clínico* (800) — todas las pruebas tardan 5 min menos.
+- *El número del adjunto* (1.500) — una llamada de ayuda en quirófano, en cualquier modo.
+- *Equipo compenetrado* (2.500) — menos imprevistos intraoperatorios.
+- *Templanza* (4.000) — empiezas cada guardia sin una gota de estrés.
+
+Las mejoras se aplican **en todos los modos**. El expediente de la portada
+lleva una **barra de progreso al siguiente rango** (de *R1 con vocación* a
+*Leyenda de la guardia*), y al cerrar la guardia se celebra la **XP ganada,
+los ascensos y cada mejora recién desbloqueada**. Salir derrotado también
+suma: vuelves con algo nuevo.
 
 ## 🚑 Paciente traumático y patología médica
 
