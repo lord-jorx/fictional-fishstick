@@ -87,7 +87,12 @@ export class SurgeryState implements GameState {
       const opciones = this.barajar(ctx, paso.opciones);
       const eleccion = await this.elegirTecnica(ctx, opciones);
 
-      p.estabilidad = Math.min(100, Math.max(0, p.estabilidad + eleccion.deltaEstabilidad));
+      // Pulso de hielo (talismán): los errores restan un 25% menos.
+      const deltaEst =
+        ctx.talisman === 'pulso' && eleccion.deltaEstabilidad < 0
+          ? Math.round(eleccion.deltaEstabilidad * 0.75)
+          : eleccion.deltaEstabilidad;
+      p.estabilidad = Math.min(100, Math.max(0, p.estabilidad + deltaEst));
       ctx.cirujano.estres = Math.min(100, Math.max(0, ctx.cirujano.estres + eleccion.deltaEstres));
 
       if (eleccion.correcta) {

@@ -104,6 +104,13 @@ export interface IO {
   preguntarTexto?(pregunta: string, porDefecto: string): Promise<string>;
   /** XP acumulada de la carrera del jugador (adaptadores con memoria). */
   experiencia?(): number;
+  /**
+   * Talismán pendiente del botín de la guardia anterior: lo devuelve y lo
+   * CONSUME (una noche, un talismán). Solo adaptadores con memoria.
+   */
+  cogerTalisman?(): string | null;
+  /** Guarda el talismán elegido en el botín para la próxima guardia. */
+  guardarTalisman?(id: string): void;
   /** Fin de la partida: libera recursos (readline) o muestra el reinicio (web). */
   cerrar(): void;
   /**

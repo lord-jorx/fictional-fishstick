@@ -86,6 +86,23 @@ lleva una **barra de progreso al siguiente rango** (de *R1 con vocación* a
 los ascensos y cada mejora recién desbloqueada**. Salir derrotado también
 suma: vuelves con algo nuevo.
 
+### 🎁 El botín de guardia: elige tu talismán
+
+Al firmar el parte de las 08:00, la noche te paga: **eliges 1 de 3
+talismanes** al azar y se guarda en la taquilla para tu **próxima guardia**
+(una noche, un uso, cualquier modo). Al volver a fichar, se anuncia lo que
+llevas *en el bolsillo* y se consume:
+
+- 🥿 *Zuecos nuevos* — ir en persona al box cuesta 2 min en vez de 5.
+- 🧪 *R1 espabilado* — las analíticas tardan 15 min menos.
+- 🩻 *El radiólogo te aprecia* — TC y angio-TC tardan 20 min menos.
+- 🚑 *Ambulancia a la puerta* — derivar cuesta 10 min en vez de 30.
+- 🧊 *Pulso de hielo* — los errores en quirófano restan un 25% menos.
+- 🛡 *La supervisora te cubre* — esta noche nadie se va sin ser visto.
+
+Es la decisión con gancho del bucle: hasta la peor guardia te manda a casa
+con algo en el bolsillo para la revancha.
+
 ## 🚑 Paciente traumático y patología médica
 
 Además del abdomen: **neumotórax a tensión** (se drena en urgencias, sin

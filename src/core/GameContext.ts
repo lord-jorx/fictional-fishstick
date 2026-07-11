@@ -74,6 +74,8 @@ export class GameContext {
   pruebasNoDisponibles: string[] = [];
   /** Mejoras roguelite desbloqueadas por la carrera del cirujano. */
   mejoras = new Set<string>();
+  /** Talismán de una noche (botín de la guardia anterior), o null. */
+  talisman: string | null = null;
   /** Llamadas al adjunto disponibles en quirófano (solo modo residente). */
   consultasAdjunto = 3;
 
@@ -238,6 +240,7 @@ export class GameContext {
 
       // ── La sala de espera se cansa: horas de espera y se van sin ser vistos ──
       for (const p of [...this.salaEspera]) {
+        if (this.talisman === 'dana') break; // la supervisora te cubre esta noche
         if (p === this.pacienteEnAtencion || p.reingresado || p.etiquetaTriaje) continue;
         const esperaMin = this.minuto - p.minutoLlegada;
         const benigno = p.patologia.manejoCorrecto === 'alta';

@@ -244,8 +244,9 @@ export class TriageState implements GameState {
       ctx.cirujanoActivo = paciente.cirujanoIdx;
     }
 
-    // Ir en persona hasta el box: los pasillos también corren en el reloj.
-    this.mostrarAvisos(ctx, ctx.avanzarTiempo(5));
+    // Ir en persona hasta el box: los pasillos también corren en el reloj
+    // (con los zuecos nuevos, casi ni se nota).
+    this.mostrarAvisos(ctx, ctx.avanzarTiempo(ctx.talisman === 'zuecos' ? 2 : 5));
 
     ctx.io.escena?.('paciente', {
       patologiaId: paciente.patologia.id,
@@ -294,7 +295,10 @@ export class TriageState implements GameState {
 
         case 'prueba': {
           const prueba = PRUEBAS[accion.prueba];
-          const bonus = ctx.mejoras.has('ojo') ? 5 : 0;
+          let bonus = ctx.mejoras.has('ojo') ? 5 : 0;
+          // Talismanes de la noche: el R1 espabilado y el radiólogo amigo.
+          if (ctx.talisman === 'r1' && prueba.id === 'analitica') bonus += 15;
+          if (ctx.talisman === 'radiologo' && (prueba.id === 'tc' || prueba.id === 'angiotc')) bonus += 20;
           const duracion = Math.max(5, prueba.duracionMin - paciente.descuentoPrueba - bonus);
           if (paciente.descuentoPrueba > 0) {
             ctx.io.escribir(gris(`Sabes exactamente qué buscar: ${prueba.nombre} priorizada (${duracion} min).`));
@@ -608,7 +612,7 @@ export class TriageState implements GameState {
   private resolverDerivacion(ctx: GameContext, p: Paciente): void {
     this.sacarDeEspera(ctx, p);
     ctx.stats.atendidos++;
-    this.mostrarAvisos(ctx, ctx.avanzarTiempo(30));
+    this.mostrarAvisos(ctx, ctx.avanzarTiempo(ctx.talisman === 'ambulancia' ? 10 : 30));
     p.estado = 'derivado';
     p.derivacionCorrecta = ctx.derivables.includes(p.patologia.id);
 

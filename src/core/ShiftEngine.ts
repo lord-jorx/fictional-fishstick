@@ -13,7 +13,7 @@ import { lineaSeparadora } from '../ui/hud.js';
 import type { IO } from './io.js';
 import { HOSPITALES } from '../data/hospitales.js';
 import { patologiaPorId } from '../data/pathologies.js';
-import { MEJORAS, proximoRango, rangoPorXp } from '../data/mejoras.js';
+import { MEJORAS, proximoRango, rangoPorXp, talismanPorId } from '../data/mejoras.js';
 import { fijarIdioma, IDIOMAS, t, type Idioma } from '../i18n.js';
 import type { Rasgos } from './io.js';
 import { crearRng, GameContext, type MiembroEquipo } from './GameContext.js';
@@ -97,6 +97,15 @@ export class ShiftEngine {
       this.io.escribir(gris(`\n  Siguiente rango: ${prox.nombre} (a ${prox.faltan} XP). La XP se gana con la puntuación de cada guardia.`));
     } else {
       this.io.escribir(gris('\n  Rango máximo alcanzado. Ya solo compites contra tu mejor noche.'));
+    }
+
+    // ── El botín de la guardia anterior: un talismán, una noche ──
+    const talisman = talismanPorId(this.io.cogerTalisman?.());
+    if (talisman) {
+      this.ctx.talisman = talisman.id;
+      this.io.escribir(
+        `\n  ${negrita(cian(`${talisman.icono} EN EL BOLSILLO: ${talisman.nombre}`))} ${gris(`— ${talisman.efecto}. Solo por esta noche.`)}`,
+      );
     }
 
     if (this.modo === undefined) {

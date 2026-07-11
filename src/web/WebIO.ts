@@ -358,6 +358,29 @@ export class WebIO implements IO {
     return this.leerCarrera()?.xp ?? 0;
   }
 
+  /** Devuelve y consume el talismán pendiente del botín anterior. */
+  cogerTalisman(): string | null {
+    try {
+      const c = this.leerCarrera();
+      if (!c?.talisman) return null;
+      const id = c.talisman;
+      delete c.talisman;
+      localStorage.setItem('surgeons-night-carrera', JSON.stringify(c));
+      return id;
+    } catch {
+      return null;
+    }
+  }
+
+  /** Guarda el talismán elegido para la próxima guardia. */
+  guardarTalisman(id: string): void {
+    try {
+      const c = this.leerCarrera() ?? { guardias: 0, mejor: -Infinity, xp: 0 };
+      c.talisman = id;
+      localStorage.setItem('surgeons-night-carrera', JSON.stringify(c));
+    } catch { /* sin almacenamiento: el botín no persiste */ }
+  }
+
   cerrar(): void {
     sonido.pararLatido();
     if (this.ticker !== null) {
@@ -601,8 +624,8 @@ export class WebIO implements IO {
     };
   }
 
-  /** Expediente persistente del cirujano (XP, rango, mejor guardia). */
-  private leerCarrera(): { guardias: number; mejor: number; xp: number } | null {
+  /** Expediente persistente del cirujano (XP, rango, mejor guardia, botín). */
+  private leerCarrera(): { guardias: number; mejor: number; xp: number; talisman?: string } | null {
     try {
       const crudo = localStorage.getItem('surgeons-night-carrera');
       return crudo ? JSON.parse(crudo) : null;

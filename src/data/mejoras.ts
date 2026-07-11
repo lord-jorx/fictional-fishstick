@@ -64,3 +64,32 @@ export function proximoRango(xp: number): { nombre: string; faltan: number } | n
 export function mejorasNuevas(xpAntes: number, xpDespues: number): Mejora[] {
   return MEJORAS.filter((m) => xpAntes < m.xpMin && xpDespues >= m.xpMin);
 }
+
+// ────────────────────────────────────────────────────────────────
+// El botín de guardia: talismanes de una noche.
+//
+// Al cerrar la guardia eliges 1 de 3 — se guarda en tu taquilla y se
+// CONSUME en la siguiente noche, en cualquier modo. Es la decisión con
+// gancho del bucle roguelite: hasta la peor guardia te manda a casa
+// con algo en el bolsillo para la revancha.
+// ────────────────────────────────────────────────────────────────
+
+export interface Talisman {
+  id: string;
+  nombre: string;
+  efecto: string;
+  icono: string;
+}
+
+export const TALISMANES: Talisman[] = [
+  { id: 'zuecos', nombre: 'Zuecos nuevos', efecto: 'ir en persona al box cuesta 2 min en vez de 5', icono: '🥿' },
+  { id: 'r1', nombre: 'R1 espabilado', efecto: 'las analíticas tardan 15 min menos', icono: '🧪' },
+  { id: 'radiologo', nombre: 'El radiólogo te aprecia', efecto: 'TC y angio-TC tardan 20 min menos', icono: '🩻' },
+  { id: 'ambulancia', nombre: 'Ambulancia a la puerta', efecto: 'derivar cuesta 10 min en vez de 30', icono: '🚑' },
+  { id: 'pulso', nombre: 'Pulso de hielo', efecto: 'los errores en quirófano restan un 25% menos de estabilidad', icono: '🧊' },
+  { id: 'dana', nombre: 'La supervisora te cubre', efecto: 'esta noche nadie se va sin ser visto', icono: '🛡' },
+];
+
+export function talismanPorId(id: string | null | undefined): Talisman | undefined {
+  return TALISMANES.find((t) => t.id === id);
+}

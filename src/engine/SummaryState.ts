@@ -6,6 +6,7 @@
 import { GameContext } from '../core/GameContext.js';
 import type { GameState } from '../core/StateMachine.js';
 import type { Paciente } from '../core/types.js';
+import { TALISMANES, type Talisman } from '../data/mejoras.js';
 import { amarillo, cian, gris, negrita, rojo, verde } from '../ui/ansi.js';
 import { lineaSeparadora } from '../ui/hud.js';
 import { pintarEstrellas } from './calificacion.js';
@@ -86,6 +87,27 @@ export class SummaryState implements GameState {
     // Segundo aviso de fin, ya con la puntuación: los adaptadores con memoria
     // (web) actualizan aquí el expediente persistente del cirujano.
     ctx.io.escena?.('fin', { puntos });
+
+    // ── El botín de guardia: elige 1 de 3 talismanes para la próxima noche.
+    // Solo en adaptadores con memoria (la web); la terminal no persiste.
+    if (ctx.io.guardarTalisman) {
+      const bolsa = [...TALISMANES];
+      const ofrecidos: Talisman[] = [];
+      while (ofrecidos.length < 3 && bolsa.length > 0) {
+        ofrecidos.push(bolsa.splice(Math.floor(ctx.rng() * bolsa.length), 1)[0]!);
+      }
+      ctx.io.escribir(negrita(cian('\n🎁 BOTÍN DE GUARDIA — hasta la peor noche te manda a casa con algo:')));
+      const elegido = await ctx.io.elegir(
+        'Elige un talismán para tu PRÓXIMA guardia (una noche, un uso):',
+        ofrecidos.map((t) => ({
+          etiqueta: `${t.icono} ${t.nombre}`,
+          detalle: t.efecto,
+          valor: t,
+        })),
+      );
+      ctx.io.guardarTalisman(elegido.id);
+      ctx.io.escribir(gris(`  ${elegido.icono} ${elegido.nombre} guardado en la taquilla. Te espera en la próxima guardia.`));
+    }
 
     ctx.io.cerrar();
     return null;
