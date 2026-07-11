@@ -14,6 +14,7 @@ import { t } from '../i18n.js';
 import { construirQuirofano } from './mapa.js';
 import { PhaserSala, type ZonaJuego } from './juego/PhaserSala.js';
 import { PhaserTriaje } from './juego/PhaserTriaje.js';
+import { MEJORAS, mejorasNuevas, proximoRango, rangoPorXp } from '../data/mejoras.js';
 import { iconoHerramienta } from './quirofano.js';
 import { retratoDesdeRasgos, retratoPaciente } from './retrato.js';
 import { sonido } from './sonido.js';
@@ -131,19 +132,30 @@ export class WebIO implements IO {
         this.desplazarAlFinal();
         break;
       }
+      case 'taquilla': {
+        this.pintarTaquilla(dato?.xpCarrera ?? 0);
+        break;
+      }
       case 'portada': {
         this.insertarArte(ARTE_PORTADA, 'portada');
-        const carrera = this.leerCarrera();
-        if (carrera && carrera.guardias > 0) {
+        const carrera = this.leerCarrera() ?? { guardias: 0, mejor: 0, xp: 0 };
+        const prox = proximoRango(carrera.xp);
+        const desbloqueadas = MEJORAS.filter((m) => carrera.xp >= m.xpMin).length;
+        const barra = prox
+          ? this.barraRango(carrera.xp, prox)
+          : '<div class="carrera-max">✦ Rango máximo ✦</div>';
+        {
           this.insertarArte(
             `<div class="carrera">
                <div class="carrera-titulo">EXPEDIENTE DEL CIRUJANO</div>
                <div class="carrera-datos">
                  <span>${carrera.guardias} guardia${carrera.guardias === 1 ? '' : 's'}</span>
-                 <span>mejor: ${carrera.mejor}</span>
+                 <span>mejor: ${Number.isFinite(carrera.mejor) ? carrera.mejor : 0}</span>
                  <span>${carrera.xp} XP</span>
-                 <span class="carrera-rango">${this.rango(carrera.xp)}</span>
+                 <span class="carrera-rango">${rangoPorXp(carrera.xp)}</span>
+                 <span>🔓 ${desbloqueadas}/${MEJORAS.length} mejoras</span>
                </div>
+               ${barra}
              </div>`,
             'carrera',
           );
@@ -602,24 +614,72 @@ export class WebIO implements IO {
   private guardarCarrera(puntos: number): void {
     try {
       const c = this.leerCarrera() ?? { guardias: 0, mejor: -Infinity, xp: 0 };
+      const xpAntes = c.xp;
+      const ganada = Math.max(0, puntos);
       c.guardias += 1;
       c.mejor = Math.max(c.mejor, puntos);
-      c.xp += Math.max(0, puntos);
+      c.xp += ganada;
+      const rangoAntes = rangoPorXp(xpAntes);
+      const rangoAhora = rangoPorXp(c.xp);
       localStorage.setItem('surgeons-night-carrera', JSON.stringify(c));
+
+      // El momento roguelite: XP ganada, ascensos y mejoras recién abiertas.
       this.escribir(
-        `\x1b[90mExpediente actualizado: guardia nº ${c.guardias} · ${c.xp} XP · rango ${sinAnsi(this.rango(c.xp))}\x1b[39m`,
+        `\x1b[36m+${ganada} XP\x1b[39m \x1b[90men esta guardia — carrera: ${c.xp} XP · guardia nº ${c.guardias}\x1b[39m`,
       );
+      if (rangoAhora !== rangoAntes) {
+        this.escribir(`\x1b[1m\x1b[33m★ ASCENSO: ahora eres ${sinAnsi(rangoAhora)}.\x1b[39m\x1b[22m`);
+        sonido.campanilla();
+      }
+      const nuevas = mejorasNuevas(xpAntes, c.xp);
+      for (const m of nuevas) {
+        this.escribir(`\x1b[1m\x1b[36m🔓 NUEVO EN TU TAQUILLA: ${m.icono} ${m.nombre}\x1b[39m\x1b[22m \x1b[90m— ${m.efecto}\x1b[39m`);
+      }
+      if (nuevas.length > 0) sonido.campanilla();
+      const prox = proximoRango(c.xp);
+      if (prox) this.escribir(`\x1b[90mSiguiente rango: ${prox.nombre}, a ${prox.faltan} XP.\x1b[39m`);
     } catch { /* sin almacenamiento: la carrera no persiste, el juego sigue */ }
   }
 
-  private rango(xp: number): string {
-    if (xp >= 6000) return 'Leyenda de la guardia';
-    if (xp >= 4000) return 'Jefe de Servicio';
-    if (xp >= 2500) return 'Adjunto senior';
-    if (xp >= 1500) return 'Adjunto';
-    if (xp >= 800) return 'R5';
-    if (xp >= 300) return 'R3';
-    return 'R1 con vocación';
+  /** El vestuario: todas las mejoras con su estado (desbloqueada o a X XP). */
+  private pintarTaquilla(xp: number): void {
+    const cartas = MEJORAS.map((m) => {
+      const abierta = xp >= m.xpMin;
+      const estado = abierta
+        ? '<span class="taq-ok">DESBLOQUEADA</span>'
+        : `<span class="taq-lock">faltan ${m.xpMin - xp} XP</span>`;
+      return `
+      <div class="taq-carta ${abierta ? 'abierta' : 'cerrada'}">
+        <div class="taq-icono">${abierta ? m.icono : '🔒'}</div>
+        <div class="taq-cuerpo">
+          <div class="taq-nombre">${escaparHtml(m.nombre)}</div>
+          <div class="taq-efecto">${escaparHtml(m.efecto)}</div>
+        </div>
+        <div class="taq-estado">${estado}</div>
+      </div>`;
+    }).join('');
+    const prox = proximoRango(xp);
+    const pie = prox
+      ? `Siguiente rango: <b>${escaparHtml(prox.nombre)}</b> a ${prox.faltan} XP`
+      : 'Rango máximo alcanzado';
+    this.insertarArte(
+      `<div class="taquilla">
+         <div class="taq-cab">🔓 TU TAQUILLA <span>${rangoPorXp(xp)} · ${xp} XP</span></div>
+         <div class="taq-rejilla">${cartas}</div>
+         <div class="taq-pie">${pie}</div>
+       </div>`,
+      'taquilla',
+    );
+  }
+
+  /** Barra de progreso hacia el siguiente rango, para la portada. */
+  private barraRango(xp: number, prox: { nombre: string; faltan: number }): string {
+    const objetivo = xp + prox.faltan;
+    const pct = Math.max(4, Math.min(100, Math.round((xp / objetivo) * 100)));
+    return `<div class="carrera-barra" title="${xp}/${objetivo} XP">
+        <div class="carrera-relleno" style="width:${pct}%"></div>
+        <span class="carrera-meta">→ ${escaparHtml(prox.nombre)} (${prox.faltan} XP)</span>
+      </div>`;
   }
 
   /** El rail de "comandas": cada paciente pendiente con su reloj vital. */

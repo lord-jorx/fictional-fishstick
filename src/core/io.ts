@@ -34,7 +34,7 @@ export interface LatidoTiempoReal {
 }
 
 /** Momentos visuales del juego, para adaptadores que sepan ilustrarlos. */
-export type EscenaId = 'portada' | 'triaje' | 'paciente' | 'quirofano' | 'paso' | 'fin' | 'editor' | 'imv';
+export type EscenaId = 'portada' | 'triaje' | 'paciente' | 'quirofano' | 'paso' | 'fin' | 'editor' | 'imv' | 'taquilla';
 
 /** Una víctima del IMV en la puerta de ambulancias, con su etiqueta si ya la tiene. */
 export interface VictimaImv {
@@ -89,6 +89,8 @@ export interface EscenaDato {
   queja?: string;
   /** Escena 'imv': víctimas en la puerta de ambulancias y sus etiquetas. */
   victimasImv?: VictimaImv[];
+  /** Escena 'taquilla': XP de carrera para pintar el vestuario roguelite. */
+  xpCarrera?: number;
 }
 
 export interface IO {

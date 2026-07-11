@@ -385,28 +385,22 @@ export class TriageState implements GameState {
     const explorado = TriageState.explorados.has(paciente.id);
     const analiticaHecha = paciente.pruebasRealizadas.includes('analitica');
     const relevantes = pruebasRelevantes(paciente.patologia);
-    let faltaExplorar = false;
-    let faltaAnalitica = false;
 
+    // El orden se respeta ocultando lo que aún no toca, SIN decir por qué:
+    // en el proceso diagnóstico no se dan pistas. Se ofrece todo lo que tiene
+    // sentido pedir en este punto, ni una prueba de más.
     for (const id of ORDEN_PRUEBAS) {
       if (!relevantes.has(id)) continue;                          // sin sentido en este cuadro
       if (ctx.pruebasNoDisponibles.includes(id)) continue;        // no la hay en este hospital
       if (paciente.pruebasRealizadas.includes(id)) continue;      // ya hecha
-      if (!vital && !explorado) { faltaExplorar = true; continue; }             // explora primero
-      if (!vital && ESCANER_ABDOMINAL.has(id) && !analiticaHecha) { faltaAnalitica = true; continue; } // analítica antes del escáner
+      if (!vital && !explorado) continue;                         // explora primero
+      if (!vital && ESCANER_ABDOMINAL.has(id) && !analiticaHecha) continue; // analítica antes del escáner
       const prueba = PRUEBAS[id];
       opciones.push({
         etiqueta: `${t('solicitar')} ${prueba.nombre}`,
         detalle: `${prueba.duracionMin} min`,
         valor: { tipo: 'prueba', prueba: id },
       });
-    }
-
-    // Pistas del orden (por qué no aparece algo), sin ser condescendiente.
-    if (faltaExplorar) {
-      ctx.io.escribir(gris('  Explora al paciente antes de pedir pruebas complementarias.'));
-    } else if (faltaAnalitica) {
-      ctx.io.escribir(gris('  El TC/angio-TC va después de la analítica (salvo urgencia vital).'));
     }
 
     opciones.push(
@@ -451,10 +445,6 @@ export class TriageState implements GameState {
     if (p.diagnosticoConfirmado) {
       const cie = p.patologia.cie10 ? gris(`  [CIE-10: ${p.patologia.cie10}]`) : '';
       ctx.io.escribir(`  ${verde(`✔ Diagnóstico confirmado: ${p.patologia.nombre}`)}${cie}`);
-    } else if (ctx.modoResidente) {
-      ctx.io.escribir(
-        `  ${cian('🩺 Tu adjunto, por teléfono:')} ${gris(`«Con esa clínica, yo pediría ${PRUEBAS[p.patologia.pruebaDiana].nombre.toLowerCase()}.»`)}`,
-      );
     }
   }
 

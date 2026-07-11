@@ -13,6 +13,7 @@ import { lineaSeparadora } from '../ui/hud.js';
 import type { IO } from './io.js';
 import { HOSPITALES } from '../data/hospitales.js';
 import { patologiaPorId } from '../data/pathologies.js';
+import { MEJORAS, proximoRango, rangoPorXp } from '../data/mejoras.js';
 import { fijarIdioma, IDIOMAS, t, type Idioma } from '../i18n.js';
 import type { Rasgos } from './io.js';
 import { crearRng, GameContext, type MiembroEquipo } from './GameContext.js';
@@ -69,26 +70,33 @@ export class ShiftEngine {
       this.io.escribir(gris('  La ambulancia medicalizada está operativa: derivar con criterio también puntúa.'));
     }
 
-    // ── Taquilla roguelite: la carrera desbloquea mejoras permanentes ──
+    // ── Taquilla roguelite: la carrera desbloquea mejoras permanentes que
+    // se aplican en CUALQUIER modo de juego. La taquilla se muestra siempre,
+    // con lo desbloqueado y lo que aún te falta (la zanahoria a la vista) ──
     const xp = this.io.experiencia?.() ?? 0;
-    const TAQUILLA: Array<{ id: string; xpMin: number; nombre: string }> = [
-      { id: 'termo', xpMin: 300, nombre: 'Termo del bueno (el café rinde el triple)' },
-      { id: 'ojo', xpMin: 800, nombre: 'Ojo clínico (todas las pruebas, 5 min más rápidas)' },
-      { id: 'busca', xpMin: 1500, nombre: 'El número personal del adjunto (1 llamada en cualquier modo)' },
-      { id: 'equipo', xpMin: 2500, nombre: 'Equipo compenetrado (menos imprevistos en quirófano)' },
-      { id: 'templanza', xpMin: 4000, nombre: 'Templanza (empiezas la guardia sin estrés)' },
-    ];
-    for (const mejora of TAQUILLA) {
+    for (const mejora of MEJORAS) {
       if (xp >= mejora.xpMin) this.ctx.mejoras.add(mejora.id);
     }
-    if (this.ctx.mejoras.size > 0) {
-      this.io.escribir(gris('\n  TAQUILLA — tu carrera te acompaña:'));
-      for (const mejora of TAQUILLA) {
-        if (this.ctx.mejoras.has(mejora.id)) this.io.escribir(gris(`   ✓ ${mejora.nombre}`));
+    if (this.ctx.mejoras.has('templanza')) {
+      for (const c of this.ctx.equipo) c.estres = 0;
+    }
+
+    this.io.escena?.('taquilla', { xpCarrera: xp });
+    this.io.escribir('\n' + lineaSeparadora());
+    this.io.escribir(`  ${negrita(cian('🔓 TU TAQUILLA'))}  ${gris(`— ${rangoPorXp(xp)} · ${xp} XP de carrera`)}`);
+    this.io.escribir(lineaSeparadora());
+    for (const mejora of MEJORAS) {
+      if (this.ctx.mejoras.has(mejora.id)) {
+        this.io.escribir(`  ${cian('✓')} ${negrita(mejora.nombre)} ${gris(`— ${mejora.efecto}`)}`);
+      } else {
+        this.io.escribir(gris(`  🔒 ${mejora.nombre} — faltan ${mejora.xpMin - xp} XP  (${mejora.efecto})`));
       }
-      if (this.ctx.mejoras.has('templanza')) {
-        for (const c of this.ctx.equipo) c.estres = 0;
-      }
+    }
+    const prox = proximoRango(xp);
+    if (prox) {
+      this.io.escribir(gris(`\n  Siguiente rango: ${prox.nombre} (a ${prox.faltan} XP). La XP se gana con la puntuación de cada guardia.`));
+    } else {
+      this.io.escribir(gris('\n  Rango máximo alcanzado. Ya solo compites contra tu mejor noche.'));
     }
 
     if (this.modo === undefined) {
