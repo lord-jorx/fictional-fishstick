@@ -111,6 +111,12 @@ export interface IO {
   cogerTalisman?(): string | null;
   /** Guarda el talismán elegido en el botín para la próxima guardia. */
   guardarTalisman?(id: string): void;
+  /**
+   * Registra un intento de la guardia del día y devuelve TODOS los intentos
+   * de esa fecha (incluido este), ordenados de mejor a peor. Adaptadores con
+   * memoria; la fecha resetea la tabla.
+   */
+  registrarDiario?(fecha: string, puntos: number): number[];
   /** Fin de la partida: libera recursos (readline) o muestra el reinicio (web). */
   cerrar(): void;
   /**

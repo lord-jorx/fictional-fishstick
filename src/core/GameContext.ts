@@ -76,6 +76,10 @@ export class GameContext {
   mejoras = new Set<string>();
   /** Talismán de una noche (botín de la guardia anterior), o null. */
   talisman: string | null = null;
+  /** Guardia del día: la misma noche (semilla) para todo el mundo. */
+  esDiario = false;
+  /** Fecha de la guardia del día (YYYY-MM-DD), para la tabla local. */
+  fechaDiario = '';
   /** Llamadas al adjunto disponibles en quirófano (solo modo residente). */
   consultasAdjunto = 3;
 

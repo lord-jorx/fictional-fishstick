@@ -133,6 +133,9 @@ const ZONA_POR_PATOLOGIA: Record<string, string> = {
   tce: 'cabeza',
   iam: 'epigastrio-toracico',
   cad: 'difuso',
+  ectopico: 'fii',
+  volvulo: 'mesogastrio',
+  pielonefritis: 'lumbar-der',
 };
 
 /** Lo que el paciente dice mientras se señala (bocadillo de la escena). */
@@ -153,6 +156,10 @@ export const QUEJAS: Record<string, string> = {
   tce: 'Solo quiero dormir un rato... la cabeza me va a estallar...',
   iam: 'Es el estómago... me aprieta... y este sudor frío, ¿de qué es?',
   cad: 'La tripa entera, doctor... y una sed que no se me quita con nada...',
+  ectopico: 'Aquí abajo, de golpe... y al levantarme se me fue la vista, doctora.',
+  absceso: 'No puedo ni sentarme, doctor... y esta noche encima fiebre.',
+  volvulo: 'Mire qué tripa, hijo... y no echo ni un gas desde ayer.',
+  pielonefritis: 'El riñón, aquí atrás... y una tiritona que me movía la cama.',
 };
 
 /** Coordenadas y nombre de la zona dolorosa (para escenas que las necesiten). */

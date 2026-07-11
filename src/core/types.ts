@@ -6,7 +6,9 @@
 export type PruebaId =
   | 'ecg'
   | 'ecofast'
+  | 'gasometria'
   | 'rxtorax'
+  | 'orina'
   | 'eco'
   | 'tccraneo'
   | 'analitica'

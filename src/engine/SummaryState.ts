@@ -88,6 +88,19 @@ export class SummaryState implements GameState {
     // (web) actualizan aquí el expediente persistente del cirujano.
     ctx.io.escena?.('fin', { puntos });
 
+    // ── La tabla de la guardia del día: tus intentos de hoy, cara a cara ──
+    if (ctx.esDiario && ctx.io.registrarDiario) {
+      const intentos = ctx.io.registrarDiario(ctx.fechaDiario, puntos);
+      const idxEste = intentos.indexOf(puntos); // primera aparición = este intento
+      ctx.io.escribir(negrita(cian(`\n📅 GUARDIA DEL DÍA ${ctx.fechaDiario} — tu tabla de hoy:`)));
+      intentos.slice(0, 10).forEach((pts, i) => {
+        const marca = i === idxEste ? cian('  ← esta guardia') : '';
+        const fila = `${`${i + 1}.`.padEnd(4)}${String(pts).padStart(6)}`;
+        ctx.io.escribir(`   ${i === 0 ? amarillo(`${fila}  🏆`) : gris(fila)}${marca}`);
+      });
+      ctx.io.escribir(gris(`   Intento nº ${intentos.length} de hoy. La misma noche espera a cualquiera que fiche: reta a alguien.`));
+    }
+
     // ── El botín de guardia: elige 1 de 3 talismanes para la próxima noche.
     // Solo en adaptadores con memoria (la web); la terminal no persiste.
     if (ctx.io.guardarTalisman) {

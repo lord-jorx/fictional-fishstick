@@ -27,7 +27,8 @@ function leerModo(argv: string[]): ModoJuego | undefined {
 }
 
 const argv = process.argv.slice(2);
-const engine = new ShiftEngine(new ConsoleIO(), leerSemilla(argv), leerModo(argv));
+const diario = argv.includes('--diario') ? true : undefined;
+const engine = new ShiftEngine(new ConsoleIO(), leerSemilla(argv), leerModo(argv), undefined, undefined, diario);
 engine.iniciar().catch((error: unknown) => {
   console.error('La guardia ha terminado de forma inesperada:', error);
   process.exit(1);

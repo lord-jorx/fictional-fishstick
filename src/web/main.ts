@@ -34,7 +34,10 @@ const lang: Idioma | undefined =
     ? langParam
     : undefined;
 
+// ?diario → fichar directamente la guardia del día (misma noche para todos hoy)
+const diario = parametros.get('diario') !== null ? true : undefined;
+
 const io = new WebIO(document.getElementById('app')!);
-new ShiftEngine(io, semilla, modo, ritmo, lang).iniciar().catch((error: unknown) => {
+new ShiftEngine(io, semilla, modo, ritmo, lang, diario).iniciar().catch((error: unknown) => {
   io.escribir(`\x1b[31mLa guardia ha terminado de forma inesperada: ${String(error)}\x1b[39m`);
 });

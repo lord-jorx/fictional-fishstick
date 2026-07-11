@@ -41,7 +41,7 @@ type AccionPaciente =
 const ESCANER_ABDOMINAL = new Set<PruebaId>(['tc', 'angiotc']);
 
 /** Orden en que se ofrecen las pruebas: analítica y cabecera antes que el escáner. */
-const ORDEN_PRUEBAS: PruebaId[] = ['analitica', 'eco', 'ecofast', 'ecg', 'rxtorax', 'tccraneo', 'tc', 'angiotc'];
+const ORDEN_PRUEBAS: PruebaId[] = ['analitica', 'gasometria', 'orina', 'eco', 'ecofast', 'ecg', 'rxtorax', 'tccraneo', 'tc', 'angiotc'];
 
 /**
  * Pruebas que tienen sentido clínico en un cuadro: la diana más aquellas

@@ -25,8 +25,9 @@ export type RitmoJuego = 'turnos' | 'real';
 const NOMBRES_DEFECTO = ['Dra. Ríos', 'Dr. Baró'];
 
 export class ShiftEngine {
-  private readonly ctx: GameContext;
-  private readonly rng: () => number;
+  private ctx: GameContext;
+  private rng: () => number;
+  private readonly semillaFijada: boolean;
 
   constructor(
     private readonly io: IO,
@@ -34,7 +35,9 @@ export class ShiftEngine {
     private modo?: ModoJuego,
     private ritmo?: RitmoJuego,
     private idiomaElegido?: Idioma,
+    private diario?: boolean,
   ) {
+    this.semillaFijada = semilla !== undefined;
     this.rng = crearRng(semilla ?? (Date.now() & 0x7fffffff));
     this.ctx = new GameContext(this.rng, io);
   }
@@ -51,13 +54,48 @@ export class ShiftEngine {
     fijarIdioma(this.idiomaElegido);
 
     this.pintarPortada();
+
+    // ── La guardia del día: misma semilla para todo el mundo hoy ──
+    // Reglas fijas (adjunto, por turnos, Hospital General) para que la
+    // tabla compare noches idénticas. Solo si nadie fijó ya una semilla.
+    if (this.diario === undefined && !this.semillaFijada) {
+      const hoy = new Date();
+      const dd = String(hoy.getDate()).padStart(2, '0');
+      const mm = String(hoy.getMonth() + 1).padStart(2, '0');
+      this.diario = await this.io.elegir('¿Qué guardia fichas?', [
+        { etiqueta: 'Guardia libre', detalle: 'una noche nueva cada vez', valor: false },
+        {
+          etiqueta: `📅 La guardia del día (${dd}/${mm})`,
+          detalle: 'la MISMA noche para todo el mundo hoy: compárate y repite intentos',
+          valor: true,
+        },
+      ]);
+    }
+    if (this.diario) {
+      const hoy = new Date();
+      const fecha = `${hoy.getFullYear()}-${String(hoy.getMonth() + 1).padStart(2, '0')}-${String(hoy.getDate()).padStart(2, '0')}`;
+      const semillaDia = Number(fecha.replace(/-/g, ''));
+      this.rng = crearRng(semillaDia);
+      this.ctx = new GameContext(this.rng, this.io);
+      this.ctx.esDiario = true;
+      this.ctx.fechaDiario = fecha;
+      this.modo = 'adjunto';
+      this.ritmo = 'turnos';
+      this.io.escribir(
+        gris('\n  Guardia del día: reglas fijas (adjunto, por turnos, Hospital General) y la') +
+          gris(`\n  misma noche que cualquiera que fiche hoy. Fecha de servicio: ${fecha}.`),
+      );
+    }
+
     await this.prepararEquipo();
 
     // ── Nivel de hospital: los recursos definen la guardia ──
-    const perfil = await this.io.elegir(
-      '¿En qué hospital toca esta noche?',
-      HOSPITALES.map((h) => ({ etiqueta: h.nombre, detalle: h.descripcion, valor: h })),
-    );
+    const perfil = this.ctx.esDiario
+      ? HOSPITALES.find((h) => h.id === 'general')!
+      : await this.io.elegir(
+          '¿En qué hospital toca esta noche?',
+          HOSPITALES.map((h) => ({ etiqueta: h.nombre, detalle: h.descripcion, valor: h })),
+        );
     this.ctx.nombreHospital = perfil.nombre;
     this.ctx.derivables = perfil.derivables;
     this.ctx.pruebasNoDisponibles = perfil.pruebasNoDisponibles;
@@ -99,13 +137,17 @@ export class ShiftEngine {
       this.io.escribir(gris('\n  Rango máximo alcanzado. Ya solo compites contra tu mejor noche.'));
     }
 
-    // ── El botín de la guardia anterior: un talismán, una noche ──
-    const talisman = talismanPorId(this.io.cogerTalisman?.());
-    if (talisman) {
-      this.ctx.talisman = talisman.id;
-      this.io.escribir(
-        `\n  ${negrita(cian(`${talisman.icono} EN EL BOLSILLO: ${talisman.nombre}`))} ${gris(`— ${talisman.efecto}. Solo por esta noche.`)}`,
-      );
+    // ── El botín de la guardia anterior: un talismán, una noche.
+    // En la guardia del día no se aplica (ni se consume): la tabla compara
+    // intentos en igualdad de condiciones ──
+    if (!this.ctx.esDiario) {
+      const talisman = talismanPorId(this.io.cogerTalisman?.());
+      if (talisman) {
+        this.ctx.talisman = talisman.id;
+        this.io.escribir(
+          `\n  ${negrita(cian(`${talisman.icono} EN EL BOLSILLO: ${talisman.nombre}`))} ${gris(`— ${talisman.efecto}. Solo por esta noche.`)}`,
+        );
+      }
     }
 
     if (this.modo === undefined) {

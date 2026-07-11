@@ -44,6 +44,12 @@ const VITALES: Record<string, PerfilVitales> = {
   cad:             { tas: [96, 110],  tad: [60, 72], fc: [110, 124], sat: [97, 99], temp: [36.8, 37.4] },
 };
 
+const NOMBRES_MUJER = [
+  'Carmen Ruiz', 'Lucía Ferrer', 'Pilar Navarro', 'Elena Sanz',
+  'Dolores Ibáñez', 'Marta Peña', 'Isabel Cano', 'Rosa Delgado',
+  'Beatriz Vega', 'Nuria Campos',
+];
+
 const NOMBRES = [
   'Manuel Ortega', 'Carmen Ruiz', 'Antonio Vidal', 'Lucía Ferrer',
   'José Andrade', 'Pilar Navarro', 'Ramón Castillo', 'Elena Sanz',
@@ -84,7 +90,16 @@ export class PatientFactory {
     return Math.round(min + this.rng() * (max - min));
   }
 
-  private elegirNombre(): string {
+  private elegirNombre(patologiaId?: string): string {
+    // El ectópico solo puede ser mujer: se sortea dentro del pool femenino.
+    if (patologiaId === 'ectopico') {
+      const candidatas = this.nombresRestantes.filter((n) => NOMBRES_MUJER.includes(n));
+      const pool = candidatas.length > 0 ? candidatas : NOMBRES_MUJER;
+      const nombre = pool[Math.floor(this.rng() * pool.length)]!;
+      const i = this.nombresRestantes.indexOf(nombre);
+      if (i >= 0) this.nombresRestantes.splice(i, 1);
+      return nombre;
+    }
     if (this.nombresRestantes.length === 0) this.nombresRestantes = [...NOMBRES];
     const i = Math.floor(this.rng() * this.nombresRestantes.length);
     return this.nombresRestantes.splice(i, 1)[0]!;
@@ -138,7 +153,11 @@ export class PatientFactory {
   }
 
   crearPaciente(minutoLlegada: number, patologia: Patologia = this.elegirPatologia()): Paciente {
-    const edad = this.entre(patologia.id === 'trauma' ? 18 : 25, patologia.id === 'trauma' ? 45 : 88);
+    const RANGO_EDAD: Record<string, [number, number]> = {
+      trauma: [18, 45], ectopico: [19, 40], volvulo: [72, 92], pielonefritis: [18, 55],
+    };
+    const [edadMin, edadMax] = RANGO_EDAD[patologia.id] ?? [25, 88];
+    const edad = this.entre(edadMin, edadMax);
     const variante = this.elegirVariante(patologia, edad);
 
     const horas = this.entre(...variante.horas);
@@ -156,7 +175,7 @@ export class PatientFactory {
 
     return {
       id: this.siguienteId++,
-      nombre: this.elegirNombre(),
+      nombre: this.elegirNombre(patologia.id),
       edad,
       constantes: this.generarConstantes(patologia),
       patologia,

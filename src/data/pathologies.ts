@@ -1,8 +1,8 @@
 /**
- * Base de datos de patologías de la guardia (16), agrupadas por manejo:
+ * Base de datos de patologías de la guardia (20), agrupadas por manejo:
  *
- *  - QUIRÚRGICAS (9): el quirófano es el tratamiento.
- *  - CONSERVADORAS (4): ingresar (o derivar, según el hospital) es tratar;
+ *  - QUIRÚRGICAS (12): el quirófano es el tratamiento.
+ *  - CONSERVADORAS (5): ingresar (o derivar, según el hospital) es tratar;
  *    operarlas sería el error.
  *  - DE ALTA (3): distractores benignos — dar el alta también es una
  *    decisión con riesgo.
@@ -31,6 +31,7 @@ export const PATOLOGIAS: Patologia[] = [
       'TC: apéndice de 11 mm, engrosamiento parietal, rarefacción de la grasa periapendicular. Apendicitis aguda no complicada.',
     hallazgosParciales: {
       analitica: 'Leucocitosis 14.500 con neutrofilia. PCR 65 mg/L.',
+      orina: 'Sedimento con leucocituria leve sin nitritos. Cuidado: un apéndice pegado al uréter también la produce — no te despiste.',
       eco: 'Ecografía: apéndice no visualizado por interposición de gas. No descarta apendicitis.',
     },
     deterioroPorHora: 4,
@@ -448,6 +449,7 @@ export const PATOLOGIAS: Patologia[] = [
       'Angio-TC: defecto de repleción en la arteria mesentérica superior a 4 cm del ostium compatible con embolia. Asas de delgado con hipocaptación parietal. Isquemia mesentérica aguda.',
     hallazgosParciales: {
       analitica: 'Lactato 4,9 mmol/L, leucocitosis 17.000, acidosis metabólica incipiente. ¡Piensa en isquemia!',
+      gasometria: 'Gasometría: pH 7,29 con lactato 4,7 mmol/L. Acidosis láctica en un abdomen blando: isquemia hasta demostrar lo contrario.',
       tc: 'TC sin fase arterial dedicada: asas de calibre normal con pared adelgazada. Estudio subóptimo para valorar la AMS.',
       eco: 'Ecografía: escaso líquido libre. No valorable el eje mesentérico.',
       ecg: 'ECG: fibrilación auricular con respuesta ventricular rápida. Ahí tienes la fábrica de émbolos.',
@@ -926,6 +928,177 @@ export const PATOLOGIAS: Patologia[] = [
     },
   },
   // ──────────────────────────────────────────────────────────────
+  {
+    id: 'ectopico',
+    cie10: 'O00.90',
+    nombre: 'Embarazo ectópico accidentado',
+    quirurgica: true,
+    frecuencia: 4,
+    presentacion: {
+      sintomas: [
+        'Dolor brusco en fosa ilíaca izquierda de 3 h de evolución',
+        'Mareo al levantarse y un pequeño manchado oscuro',
+        'Última regla «hará unas siete semanas, con lo del trabajo ni lo pensé»',
+      ],
+      exploracion:
+        'Pálida y sudorosa. Dolor anexial izquierdo intenso con defensa localizada. Cérvix doloroso a la movilización.',
+      constantes: 'TA 92/58, FC 112, Sat 98%, Tª 36,7 °C',
+    },
+    pruebaDiana: 'eco',
+    hallazgoDiana:
+      'Ecografía: útero vacío con endometrio engrosado, masa anexial izquierda de 3 cm y abundante líquido libre ecogénico (hemoperitoneo). Embarazo ectópico accidentado.',
+    hallazgosParciales: {
+      orina: 'Test de gestación POSITIVO. Dolor anexial + amenorrea + test positivo: el ectópico manda hasta verlo.',
+      analitica: 'Hb 9,6 g/dL en descenso. Leucocitos normales. Está sangrando dentro.',
+    },
+    deterioroPorHora: 10,
+    estabilidadInicial: [45, 62],
+    manejoCorrecto: 'cirugia',
+    notaDocente:
+      'Toda mujer en edad fértil con dolor abdominal y síncope es un ectópico accidentado hasta que el test de gestación diga lo contrario. Roto e inestable: laparoscopia urgente, sin esperar a la beta-hCG cuantitativa.',
+    cirugia: {
+      nombre: 'Salpingectomía laparoscópica urgente',
+      duracionMin: 70,
+      pasos: [
+        {
+          titulo: 'Entrada y evaluación del hemoperitoneo',
+          evento: 'Al entrar la cámara, sangre libre en pelvis que impide ver el origen.',
+          opciones: [
+            {
+              texto: 'Aspirar el hemoperitoneo por cuadrantes y exponer el anejo con suavidad',
+              correcta: true,
+              resultado: 'Campo despejado: trompa izquierda rota con sangrado activo del borde.',
+              deltaEstabilidad: 0,
+              deltaEstres: -2,
+            },
+            {
+              texto: 'Coagular a ciegas donde parece sangrar, sin aspirar primero',
+              correcta: false,
+              resultado: 'Quemas mesosálpinx sano y el sangrado sigue. Pierdes minutos y campo.',
+              deltaEstabilidad: -12,
+              deltaEstres: 10,
+            },
+          ],
+        },
+        {
+          titulo: 'Control del sangrado',
+          evento: 'La trompa está rota en su tercio medio y sangra de forma pulsátil.',
+          opciones: [
+            {
+              texto: 'Salpingectomía reglada con sellador/bipolar, de proximal a distal',
+              correcta: true,
+              resultado: 'Trompa extirpada con hemostasia limpia. El sangrado cede.',
+              deltaEstabilidad: +5,
+              deltaEstres: -2,
+            },
+            {
+              texto: 'Intentar salpingostomía conservadora en la trompa reventada',
+              correcta: false,
+              resultado: 'En una trompa rota y sangrante no hay nada que conservar: resangra y acabas resecando igual.',
+              deltaEstabilidad: -14,
+              deltaEstres: 10,
+            },
+          ],
+        },
+        {
+          titulo: 'Revisión final',
+          evento: 'Hemostasia aparente. Queda decidir cómo cierras la intervención.',
+          opciones: [
+            {
+              texto: 'Lavado, revisar anejo contralateral y comprobar hemostasia bajando la presión del neumo',
+              correcta: true,
+              resultado: 'Pelvis limpia, contralateral sano, sin resangrado con presión baja. Cierre.',
+              deltaEstabilidad: 0,
+              deltaEstres: -3,
+            },
+            {
+              texto: 'Cerrar directamente: «ya no sangra, no toquemos más»',
+              correcta: false,
+              resultado: 'Sin bajar la presión, un vaso retraído queda dormido... y despierta en REA.',
+              deltaEstabilidad: -10,
+              deltaEstres: 6,
+            },
+          ],
+        },
+      ],
+    },
+  },
+  // ──────────────────────────────────────────────────────────────
+  {
+    id: 'absceso',
+    cie10: 'K61.0',
+    nombre: 'Absceso perianal',
+    quirurgica: true,
+    frecuencia: 5,
+    presentacion: {
+      sintomas: [
+        'Dolor anal continuo y pulsátil de 72 h, que no deja ni sentarse',
+        'Fiebre de 38,2 °C desde anoche',
+        '«Pensé que eran almorranas, pero esto es otra cosa, doctor»',
+      ],
+      exploracion:
+        'Tumefacción perianal derecha eritematosa, caliente y fluctuante, exquisitamente dolorosa. No crepita. Tacto rectal imposible por dolor.',
+      constantes: 'TA 128/80, FC 96, Sat 98%, Tª 38,2 °C',
+    },
+    pruebaDiana: 'eco',
+    hallazgoDiana:
+      'Eco de partes blandas: colección hipoecoica de 4 cm con detritus en margen anal derecho, sin gas en planos profundos. Absceso perianal establecido.',
+    hallazgosParciales: {
+      analitica: 'Leucocitosis 13.900 con neutrofilia. PCR 90 mg/L. Glucemia 108 (no diabético conocido: apúntalo igualmente).',
+    },
+    deterioroPorHora: 3,
+    estabilidadInicial: [68, 85],
+    manejoCorrecto: 'cirugia',
+    notaDocente:
+      'Un absceso no se cura con antibiótico: se cura drenándolo. La exploración ya es diagnóstica cuando fluctúa; la eco ayuda si dudas. Y en el diabético, piensa siempre en Fournier antes de irte a casa.',
+    cirugia: {
+      nombre: 'Drenaje de absceso perianal',
+      duracionMin: 35,
+      pasos: [
+        {
+          titulo: 'Incisión y drenaje',
+          evento: 'Bajo anestesia, la zona fluctúa a tensión. Bisturí en mano.',
+          opciones: [
+            {
+              texto: 'Incisión amplia sobre el punto de máxima fluctuación, lo más cerca del margen anal',
+              correcta: true,
+              resultado: 'Sale pus a tensión con alivio inmediato. Cavidad desbridada con el dedo.',
+              deltaEstabilidad: +5,
+              deltaEstres: -2,
+            },
+            {
+              texto: 'Punción-aspiración con aguja gruesa «para no dejar cicatriz»',
+              correcta: false,
+              resultado: 'La cavidad se rellena en horas: el absceso puncionado y no drenado siempre vuelve.',
+              deltaEstabilidad: -8,
+              deltaEstres: 6,
+            },
+          ],
+        },
+        {
+          titulo: 'Cierre de la intervención',
+          evento: 'Cavidad limpia y desbridada. ¿Cómo la dejas?',
+          opciones: [
+            {
+              texto: 'Herida ABIERTA con mecha, para cierre por segunda intención',
+              correcta: true,
+              resultado: 'Drenaje asegurado. Curas diarias y a vigilar el trayecto fistuloso en consulta.',
+              deltaEstabilidad: 0,
+              deltaEstres: -2,
+            },
+            {
+              texto: 'Sutura de la piel por primera intención, «que quede bonito»',
+              correcta: false,
+              resultado: 'Cerrar un absceso es fabricar el siguiente. Recidiva precoz garantizada.',
+              deltaEstabilidad: -10,
+              deltaEstres: 6,
+            },
+          ],
+        },
+      ],
+    },
+  },
+  // ──────────────────────────────────────────────────────────────
   // Conservadoras: ingresar (o derivar a tiempo) también es tratar.
   // ──────────────────────────────────────────────────────────────
   {
@@ -1009,6 +1182,7 @@ export const PATOLOGIAS: Patologia[] = [
     hallazgoDiana:
       'Analítica: glucemia 486 mg/dL, pH 7,12, bicarbonato 9, cetonemia intensa. Cetoacidosis diabética: el abdomen duele, pero el problema es metabólico.',
     hallazgosParciales: {
+      gasometria: 'Gasometría: pH 7,14, bicarbonato 10, anión gap elevado. Acidosis metabólica grave: esto se trata en la cama, no en la mesa.',
       tc: 'TC abdominal sin hallazgos. La CAD imita el abdomen quirúrgico y se ríe de los escáneres.',
       ecg: 'Taquicardia sinusal con ondas T algo picudas: vigila ese potasio durante el tratamiento.',
     },
@@ -1046,6 +1220,64 @@ export const PATOLOGIAS: Patologia[] = [
     notaDocente:
       'La pancreatitis aguda NO se opera en fase aguda: el tratamiento es ingreso, fluidoterapia, analgesia y nutrición precoz. La colecistectomía se hace diferida en el mismo ingreso una vez resuelto el cuadro. Operar el páncreas inflamado de urgencia es un error clásico.',
   },
+  {
+    id: 'volvulo',
+    cie10: 'K56.2',
+    nombre: 'Vólvulo de sigma (sin isquemia)',
+    quirurgica: false,
+    frecuencia: 4,
+    presentacion: {
+      sintomas: [
+        'Traído de la residencia por distensión abdominal enorme de 24 h',
+        'No hace deposición ni expulsa gases desde ayer',
+        'Episodios parecidos «que se le pasaban solos», según la hoja de enfermería',
+      ],
+      exploracion:
+        'Abdomen muy distendido y timpánico, molesto pero SIN defensa ni peritonismo. Ampolla rectal vacía.',
+      constantes: 'TA 132/78, FC 88, Sat 96%, Tª 36,9 °C',
+    },
+    pruebaDiana: 'tc',
+    hallazgoDiana:
+      'TC: sigma masivamente dilatado con imagen «en grano de café» y remolino mesentérico. Pared con realce conservado, sin neumatosis ni líquido libre. Vólvulo de sigma NO complicado.',
+    hallazgosParciales: {
+      analitica: 'Sin leucocitosis, lactato 1,3 mmol/L. Nada grita isquemia... de momento.',
+      eco: 'Ecografía: asas muy dilatadas con gas que impide todo lo demás.',
+    },
+    deterioroPorHora: 5,
+    estabilidadInicial: [58, 76],
+    manejoCorrecto: 'conservador',
+    notaDocente:
+      'El vólvulo de sigma sin signos de isquemia se DEVOLVULA POR ENDOSCOPIA (y la sigmoidectomía se programa después, porque recidiva). Abrir de urgencia un vólvulo viable es sobretratar; dejarlo pasar hasta que se necrose, infratratar. El arte está en el medio.',
+  },
+  {
+    id: 'pielonefritis',
+    cie10: 'N10',
+    nombre: 'Pielonefritis aguda',
+    quirurgica: false,
+    frecuencia: 5,
+    presentacion: {
+      sintomas: [
+        'Fiebre de 39,2 °C con tiritona franca desde hace 12 h',
+        'Dolor lumbar derecho continuo',
+        'Escozor al orinar desde hace tres días que trató «bebiendo mucha agua»',
+      ],
+      exploracion:
+        'Afectada, febril. Puñopercusión renal derecha claramente positiva. Abdomen blando, sin defensa.',
+      constantes: 'TA 108/66, FC 104, Sat 98%, Tª 39,2 °C',
+    },
+    pruebaDiana: 'orina',
+    hallazgoDiana:
+      'Sedimento: piuria intensa, nitritos positivos y bacteriuria abundante. Con fiebre, tiritona y puñopercusión positiva: pielonefritis aguda.',
+    hallazgosParciales: {
+      analitica: 'Leucocitosis 15.800 con neutrofilia. PCR 180 mg/L. Función renal conservada.',
+      eco: 'Ecografía: riñón derecho discretamente aumentado SIN dilatación de la vía. Dato clave: no hay obstrucción.',
+    },
+    deterioroPorHora: 4,
+    estabilidadInicial: [60, 80],
+    manejoCorrecto: 'conservador',
+    notaDocente:
+      'La pielonefritis se trata con antibiótico y sueros, no con bisturí — pero exige una eco que descarte obstrucción: una pielonefritis obstruida es una urgencia urológica que hay que drenar. Fiebre + puñopercusión + piuria: ingresa, cultiva y trata.',
+  },
   // ──────────────────────────────────────────────────────────────
   // De alta: distractores benignos — dar el alta también es medicina.
   // ──────────────────────────────────────────────────────────────
@@ -1068,7 +1300,8 @@ export const PATOLOGIAS: Patologia[] = [
     hallazgoDiana:
       'TC abdominal (protocolo litiasis, baja dosis): litiasis de 4 mm en uréter distal derecho con ectasia leve de la vía. Sin signos de complicación. Cólico renoureteral no complicado.',
     hallazgosParciales: {
-      analitica: 'Función renal normal, sin leucocitosis. Microhematuria en el sedimento: pista clave.',
+      analitica: 'Función renal normal, sin leucocitosis.',
+      orina: 'Sedimento: microhematuria franca sin piuria. En un dolor cólico lumbar, la pista clave.',
       eco: 'Ecografía: discreta ectasia pielocalicial derecha. No se visualiza la litiasis.',
     },
     deterioroPorHora: 0,

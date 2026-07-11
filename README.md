@@ -103,6 +103,17 @@ llevas *en el bolsillo* y se consume:
 Es la decisión con gancho del bucle: hasta la peor guardia te manda a casa
 con algo en el bolsillo para la revancha.
 
+### 📅 La guardia del día
+
+Cada día, **la misma noche para todo el mundo**: al fichar puedes elegir la
+*guardia del día* (o entrar directo con `?diario` en la web / `--diario` en
+terminal). Reglas fijas para que la comparación sea justa — adjunto, por
+turnos, Hospital General, sin talismán — y la semilla sale de la fecha, así
+que tus intentos y los de cualquier otra persona transcurren sobre los
+mismos pacientes. Al firmar el parte, **tu tabla del día**: todos tus
+intentos ordenados, el 🏆 del mejor y el puesto de esta guardia. Reta a
+alguien: la noche es la misma.
+
 ## 🚑 Paciente traumático y patología médica
 
 Además del abdomen: **neumotórax a tensión** (se drena en urgencias, sin

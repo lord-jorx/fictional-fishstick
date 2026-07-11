@@ -381,6 +381,21 @@ export class WebIO implements IO {
     } catch { /* sin almacenamiento: el botín no persiste */ }
   }
 
+  /** Tabla local de la guardia del día: intentos de hoy, de mejor a peor. */
+  registrarDiario(fecha: string, puntos: number): number[] {
+    try {
+      const crudo = localStorage.getItem('surgeons-night-diario');
+      let tabla: { fecha: string; intentos: number[] } = crudo ? JSON.parse(crudo) : { fecha, intentos: [] };
+      if (tabla.fecha !== fecha) tabla = { fecha, intentos: [] }; // día nuevo, tabla nueva
+      tabla.intentos.push(puntos);
+      tabla.intentos.sort((a, b) => b - a);
+      localStorage.setItem('surgeons-night-diario', JSON.stringify(tabla));
+      return [...tabla.intentos];
+    } catch {
+      return [puntos];
+    }
+  }
+
   cerrar(): void {
     sonido.pararLatido();
     if (this.ticker !== null) {
