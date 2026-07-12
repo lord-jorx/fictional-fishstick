@@ -37,10 +37,10 @@ class TriajeScene extends Phaser.Scene {
 
     // La ambulancia con las puertas abiertas a la izquierda.
     this.add.image(64, 70, 'ambu').setDepth(0);
-    this.add.text(64, 118, '🚑 061', { fontFamily: 'monospace', fontSize: '12px', color: '#9c8e72' })
+    this.add.text(64, 118, '🚑 061', { fontFamily: 'system-ui, sans-serif', fontSize: '12px', color: '#8496b3' })
       .setOrigin(0.5, 0).setDepth(1);
     this.add.text(ANCHO / 2, 8, 'PUERTA DE AMBULANCIAS — TRIAJE', {
-      fontFamily: 'monospace', fontSize: '12px', color: '#8a7f6a',
+      fontFamily: 'system-ui, sans-serif', fontSize: '12px', color: '#7d90ab',
     }).setOrigin(0.5, 0).setDepth(2);
 
     this.pintarVictimas();
@@ -53,7 +53,7 @@ class TriajeScene extends Phaser.Scene {
     this.add.image(0, 0, 'asfalto').setOrigin(0, 0).setDepth(-10);
     this.add.image(64, 70, 'ambu').setDepth(0);
     this.add.text(ANCHO / 2, 8, 'PUERTA DE AMBULANCIAS — TRIAJE', {
-      fontFamily: 'monospace', fontSize: '12px', color: '#8a7f6a',
+      fontFamily: 'system-ui, sans-serif', fontSize: '12px', color: '#7d90ab',
     }).setOrigin(0.5, 0).setDepth(2);
     this.pintarVictimas();
   }
@@ -75,30 +75,30 @@ class TriajeScene extends Phaser.Scene {
 
       // Halo de la víctima activa (la que estás etiquetando ahora).
       if (v.activa) {
-        const anillo = this.add.rectangle(x, y, 74, 52).setStrokeStyle(2, 0xcfa257).setDepth(1);
+        const anillo = this.add.rectangle(x, y, 74, 52).setStrokeStyle(2, 0x38d6e0).setDepth(1);
         this.tweens.add({ targets: anillo, alpha: { from: 0.3, to: 1 }, duration: 600, yoyo: true, repeat: -1 });
       }
 
       // La tarjeta de etiqueta colgando sobre la camilla.
-      const col = v.etiqueta ? COLOR_ETIQUETA[v.etiqueta] : 0x1a150d;
+      const col = v.etiqueta ? COLOR_ETIQUETA[v.etiqueta] : 0x14203a;
       this.add.rectangle(x, y - 34, 26, 18, col, v.etiqueta ? 1 : 0.5)
-        .setStrokeStyle(1, v.etiqueta ? 0x000000 : 0x4a3f2c).setDepth(3);
+        .setStrokeStyle(1, v.etiqueta ? 0x000000 : 0x2a3d5c).setDepth(3);
       if (v.etiqueta === 'negro') {
         this.add.text(x, y - 34, '✝', { fontSize: '12px', color: '#cccccc' }).setOrigin(0.5).setDepth(4);
       }
 
       // Nombre (primer nombre) bajo la camilla.
       this.add.text(x, y + 26, v.nombre.split(' ')[0] ?? v.nombre, {
-        fontFamily: 'monospace', fontSize: '10px', color: '#b6a988',
+        fontFamily: 'system-ui, sans-serif', fontSize: '10px', color: '#a9bcd8',
       }).setOrigin(0.5, 0).setDepth(3);
     });
   }
 
   private dibujarTexturas(): void {
     const g = this.make.graphics({ x: 0, y: 0 }, false);
-    g.fillStyle(0x0f0b07, 1).fillRect(0, 0, ANCHO, ALTO);
+    g.fillStyle(0x0a111d, 1).fillRect(0, 0, ANCHO, ALTO);
     // asfalto mojado con líneas de aparcamiento tenues
-    g.lineStyle(2, 0x2a2114, 0.7);
+    g.lineStyle(2, 0x1c2a44, 0.7);
     for (let x = 120; x < ANCHO; x += 105) g.lineBetween(x, 40, x, ALTO - 10);
     g.fillStyle(0x000000, 0.3).fillRect(0, 0, ANCHO, 22);
     g.generateTexture('asfalto', ANCHO, ALTO);
@@ -117,10 +117,10 @@ class TriajeScene extends Phaser.Scene {
 
   private texturaCamilla(clave: string, estabilidad: number): void {
     if (this.textures.exists(clave)) return;
-    const col = estabilidad >= 60 ? 0x97b077 : estabilidad >= 35 ? 0xd9b36a : 0xc9645a;
+    const col = estabilidad >= 60 ? 0x3ddc97 : estabilidad >= 35 ? 0xffc857 : 0xff5d6c;
     const g = this.make.graphics({ x: 0, y: 0 }, false);
-    g.fillStyle(0x6d6046, 1).fillRoundedRect(2, 20, 56, 9, 3);
-    g.fillStyle(0x4a4232, 1).fillRect(6, 29, 3, 7).fillRect(50, 29, 3, 7);
+    g.fillStyle(0x35496b, 1).fillRoundedRect(2, 20, 56, 9, 3);
+    g.fillStyle(0x24344f, 1).fillRect(6, 29, 3, 7).fillRect(50, 29, 3, 7);
     g.fillStyle(0xd9ab7f, 1).fillCircle(12, 15, 5.5);
     g.fillStyle(0x9fb4c4, 1).fillRoundedRect(16, 12, 38, 9, 3);
     g.fillStyle(0x0b0f14, 1).fillRoundedRect(44, 3, 14, 7, 2);

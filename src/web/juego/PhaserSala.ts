@@ -43,20 +43,20 @@ const ANCHO = 760;
 const ALTO = 300;
 
 const COLOR_ZONA: Record<ZonaJuego['clase'], number> = {
-  box: 0x1c1610,
-  planta: 0x161a10,
-  quirofano: 0x1a1016,
-  control: 0x121a1a,
-  cafe: 0x1a1509,
-  sofa: 0x14100a,
-  entrada: 0x120d08,
+  box: 0x121e33,
+  planta: 0x11253a,
+  quirofano: 0x1a1a38,
+  control: 0x0e2a38,
+  cafe: 0x1d2438,
+  sofa: 0x121c30,
+  entrada: 0x16213a,
 };
 
 /** Convierte estabilidad en el color del monitor/halo del paciente. */
 function colorEstabilidad(e: number): number {
-  if (e >= 60) return 0x97b077;
-  if (e >= 35) return 0xd9b36a;
-  return 0xc9645a;
+  if (e >= 60) return 0x3ddc97;
+  if (e >= 35) return 0xffc857;
+  return 0xff5d6c;
 }
 
 class SalaScene extends Phaser.Scene {
@@ -153,7 +153,7 @@ class SalaScene extends Phaser.Scene {
     if (this.resuelto) return;
     this.resuelto = true;
     this.cirujano.setVelocity(0, 0);
-    this.cameras.main.flash(180, 60, 50, 30);
+    this.cameras.main.flash(180, 24, 68, 84);
     this.time.delayedCall(120, () => this.cfg.onElegir(idx));
   }
 
@@ -170,8 +170,8 @@ class SalaScene extends Phaser.Scene {
   private dibujarTexturas(): void {
     // Suelo de baldosa hospitalaria con junta y viñeteado.
     const g = this.make.graphics({ x: 0, y: 0 }, false);
-    g.fillStyle(0x14100a, 1).fillRect(0, 0, ANCHO, ALTO);
-    g.lineStyle(1, 0x1f1810, 1);
+    g.fillStyle(0x0e1626, 1).fillRect(0, 0, ANCHO, ALTO);
+    g.lineStyle(1, 0x16233a, 1);
     for (let x = 0; x <= ANCHO; x += 34) g.lineBetween(x, 0, x, ALTO);
     for (let y = 0; y <= ALTO; y += 34) g.lineBetween(0, y, ANCHO, y);
     g.fillStyle(0x000000, 0.28).fillRect(0, 0, ANCHO, 10).fillRect(0, ALTO - 10, ANCHO, 10);
@@ -211,8 +211,8 @@ class SalaScene extends Phaser.Scene {
     if (this.textures.exists(clave)) return;
     const g = this.make.graphics({ x: 0, y: 0 }, false);
     const col = colorEstabilidad(estabilidad);
-    g.fillStyle(0x6d6046, 1).fillRoundedRect(2, 20, 56, 10, 3);    // camilla
-    g.fillStyle(0x4a4232, 1).fillRect(6, 30, 4, 8).fillRect(48, 30, 4, 8); // patas
+    g.fillStyle(0x35496b, 1).fillRoundedRect(2, 20, 56, 10, 3);    // camilla
+    g.fillStyle(0x24344f, 1).fillRect(6, 30, 4, 8).fillRect(48, 30, 4, 8); // patas
     g.fillStyle(0xd9ab7f, 1).fillCircle(12, 15, 6);                 // cabeza
     g.fillStyle(0x9fb4c4, 1).fillRoundedRect(16, 12, 38, 10, 3);    // manta
     g.fillStyle(0x0b0f14, 1).fillRoundedRect(44, 3, 15, 8, 2);      // monitor
@@ -228,14 +228,14 @@ class SalaScene extends Phaser.Scene {
       const { x, y, w, h } = geom;
 
       const rect = this.add.rectangle(x, y, w, h, COLOR_ZONA[z.clase], 0.72)
-        .setStrokeStyle(1, z.recien ? 0xcfa257 : 0x4a3f2c)
+        .setStrokeStyle(1, z.recien ? 0x38d6e0 : 0x2a3d5c)
         .setOrigin(0, 0).setDepth(0);
       if (z.clase !== 'box' && z.idx < 0) rect.setAlpha(0.35);
 
       // Etiqueta e icono
       this.add.text(x + w / 2, y + 6, z.icono, { fontSize: '20px' }).setOrigin(0.5, 0).setDepth(2);
       this.add.text(x + w / 2, y + h - 14, z.etiqueta, {
-        fontFamily: 'monospace', fontSize: '9px', color: '#8a7f6a',
+        fontFamily: 'system-ui, sans-serif', fontSize: '9px', color: '#7d90ab',
       }).setOrigin(0.5, 0).setDepth(2);
 
       if (z.clase === 'box' && z.estabilidad !== undefined) {
