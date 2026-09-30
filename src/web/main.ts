@@ -1,22 +1,25 @@
 /**
- * Bootstrap del juego en navegador.
+ * Arranque del juego en el navegador.
  *
  * Parámetros de URL:
- *   ?seed=42          → partida reproducible
- *   ?modo=residente   → salta el menú de nivel (también ?modo=adjunto)
+ *   ?seed=42        → partida reproducible
+ *   ?modo=residente → salta el menú de nivel (adjunto | residente | negra | festival)
+ *   ?ritmo=real     → tiempo real (1 s = 1 min de guardia)
+ *   ?lang=en        → idioma (es | en | fr | ca | de)
+ *   ?diario         → entra directo a la guardia del día
+ *   ?bajo           → calidad gráfica reducida (sin posproceso)
  */
 import { ShiftEngine, type ModoJuego, type RitmoJuego } from '../core/ShiftEngine.js';
 import type { Idioma } from '../i18n.js';
 import { configurarColores } from '../ui/ansi.js';
-import { WebIO } from './WebIO.js';
+import { ThreeIO } from './ThreeIO.js';
 
-configurarColores(true); // en el navegador siempre emitimos ANSI y lo convertimos a HTML
+configurarColores(true); // el motor emite ANSI; la interfaz lo convierte a HTML
 
 const parametros = new URLSearchParams(location.search);
 
 const semillaParam = parametros.get('seed');
-const semilla =
-  semillaParam !== null && Number.isFinite(Number(semillaParam)) ? Number(semillaParam) : undefined;
+const semilla = semillaParam !== null && Number.isFinite(Number(semillaParam)) ? Number(semillaParam) : undefined;
 
 const modoParam = parametros.get('modo');
 const modo: ModoJuego | undefined =
@@ -25,19 +28,16 @@ const modo: ModoJuego | undefined =
     : undefined;
 
 const ritmoParam = parametros.get('ritmo');
-const ritmo: RitmoJuego | undefined =
-  ritmoParam === 'real' || ritmoParam === 'turnos' ? ritmoParam : undefined;
+const ritmo: RitmoJuego | undefined = ritmoParam === 'real' || ritmoParam === 'turnos' ? ritmoParam : undefined;
 
 const langParam = parametros.get('lang');
 const lang: Idioma | undefined =
-  langParam === 'es' || langParam === 'en' || langParam === 'fr' || langParam === 'ca' || langParam === 'de'
-    ? langParam
-    : undefined;
+  langParam === 'es' || langParam === 'en' || langParam === 'fr' || langParam === 'ca' || langParam === 'de' ? langParam : undefined;
 
-// ?diario → fichar directamente la guardia del día (misma noche para todos hoy)
 const diario = parametros.get('diario') !== null ? true : undefined;
 
-const io = new WebIO(document.getElementById('app')!);
+const io = new ThreeIO(document.getElementById('juego')!);
 new ShiftEngine(io, semilla, modo, ritmo, lang, diario).iniciar().catch((error: unknown) => {
+  console.error(error);
   io.escribir(`\x1b[31mLa guardia ha terminado de forma inesperada: ${String(error)}\x1b[39m`);
 });

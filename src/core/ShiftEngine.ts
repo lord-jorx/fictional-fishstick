@@ -48,7 +48,7 @@ export class ShiftEngine {
     if (this.idiomaElegido === undefined) {
       this.idiomaElegido = await this.io.elegir<Idioma>(
         'Idioma / Language / Langue / Llengua / Sprache',
-        IDIOMAS.map((i) => ({ etiqueta: i.nombre, valor: i.id })),
+        IDIOMAS.map((i) => ({ etiqueta: i.nombre, clave: `idioma:${i.id}`, valor: i.id })),
       );
     }
     fijarIdioma(this.idiomaElegido);
@@ -63,10 +63,11 @@ export class ShiftEngine {
       const dd = String(hoy.getDate()).padStart(2, '0');
       const mm = String(hoy.getMonth() + 1).padStart(2, '0');
       this.diario = await this.io.elegir('¿Qué guardia fichas?', [
-        { etiqueta: 'Guardia libre', detalle: 'una noche nueva cada vez', valor: false },
+        { etiqueta: 'Guardia libre', detalle: 'una noche nueva cada vez', clave: 'libre', valor: false },
         {
           etiqueta: `📅 La guardia del día (${dd}/${mm})`,
           detalle: 'la MISMA noche para todo el mundo hoy: compárate y repite intentos',
+          clave: 'diario',
           valor: true,
         },
       ]);
@@ -94,7 +95,7 @@ export class ShiftEngine {
       ? HOSPITALES.find((h) => h.id === 'general')!
       : await this.io.elegir(
           '¿En qué hospital toca esta noche?',
-          HOSPITALES.map((h) => ({ etiqueta: h.nombre, detalle: h.descripcion, valor: h })),
+          HOSPITALES.map((h) => ({ etiqueta: h.nombre, detalle: h.descripcion, clave: `hospital:${h.id}`, valor: h })),
         );
     this.ctx.nombreHospital = perfil.nombre;
     this.ctx.derivables = perfil.derivables;
@@ -119,7 +120,12 @@ export class ShiftEngine {
       for (const c of this.ctx.equipo) c.estres = 0;
     }
 
-    this.io.escena?.('taquilla', { xpCarrera: xp });
+    // El botín de la guardia anterior: un talismán, una noche. En la guardia
+    // del día no se aplica (ni se consume): la tabla compara en igualdad.
+    const talisman = this.ctx.esDiario ? undefined : talismanPorId(this.io.cogerTalisman?.());
+    if (talisman) this.ctx.talisman = talisman.id;
+
+    this.io.escena?.('taquilla', { xpCarrera: xp, talismanId: talisman?.id });
     this.io.escribir('\n' + lineaSeparadora());
     this.io.escribir(`  ${negrita(cian('🔓 TU TAQUILLA'))}  ${gris(`— ${rangoPorXp(xp)} · ${xp} XP de carrera`)}`);
     this.io.escribir(lineaSeparadora());
@@ -137,17 +143,10 @@ export class ShiftEngine {
       this.io.escribir(gris('\n  Rango máximo alcanzado. Ya solo compites contra tu mejor noche.'));
     }
 
-    // ── El botín de la guardia anterior: un talismán, una noche.
-    // En la guardia del día no se aplica (ni se consume): la tabla compara
-    // intentos en igualdad de condiciones ──
-    if (!this.ctx.esDiario) {
-      const talisman = talismanPorId(this.io.cogerTalisman?.());
-      if (talisman) {
-        this.ctx.talisman = talisman.id;
-        this.io.escribir(
-          `\n  ${negrita(cian(`${talisman.icono} EN EL BOLSILLO: ${talisman.nombre}`))} ${gris(`— ${talisman.efecto}. Solo por esta noche.`)}`,
-        );
-      }
+    if (talisman) {
+      this.io.escribir(
+        `\n  ${negrita(cian(`${talisman.icono} EN EL BOLSILLO: ${talisman.nombre}`))} ${gris(`— ${talisman.efecto}. Solo por esta noche.`)}`,
+      );
     }
 
     if (this.modo === undefined) {
@@ -155,21 +154,25 @@ export class ShiftEngine {
         {
           etiqueta: 'Residente',
           detalle: 'un adjunto te da pistas; ideal para aprender (también sin ser sanitario)',
+          clave: 'modo:residente',
           valor: 'residente',
         },
         {
           etiqueta: 'Adjunto',
           detalle: 'sin red de seguridad, puntuación completa',
+          clave: 'modo:adjunto',
           valor: 'adjunto',
         },
         {
           etiqueta: 'Guardia negra',
           detalle: 'atípicas ×2, hospital saturado, más complicaciones; puntuación ×1,2',
+          clave: 'modo:negra',
           valor: 'negra',
         },
         {
           etiqueta: 'Noche de fiestas mayores',
           detalle: 'evento: aluvión de urgencias y un incidente de múltiples víctimas garantizado; puntuación ×1,35',
+          clave: 'modo:festival',
           valor: 'festival',
         },
       ]);
@@ -244,11 +247,13 @@ export class ShiftEngine {
           {
             etiqueta: 'Por turnos',
             detalle: 'clásico: el tiempo solo corre cuando actúas',
+            clave: 'ritmo:turnos',
             valor: 'turnos',
           },
           {
             etiqueta: 'Tiempo real',
             detalle: 'arcade: 1 segundo = 1 minuto; la guardia no espera a nadie',
+            clave: 'ritmo:real',
             valor: 'real',
           },
         ]);
@@ -278,8 +283,8 @@ export class ShiftEngine {
   /** Solo o cooperativo local, con editor de personaje opcional. */
   private async prepararEquipo(): Promise<void> {
     const cuantos = await this.io.elegir('¿Cómo sales a esta guardia?', [
-      { etiqueta: 'En solitario', valor: 1 },
-      { etiqueta: 'Dúo cooperativo (local): dos cirujanos, una guardia', valor: 2 },
+      { etiqueta: 'En solitario', clave: 'solo', valor: 1 },
+      { etiqueta: 'Dúo cooperativo (local): dos cirujanos, una guardia', clave: 'duo', valor: 2 },
     ]);
 
     const equipo: MiembroEquipo[] = [];
@@ -300,8 +305,8 @@ export class ShiftEngine {
     const titulo = total > 1 ? `Cirujano ${indice + 1}` : 'Tu cirujano';
 
     const modo = await this.io.elegir(`${titulo}: ¿ficha rápida o a medida?`, [
-      { etiqueta: `Empezar ya como ${porDefecto}`, valor: 'rapido' as const },
-      { etiqueta: 'Editor de personaje (nombre y aspecto)', valor: 'editor' as const },
+      { etiqueta: `Empezar ya como ${porDefecto}`, clave: 'rapido', valor: 'rapido' as const },
+      { etiqueta: 'Editor de personaje (nombre y aspecto)', clave: 'editor', valor: 'editor' as const },
     ]);
 
     if (modo === 'rapido' || !this.io.preguntarTexto) {
@@ -313,19 +318,19 @@ export class ShiftEngine {
     const previsualizar = () => this.io.escena?.('editor', { rasgos, nombre });
 
     previsualizar();
-    rasgos.piel = await this.io.elegir('Tono de piel', [1, 2, 3, 4, 5].map((n) => ({ etiqueta: `Tono ${n}`, valor: n - 1 })));
+    rasgos.piel = await this.io.elegir('Tono de piel', [1, 2, 3, 4, 5].map((n) => ({ etiqueta: `Tono ${n}`, clave: `piel:${n - 1}`, valor: n - 1 })));
     previsualizar();
     rasgos.peinado = await this.io.elegir('Peinado', [
-      { etiqueta: 'Corto', valor: 'corto' as const },
-      { etiqueta: 'Melena', valor: 'melena' as const },
-      { etiqueta: 'Rapado', valor: 'calvo' as const },
+      { etiqueta: 'Corto', clave: 'peinado:corto', valor: 'corto' as const },
+      { etiqueta: 'Melena', clave: 'peinado:melena', valor: 'melena' as const },
+      { etiqueta: 'Rapado', clave: 'peinado:calvo', valor: 'calvo' as const },
     ]);
     previsualizar();
     rasgos.pelo = await this.io.elegir('Color de pelo', [
-      { etiqueta: 'Negro', valor: 0 },
-      { etiqueta: 'Castaño oscuro', valor: 1 },
-      { etiqueta: 'Castaño', valor: 3 },
-      { etiqueta: 'Cobrizo', valor: 4 },
+      { etiqueta: 'Negro', clave: 'pelo:0', valor: 0 },
+      { etiqueta: 'Castaño oscuro', clave: 'pelo:1', valor: 1 },
+      { etiqueta: 'Castaño', clave: 'pelo:3', valor: 3 },
+      { etiqueta: 'Cobrizo', clave: 'pelo:4', valor: 4 },
     ]);
     previsualizar();
     rasgos.gafas = await this.io.elegir('¿Gafas?', [

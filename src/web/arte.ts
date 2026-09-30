@@ -1,6 +1,6 @@
 /**
  * Arte del juego: ilustraciones SVG inline (sin bitmaps ni red) que el
- * adaptador WebIO inyecta cuando el motor emite escenas.
+ * adaptador ThreeIO inyecta cuando el motor emite escenas.
  *
  * Todas las animaciones se definen por CSS en template.html
  * (clases: estrella, ventana, neon, baliza, dolor, onda, sol, punto-rec...).

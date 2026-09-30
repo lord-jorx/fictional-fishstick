@@ -7,17 +7,26 @@ Un **noir de hospital**: detective procedural de los 40 donde el crimen es
 la patología, el interrogatorio es la anamnesis y el veredicto se firma con
 bisturí.
 
-## 🎮 Hecho con Phaser
+## 🎮 Hecho con Three.js
 
-El plano de urgencias no son divs: es una **escena de Phaser** (el motor 2D
-con el que se publican juegos en web y en Steam). El cirujano es un sprite
-con **físicas arcade** que recorre el servicio con WASD/flechas/ZQSD, cruceta
-táctil o clic-para-caminar, y *pisar* una zona dispara esa acción. Todas las
-texturas se dibujan proceduralmente en tiempo de ejecución
-(`Graphics → generateTexture`): cero ficheros de imagen, todo en un único
-`web/index.html` autocontenido. El motor clínico sigue siendo puro TypeScript
-sin dependencias (arquitectura de puertos y adaptadores): Phaser es solo el
-adaptador visual, y la versión de terminal ni se entera de que existe.
+Nada de terminal en la versión web: el hospital es un **mundo 3D real**
+(Three.js / WebGL) con cámara cinematográfica, luces que respiran, sombras,
+bloom, lluvia sobre el hospital en el título, monitores con ECG en vivo y
+personajes articulados que caminan. El cirujano se mueve con WASD / flechas
+/ ZQSD o clic-para-caminar, y *acercarte* a una zona (box, café, sofá,
+planta, quirófano) permite interactuar con ella; el resto de la interfaz es
+UI de juego (HUD, historia clínica, panel de pruebas, tarjetas de decisión,
+cartas de etiqueta IMV, parte de guardia), no un log de texto. Todo se
+genera en tiempo de ejecución (texturas de canvas, geometría procedural):
+cero ficheros de imagen, todo en un único `web/index.html` autocontenido.
+Con `?bajo` se desactiva el posproceso para equipos modestos.
+
+El motor clínico sigue siendo puro TypeScript sin dependencias de
+renderizado (puertos y adaptadores): Three.js es solo el adaptador visual
+(`web/ThreeIO.ts` + `web/three/`) y la versión de terminal ni se entera.
+El motor emite, además del texto, datos estructurados (`hud`, `ficha`,
+`escena`, claves y contexto de cada menú) que el adaptador 3D convierte en
+interfaz; `ConsoleIO` los ignora.
 
 > **Página de venta**: en `web/store.html` hay una store page estilo Steam
 > (héroe noir con ECG en vivo, galería de gameplay real y ficha técnica) para
@@ -160,7 +169,7 @@ otro necesitaba. Y la etiqueta negra bien puesta es medicina — mal puesta,
 una sentencia que te persigue el resto de la guardia. El parte final
 recoge tu triaje de catástrofe, etiqueta a etiqueta.
 
-En la web, la puerta de ambulancias se ve: una **escena de Phaser** con las
+En la web, la puerta de ambulancias se ve: una **escena 3D** con las
 víctimas alineadas en sus camillas y una tarjeta de etiqueta colgando sobre
 cada una. Según decides, la tarjeta se **colorea** (rojo/amarillo/verde/negro)
 y la víctima entra rodando al servicio; la que estás valorando parpadea.
@@ -396,7 +405,11 @@ src/
 │   ├── ConsoleIO.ts          # Adaptador IO terminal (readline nativo)
 │   └── hud.ts                # HUD, barras de estado, reloj de guardia
 └── web/
-    ├── WebIO.ts              # Adaptador IO navegador (DOM + ANSI→HTML + escenas)
+    ├── ThreeIO.ts            # Adaptador IO navegador: UI de juego sobre el mundo 3D
+    ├── three/                # Mundo Three.js: escenarios, personajes, mobiliario, cámara
+    ├── ansiHtml.ts           # ANSI→HTML para los textos del motor
+    ├── carrera.ts            # Progresión roguelite persistente (localStorage)
+    ├── iconos.ts             # Iconos SVG de línea
     ├── arte.ts               # Ilustraciones SVG (portada, mapa de dolor, quirófano…)
     ├── retrato.ts            # Retratos procedurales de pacientes (SVG paramétrico)
     ├── sonido.ts             # Sonido sintetizado con Web Audio API (sin ficheros)
@@ -409,7 +422,7 @@ web/index.html                # Versión jugable en navegador (generada)
 Decisiones de diseño:
 
 - **Ports & adapters**: el motor solo conoce la interfaz `IO`
-  (`core/io.ts`); `ConsoleIO` (readline) y `WebIO` (DOM con botones táctiles)
+  (`core/io.ts`); `ConsoleIO` (readline) y `ThreeIO` (mundo 3D + UI de juego)
   son adaptadores intercambiables. Los textos llevan códigos ANSI que la
   terminal muestra tal cual y el navegador convierte a `<span>` con CSS.
   Portar a otra plataforma = escribir otro adaptador.
@@ -457,7 +470,7 @@ El modo a dos cirujanos está diseñado y pendiente de implementación:
    y otro en quirófano resolviendo pasos, compartiendo recursos y reloj en
    tiempo real. Requiere servidor (WebSocket) y el motor ya lo permite: todo
    el estado vive en `GameContext` y toda la E/S pasa por el puerto `IO`,
-   así que un adaptador de red es el mismo patrón que `WebIO`.
+   así que un adaptador de red es el mismo patrón que `ThreeIO`.
 
 ## 📦 Plataformas y portabilidad
 

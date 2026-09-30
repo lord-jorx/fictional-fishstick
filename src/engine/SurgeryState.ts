@@ -11,7 +11,7 @@ import type { GameState } from '../core/StateMachine.js';
 import type { OpcionQuirurgica, Paciente, PasoQuirurgico } from '../core/types.js';
 import { COMPLICACIONES_IMPREVISTAS } from '../data/complicaciones.js';
 import { amarillo, cian, fondoRojo, gris, negrita, rojo, verde } from '../ui/ansi.js';
-import { barra, lineaSeparadora } from '../ui/hud.js';
+import { barra, emitirHud, lineaSeparadora } from '../ui/hud.js';
 import { calificarCaso, pintarEstrellas } from './calificacion.js';
 import { t } from '../i18n.js';
 import { TriageState } from './TriageState.js';
@@ -30,10 +30,13 @@ export class SurgeryState implements GameState {
     if (i >= 0) ctx.salaEspera.splice(i, 1);
     ctx.hospital.quirofanosLibres--;
 
+    emitirHud(ctx);
     ctx.io.escena?.('quirofano', {
       patologiaId: p.patologia.id,
       nombre: p.nombre,
       edad: p.edad,
+      estabilidad: p.estabilidad,
+      nombreCirugia: plan.nombre,
       tablero: ctx.tablero(),
     });
     if (p.cirujanoIdx !== undefined) ctx.cirujanoActivo = p.cirujanoIdx;
@@ -66,6 +69,7 @@ export class SurgeryState implements GameState {
     for (const [n, paso] of pasos.entries()) {
       const esImprevisto = imprevistos.has(paso);
       if (!esImprevisto) etapa++;
+      emitirHud(ctx);
       ctx.io.escena?.('paso', {
         patologiaId: p.patologia.id,
         estabilidad: p.estabilidad,
@@ -73,6 +77,12 @@ export class SurgeryState implements GameState {
         totalEtapas,
         evento: paso.evento,
         imprevisto: esImprevisto,
+        titulo: paso.titulo,
+        nombreCirugia: plan.nombre,
+        numeroPaso: n + 1,
+        totalPasos: pasos.length,
+        nombre: p.nombre,
+        edad: p.edad,
       });
 
       if (esImprevisto) {
@@ -178,18 +188,20 @@ export class SurgeryState implements GameState {
    */
   private async elegirTecnica(ctx: GameContext, opciones: OpcionQuirurgica[]): Promise<OpcionQuirurgica> {
     for (;;) {
-      const menu: { etiqueta: string; valor: OpcionQuirurgica | 'adjunto' }[] = opciones.map((op) => ({
+      const menu: { etiqueta: string; clave?: string; detalle?: string; valor: OpcionQuirurgica | 'adjunto' }[] = opciones.map((op) => ({
         etiqueta: op.texto,
+        clave: 'tecnica',
         valor: op,
       }));
       if (ctx.consultasAdjunto > 0) {
         menu.push({
           etiqueta: cian(`📞 Llamar al adjunto (quedan ${ctx.consultasAdjunto} llamadas)`),
+          clave: 'adjunto',
           valor: 'adjunto',
         });
       }
 
-      const eleccion = await ctx.io.elegir(t('comoProcedes'), menu);
+      const eleccion = await ctx.io.elegir(t('comoProcedes'), menu, 'tecnica');
       if (eleccion !== 'adjunto') return eleccion;
 
       ctx.consultasAdjunto--;

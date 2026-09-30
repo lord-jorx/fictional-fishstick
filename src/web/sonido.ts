@@ -28,6 +28,21 @@ class MotorSonido {
     }
   }
 
+  /** Silencia o reactiva el sonido (recordado entre sesiones). Devuelve el estado. */
+  alternar(): boolean {
+    this.activo = !this.activo;
+    try {
+      localStorage.setItem(CLAVE_SILENCIO, this.activo ? '0' : '1');
+    } catch { /* sin persistencia, no pasa nada */ }
+    if (!this.activo) {
+      this.pararLatido();
+      this.pararLluvia();
+    } else {
+      this.empezarLluvia();
+    }
+    return this.activo;
+  }
+
   /** Conecta el botón de la cabecera para silenciar/activar. */
   conectarBoton(boton: HTMLElement | null): void {
     if (!boton) return;

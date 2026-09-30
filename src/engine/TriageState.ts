@@ -13,7 +13,7 @@ import { INFORME_INESPECIFICO, PRUEBAS } from '../data/pruebas.js';
 import { calificarCaso, pintarEstrellas } from './calificacion.js';
 import { t } from '../i18n.js';
 import { amarillo, cian, gris, negrita, rojo, verde } from '../ui/ansi.js';
-import { fichaPaciente, horaGuardia, lineaSeparadora, pintarHUD } from '../ui/hud.js';
+import { emitirHud, fichaPaciente, horaGuardia, lineaSeparadora, pintarHUD } from '../ui/hud.js';
 import type { Opcion } from '../core/io.js';
 import { SummaryState } from './SummaryState.js';
 import { SurgeryState } from './SurgeryState.js';
@@ -100,15 +100,16 @@ export class TriageState implements GameState {
   private async elegirAccionDeSala(ctx: GameContext): Promise<AccionSala> {
     const opciones: Opcion<AccionSala>[] = ctx.salaEspera.map((p) => ({
       etiqueta: `${t('atenderA')} ${fichaPaciente(p)}`,
+      clave: `paciente:${p.nombre}`,
       valor: { tipo: 'paciente', paciente: p },
     }));
 
     if (ctx.ingresados.length > 0) {
-      opciones.push({ etiqueta: t('ronda'), detalle: '15 min', valor: { tipo: 'ronda' } });
+      opciones.push({ etiqueta: t('ronda'), detalle: '15 min', clave: 'ronda', valor: { tipo: 'ronda' } });
     }
-    opciones.push({ etiqueta: t('cafe'), detalle: '15 min ☕', valor: { tipo: 'cafe' } });
+    opciones.push({ etiqueta: t('cafe'), detalle: '15 min', clave: 'cafe', valor: { tipo: 'cafe' } });
     if (ctx.salaEspera.length === 0) {
-      opciones.push({ etiqueta: t('descansar'), detalle: '💤', valor: { tipo: 'esperar' } });
+      opciones.push({ etiqueta: t('descansar'), clave: 'descansar', valor: { tipo: 'esperar' } });
     }
 
     opciones.push({ etiqueta: '⟳', oculta: true, valor: { tipo: 'refrescar' } });
@@ -117,7 +118,7 @@ export class TriageState implements GameState {
       ctx.salaEspera.length > 0
         ? `${t('salaTitulo')} (${ctx.salaEspera.length})`
         : t('salaCalma');
-    return ctx.io.elegir(titulo, opciones);
+    return ctx.io.elegir(titulo, opciones, 'sala');
   }
 
   // ────────────────────────────────────────────────────────────
@@ -139,7 +140,7 @@ export class TriageState implements GameState {
         gris('  tarjeta de etiquetas en la mano: ROJO inmediato, AMARILLO diferido,\n') +
         gris('  VERDE puede esperar, NEGRO expectante. Nadie más va a decidirlo por ti.'),
     );
-    // Foto para el canvas Phaser de la puerta de ambulancias.
+    // Foto para el mundo 3D de la puerta de ambulancias.
     const fotoImv = (activaIdx: number) =>
       victimas.map((v, i) => ({
         nombre: v.nombre,
@@ -156,11 +157,12 @@ export class TriageState implements GameState {
       const elegida = await ctx.io.elegir<EtiquetaTriaje>(
         `Etiqueta para ${v.nombre}, ${v.edad} años — ${v.constantes}`,
         [
-          { etiqueta: rojo('ROJO — inmediato'), detalle: 'no puede esperar ni un minuto', valor: 'rojo' },
-          { etiqueta: amarillo('AMARILLO — diferido'), detalle: 'grave, pero aguanta un rato', valor: 'amarillo' },
-          { etiqueta: verde('VERDE — leve'), detalle: 'herido que camina', valor: 'verde' },
-          { etiqueta: gris('NEGRO — expectante'), detalle: 'irrecuperable: confort y dignidad', valor: 'negro' },
+          { etiqueta: rojo('ROJO — inmediato'), detalle: 'no puede esperar ni un minuto', clave: 'rojo', valor: 'rojo' },
+          { etiqueta: amarillo('AMARILLO — diferido'), detalle: 'grave, pero aguanta un rato', clave: 'amarillo', valor: 'amarillo' },
+          { etiqueta: verde('VERDE — leve'), detalle: 'herido que camina', clave: 'verde', valor: 'verde' },
+          { etiqueta: gris('NEGRO — expectante'), detalle: 'irrecuperable: confort y dignidad', clave: 'negro', valor: 'negro' },
         ],
+        'etiqueta',
       );
       v.etiquetaTriaje = elegida;
       ctx.stats.etiquetasImvTotales++;
@@ -372,12 +374,14 @@ export class TriageState implements GameState {
     const opciones: Opcion<AccionPaciente>[] = [];
 
     if (!TriageState.explorados.has(paciente.id)) {
-      opciones.push({ etiqueta: t('explorar'), detalle: '10 min', valor: { tipo: 'explorar' } });
+      opciones.push({ etiqueta: t('explorar'), detalle: '10 min', clave: 'explorar', grupo: 'valorar', valor: { tipo: 'explorar' } });
     }
     if (!paciente.interrogado && INTERROGATORIOS[paciente.patologia.id]) {
       opciones.push({
         etiqueta: cian(t('apretar')),
         detalle: '5 min',
+        clave: 'interrogar',
+        grupo: 'valorar',
         valor: { tipo: 'interrogar' },
       });
     }
@@ -403,13 +407,15 @@ export class TriageState implements GameState {
       opciones.push({
         etiqueta: `${t('solicitar')} ${prueba.nombre}`,
         detalle: `${prueba.duracionMin} min`,
+        clave: `prueba:${id}`,
+        grupo: 'pruebas',
         valor: { tipo: 'prueba', prueba: id },
       });
     }
 
     opciones.push(
-      { etiqueta: negrita(t('alta')), valor: { tipo: 'alta' } },
-      { etiqueta: negrita(t('ingresar')), valor: { tipo: 'ingreso' } },
+      { etiqueta: negrita(t('alta')), clave: 'alta', grupo: 'decidir', valor: { tipo: 'alta' } },
+      { etiqueta: negrita(t('ingresar')), clave: 'ingreso', grupo: 'decidir', valor: { tipo: 'ingreso' } },
     );
     // No a todo el mundo se le plantea quirófano: hay que haberlo valorado
     // (exploración + alguna prueba), salvo que sea una emergencia vital.
@@ -417,20 +423,49 @@ export class TriageState implements GameState {
       opciones.push({
         etiqueta: negrita(rojo(t('cirugiaUrgente'))),
         detalle: `quirófanos libres: ${ctx.hospital.quirofanosLibres}`,
+        clave: 'cirugia',
+        grupo: 'decidir',
         valor: { tipo: 'cirugia' },
       });
     }
     opciones.push(
-      { etiqueta: cian(t('derivar')), detalle: '30 min', valor: { tipo: 'derivar' } },
-      { etiqueta: gris(t('volverControl')), valor: { tipo: 'volver' } },
+      { etiqueta: cian(t('derivar')), detalle: `${ctx.talisman === 'ambulancia' ? 10 : 30} min`, clave: 'derivar', grupo: 'decidir', valor: { tipo: 'derivar' } },
+      { etiqueta: gris(t('volverControl')), clave: 'volver', valor: { tipo: 'volver' } },
       { etiqueta: '⟳', oculta: true, valor: { tipo: 'reevaluar' } },
     );
 
-    return ctx.io.elegir(`${t('queHacesCon')} ${paciente.nombre}?`, opciones);
+    return ctx.io.elegir(`${t('queHacesCon')} ${paciente.nombre}?`, opciones, 'paciente');
   }
 
   // ────────────────────────────────────────────────────────────
   private pintarFichaClinica(ctx: GameContext, p: Paciente): void {
+    // Adaptador gráfico: recibe la historia estructurada y pinta su panel
+    // (y refresca el HUD: las pruebas gastan reloj mientras estás en el box).
+    if (ctx.io.ficha) {
+      emitirHud(ctx);
+      ctx.io.ficha({
+        id: p.id,
+        nombre: p.nombre,
+        edad: p.edad,
+        estabilidad: p.estabilidad,
+        llegada: horaGuardia(p.minutoLlegada),
+        patologiaId: p.patologia.id,
+        sintomas: [...p.sintomas],
+        constantes: p.constantes,
+        exploracion: TriageState.explorados.has(p.id) ? p.exploracion : undefined,
+        notas: [...p.notasClinicas],
+        pruebas: p.pruebasRealizadas.map((id) => ({
+          id,
+          nombre: PRUEBAS[id].nombre,
+          informe: this.informeDePrueba(p, id),
+        })),
+        diagnostico: p.diagnosticoConfirmado
+          ? { nombre: p.patologia.nombre, cie10: p.patologia.cie10 }
+          : undefined,
+        reingreso: p.reingresado,
+      });
+      return;
+    }
     ctx.io.escribir('\n' + lineaSeparadora());
     ctx.io.escribir(`  ${negrita(cian(`BOX ${p.id}`))} — ${fichaPaciente(p)}  ${gris(`(llegó a las ${horaGuardia(p.minutoLlegada)})`)}`);
     ctx.io.escribir(lineaSeparadora());

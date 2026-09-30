@@ -34,7 +34,32 @@ export function lineaSeparadora(): string {
   return gris('─'.repeat(64));
 }
 
+/** Emite el estado estructurado al adaptador gráfico (devuelve false si no hay). */
+export function emitirHud(ctx: GameContext): boolean {
+  if (!ctx.io.hud) return false;
+  ctx.io.hud({
+    hora: horaGuardia(ctx.minuto),
+    minuto: ctx.minuto,
+    minutosRestantes: Math.max(0, ctx.duracionGuardia - ctx.minuto),
+    hospital: ctx.nombreHospital,
+    quirofanosLibres: ctx.hospital.quirofanosLibres,
+    quirofanosTotales: ctx.hospital.quirofanosTotales,
+    reaLibres: ctx.hospital.camasReaLibres,
+    reaTotales: ctx.hospital.camasReaTotales,
+    enEspera: ctx.salaEspera.length,
+    equipo: ctx.equipo.map((c, i) => ({
+      nombre: c.nombre,
+      energia: c.energia,
+      estres: c.estres,
+      activo: i === ctx.cirujanoActivo,
+    })),
+  });
+  return true;
+}
+
 export function pintarHUD(ctx: GameContext): void {
+  // Adaptador gráfico: pinta su propio HUD a partir del estado estructurado.
+  if (emitirHud(ctx)) return;
   const restanteMin = Math.max(0, ctx.duracionGuardia - ctx.minuto);
   const restante = `${Math.floor(restanteMin / 60)}h ${String(restanteMin % 60).padStart(2, '0')}m`;
 

@@ -12,7 +12,7 @@ const resultado = await build({
   format: 'iife',
   target: ['es2020'],
   charset: 'utf8',
-  // Con Phaser dentro, minificar es obligatorio: baja de ~5,8 MB a ~1,5 MB.
+  // Con Three.js dentro, minificar es obligatorio para mantener el HTML ligero.
   minify: true,
   legalComments: 'none',
   write: false,

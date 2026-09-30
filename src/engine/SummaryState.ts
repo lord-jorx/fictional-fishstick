@@ -5,6 +5,7 @@
  */
 import { GameContext } from '../core/GameContext.js';
 import type { GameState } from '../core/StateMachine.js';
+import type { InformeFinal } from '../core/io.js';
 import type { Paciente } from '../core/types.js';
 import { TALISMANES, type Talisman } from '../data/mejoras.js';
 import { amarillo, cian, gris, negrita, rojo, verde } from '../ui/ansi.js';
@@ -84,6 +85,9 @@ export class SummaryState implements GameState {
     ctx.io.escribir(`\n${negrita('Puntuación final:')} ${negrita(puntos >= 0 ? verde(String(puntos)) : rojo(String(puntos)))}`);
     ctx.io.escribir(`${negrita('Veredicto del Jefe de Servicio:')} ${this.veredicto(puntos)}\n`);
 
+    // Parte estructurado para adaptadores gráficos (la terminal lo ignora).
+    ctx.io.escena?.('fin', { informe: this.construirInforme(ctx, puntos) });
+
     // Segundo aviso de fin, ya con la puntuación: los adaptadores con memoria
     // (web) actualizan aquí el expediente persistente del cirujano.
     ctx.io.escena?.('fin', { puntos });
@@ -115,8 +119,10 @@ export class SummaryState implements GameState {
         ofrecidos.map((t) => ({
           etiqueta: `${t.icono} ${t.nombre}`,
           detalle: t.efecto,
+          clave: `talisman:${t.id}`,
           valor: t,
         })),
+        'botin',
       );
       ctx.io.guardarTalisman(elegido.id);
       ctx.io.escribir(gris(`  ${elegido.icono} ${elegido.nombre} guardado en la taquilla. Te espera en la próxima guardia.`));
@@ -124,6 +130,73 @@ export class SummaryState implements GameState {
 
     ctx.io.cerrar();
     return null;
+  }
+
+  /** El parte de guardia como datos: el adaptador gráfico lo maqueta a su manera. */
+  private construirInforme(ctx: GameContext, puntos: number): InformeFinal {
+    const plano = (x: string) => x.replace(/\x1b\[\d+m/g, '');
+    const s = ctx.stats;
+    const tonoDe = (p: Paciente): InformeFinal['pacientes'][number]['tono'] => {
+      switch (p.estado) {
+        case 'exitus':
+        case 'espera': return 'mal';
+        case 'operado':
+        case 'alta': return 'ok';
+        case 'rea':
+        case 'ingresado':
+        case 'fugado': return 'aviso';
+        default: return 'info';
+      }
+    };
+    const balance: InformeFinal['balance'] = [
+      { etiqueta: 'Pacientes atendidos', valor: String(s.atendidos) },
+      { etiqueta: 'Cirugías', valor: `${s.cirugiasRealizadas} (${s.cirugiasPerfectas} impecables)`, tono: s.cirugiasPerfectas > 0 ? 'ok' : undefined },
+      { etiqueta: 'Altas correctas', valor: String(s.altasCorrectas), tono: 'ok' },
+      { etiqueta: 'Ingresos', valor: `${s.ingresosCorrectos} correctos · ${s.ingresosErroneos} discutibles` },
+      { etiqueta: 'Altas erróneas', valor: String(s.altasErroneas), tono: s.altasErroneas === 0 ? 'ok' : 'mal' },
+      { etiqueta: 'Complicaciones', valor: String(s.complicaciones), tono: s.complicaciones === 0 ? 'ok' : 'aviso' },
+    ];
+    if (s.derivacionesCorrectas + s.derivacionesErroneas > 0) {
+      balance.push({ etiqueta: 'Derivaciones', valor: `${s.derivacionesCorrectas} con criterio · ${s.derivacionesErroneas} innecesarias`, tono: s.derivacionesErroneas === 0 ? 'ok' : 'aviso' });
+    }
+    if (s.etiquetasImvTotales > 0) {
+      balance.push({ etiqueta: 'Triaje de catástrofe', valor: `${s.etiquetasImvCorrectas}/${s.etiquetasImvTotales} correctas`, tono: s.etiquetasImvCorrectas === s.etiquetasImvTotales ? 'ok' : 'aviso' });
+    }
+    if (s.seFueronSinSerVistos > 0) {
+      balance.push({ etiqueta: 'Se fueron sin ser vistos', valor: String(s.seFueronSinSerVistos), tono: 'mal' });
+    }
+    balance.push({ etiqueta: 'Éxitus', valor: String(s.exitus), tono: s.exitus === 0 ? 'ok' : 'mal' });
+
+    const notas: string[] = [];
+    if (ctx.modoResidente) notas.push('Guardia tutelada (residente): puntuación al 85 %');
+    if (ctx.modoFestival) notas.push('Noche de fiestas mayores: puntuación ×1,35');
+    else if (ctx.modoNegra) notas.push('Guardia negra: puntuación ×1,2');
+
+    let equipo: InformeFinal['equipo'];
+    if (ctx.equipo.length > 1) {
+      equipo = ctx.equipo.map((c, i) => {
+        const suyos = ctx.historial.filter((p) => p.cirujanoIdx === i && p.estrellas !== undefined);
+        const media = suyos.length > 0 ? suyos.reduce((acc, p) => acc + (p.estrellas ?? 0), 0) / suyos.length : 0;
+        return { nombre: c.nombre, expedientes: suyos.length, media };
+      });
+    }
+
+    return {
+      pacientes: ctx.historial.map((p) => ({
+        nombre: p.nombre,
+        patologia: p.patologia.nombre,
+        cie10: p.diagnosticoConfirmado ? p.patologia.cie10 : undefined,
+        destino: plano(this.destino(p)),
+        tono: tonoDe(p),
+        estrellas: p.estrellas,
+        atipica: p.varianteId.startsWith('tipic') ? undefined : p.varianteId,
+      })),
+      balance,
+      equipo,
+      notas,
+      puntos,
+      veredicto: plano(this.veredicto(puntos)).replace(/^«|»$/g, ''),
+    };
   }
 
   private destino(p: Paciente): string {
