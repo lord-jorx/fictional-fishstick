@@ -208,7 +208,7 @@ export class ShiftEngine {
     // La guardia se genera tras elegir modo: en residente las atípicas bajan a
     // la mitad; en guardia negra/festival se duplican y llegan más pacientes.
     const atipicidad = this.ctx.modoResidente ? 0.5 : this.ctx.modoNegra ? 2 : 1;
-    const extra = (modoFestival ? 4 : this.ctx.modoNegra ? 2 : 0) + perfil.pacientesExtra;
+    const extra = (modoFestival ? 1 : this.ctx.modoNegra ? 1 : 0) + perfil.pacientesExtra;
     const fabrica = new PatientFactory(this.rng, atipicidad, extra);
     this.ctx.programarLlegadas(fabrica.generarLlegadasDeGuardia());
 
@@ -217,7 +217,7 @@ export class ShiftEngine {
     if (this.ctx.modoNegra || this.rng() < 0.45) {
       const minutoImv = 240 + Math.floor(this.rng() * 600);
       const pool = ['trauma', 'trauma', 'trauma', 'neumotorax', 'tce'];
-      const cuantas = (modoFestival ? 7 : 4) + Math.floor(this.rng() * 3);
+      const cuantas = (modoFestival ? 5 : 4) + Math.floor(this.rng() * 2);
       const victimas = Array.from({ length: cuantas }, () => {
         const patologia = patologiaPorId(pool[Math.floor(this.rng() * pool.length)]!)!;
         return fabrica.crearPaciente(minutoImv, patologia);

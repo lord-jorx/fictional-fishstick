@@ -340,13 +340,22 @@ Al arrancar eliges cómo vivir la guardia (o con `?ritmo=` en la URL):
 | Gastroenteritis aguda *(distractor)* | Analítica | Alta |
 | Cólico biliar simple *(distractor)* | Ecografía | Alta |
 | Cólico renoureteral *(distractor)* | TC | Alta |
+| Estreñimiento con impactación fecal *(distractor)* | Ecografía | Alta |
+| Cistitis aguda no complicada *(distractor)* | Sedimento de orina | Alta |
+| Gastritis por antiinflamatorios *(distractor)* | Rx de tórax | Alta |
+| Apendagitis epiploica *(distractor)* | TC | Alta |
+| Diverticulitis no complicada | TC | Ingreso |
+| Neumonía basal *(disfrazada de abdomen)* | Rx de tórax | Ingreso |
+| Hepatitis aguda alcohólica | Analítica | Ingreso |
 
 Cada caso termina con una **perla docente** basada en el manejo estándar.
 
 **¿Cómo de procedurales son los casos?** El contenido clínico base (pruebas
 diana, planes quirúrgicos, perlas) está curado a mano; TODO lo demás se
-ensambla proceduralmente y de forma determinista por semilla: patología por
-sorteo ponderado, nombre, edad, estabilidad, hora de llegada, **constantes
+ensambla proceduralmente y de forma determinista por semilla: el reparto de
+la guardia (**~35 % quirúrgico**, el resto conservador o benigno, **sin repetir
+diagnóstico** en una misma noche y con las llegadas repartidas en las 24 h),
+nombre, edad, estabilidad, hora de llegada, **constantes
 vitales por rangos clínicos** (con alertas de hipotensión/taquicardia),
 **horas de evolución insertadas en la anamnesis** y, sobre todo, la
 **variante de presentación**.

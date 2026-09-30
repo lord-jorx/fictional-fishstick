@@ -112,6 +112,7 @@ const ZONAS: Record<string, ZonaDolor> = {
   cabeza: { zona: 'región temporal derecha', puntos: [[52, 12]] },
   'epigastrio-toracico': { zona: 'epigastrio (opresivo)', puntos: [[60, 72]] },
   cinturon: { zona: 'epigastrio, en cinturón', puntos: [[60, 80], [46, 86], [74, 86]] },
+  hipogastrio: { zona: 'hipogastrio (suprapúbico)', puntos: [[60, 114]] },
   difuso: { zona: 'difuso', puntos: [[52, 92], [68, 100], [58, 112]] },
 };
 
@@ -136,6 +137,13 @@ const ZONA_POR_PATOLOGIA: Record<string, string> = {
   ectopico: 'fii',
   volvulo: 'mesogastrio',
   pielonefritis: 'lumbar-der',
+  estrenimiento: 'difuso',
+  itu_baja: 'hipogastrio',
+  gastritis: 'epigastrio',
+  apendagitis: 'fii',
+  diverticulitis_leve: 'fii',
+  neumonia: 'hd',
+  hepatitis: 'hd',
 };
 
 /** Lo que el paciente dice mientras se señala (bocadillo de la escena). */
@@ -160,6 +168,13 @@ export const QUEJAS: Record<string, string> = {
   absceso: 'No puedo ni sentarme, doctor... y esta noche encima fiebre.',
   volvulo: 'Mire qué tripa, hijo... y no echo ni un gas desde ayer.',
   pielonefritis: 'El riñón, aquí atrás... y una tiritona que me movía la cama.',
+  estrenimiento: 'Llevo una semana sin ir, doctor... y la tripa me hace ruidos y me retuerce.',
+  itu_baja: 'Me escuece al orinar, doctora, y voy al baño cada diez minutos para nada.',
+  gastritis: 'Es un ardor aquí, en la boca del estómago... desde que me tomo las pastillas.',
+  apendagitis: 'Un pinchazo aquí, en el lado izquierdo, y me duele más si toso.',
+  diverticulitis_leve: 'Me duele este lado desde hace dos días, y hoy tengo algo de fiebre.',
+  neumonia: 'Me duele aquí arriba al respirar... y llevo dos días con tos y fiebre.',
+  hepatitis: 'Me duele aquí debajo de las costillas, y dicen que estoy amarillo.',
 };
 
 /** Coordenadas y nombre de la zona dolorosa (para escenas que las necesiten). */

@@ -192,11 +192,24 @@ export class TriageState implements GameState {
       if (elegida === correcta) {
         ctx.stats.etiquetasImvCorrectas++;
         ctx.io.escribir(verde('  ✔ Etiqueta correcta.'));
+        if (elegida === 'amarillo') {
+          // Diferido bien etiquetado: el plan de catástrofe lo estabiliza (sueros,
+          // analgesia, vigilancia) y aguanta a que le toque el turno.
+          v.deterioroPorHora *= 0.4;
+        }
       } else if (this.gravedadEtiqueta(elegida) < this.gravedadEtiqueta(correcta)) {
         v.estabilidad = Math.max(5, v.estabilidad - 8);
         ctx.io.escribir(amarillo(`  ⚠ Infratriaje: era ${correcta.toUpperCase()}. ${v.nombre} pierde terreno mientras espera su turno.`));
       } else {
         ctx.io.escribir(amarillo(`  ⚠ Sobretriaje: era ${correcta.toUpperCase()}. Recursos y minutos que otro necesitaba más.`));
+      }
+
+      // Un herido leve bien etiquetado no ocupa tu box: las curas las hace el
+      // equipo de enfermería del plan de catástrofe y se va a observación.
+      if (elegida === 'verde' && correcta === 'verde') {
+        v.estado = 'alta';
+        ctx.io.escribir(gris(`  ${v.nombre} pasa a curas con enfermería; no necesitará tu box.`));
+        continue;
       }
 
       v.minutoLlegada = ctx.minuto;

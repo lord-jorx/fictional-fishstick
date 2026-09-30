@@ -1,11 +1,14 @@
 /**
- * Base de datos de patologías de la guardia (20), agrupadas por manejo:
+ * Base de datos de patologías de la guardia (27), agrupadas por manejo:
  *
- *  - QUIRÚRGICAS (12): el quirófano es el tratamiento.
- *  - CONSERVADORAS (5): ingresar (o derivar, según el hospital) es tratar;
+ *  - QUIRÚRGICAS (11): el quirófano es el tratamiento.
+ *  - CONSERVADORAS (9): ingresar (o derivar, según el hospital) es tratar;
  *    operarlas sería el error.
- *  - DE ALTA (3): distractores benignos — dar el alta también es una
+ *  - DE ALTA (7): distractores benignos — dar el alta también es una
  *    decisión con riesgo.
+ *
+ * La fábrica de pacientes reparte cada guardia con ~35 % quirúrgico y sin
+ * repetir diagnóstico: la mayoría de lo que entra por la puerta no se opera.
  */
 import type { Patologia } from '../core/types.js';
 
@@ -1364,6 +1367,209 @@ export const PATOLOGIAS: Patologia[] = [
     manejoCorrecto: 'alta',
     notaDocente:
       'El cólico biliar sin signos inflamatorios se trata con analgesia y alta, remitiendo al paciente a consultas para colecistectomía programada. Operarlo de urgencia esta noche sería sobretratar.',
+  },
+  // ──────────────────────────────────────────────────────────────
+  // Más variedad de guardia: lo que de verdad llena urgencias y no se opera.
+  {
+    id: 'estrenimiento',
+    cie10: 'K59.00',
+    nombre: 'Estreñimiento con impactación fecal',
+    quirurgica: false,
+    frecuencia: 5,
+    presentacion: {
+      sintomas: [
+        'Dolor cólico difuso de 2 días, algo peor en el hemiabdomen izquierdo',
+        'Seis días sin deposición, aunque sigue expulsando algún gas',
+        'Toma codeína desde hace semanas por una lumbalgia',
+      ],
+      exploracion: 'Abdomen levemente distendido, blando y timpánico, sin peritonismo. Tacto rectal: ampolla llena de heces duras.',
+      constantes: 'TA 128/80, FC 82, Sat 98%, Tª 36,7 °C',
+    },
+    pruebaDiana: 'eco',
+    hallazgoDiana:
+      'Ecografía: marco cólico con abundante contenido fecal, asas de intestino delgado de calibre normal y sin líquido libre. Sin signos de obstrucción.',
+    hallazgosParciales: {
+      analitica: 'Analítica normal: sin leucocitosis ni PCR elevada. Potasio en el límite bajo.',
+      tc: 'TC: fecaloma en recto-sigma sin dilatación proximal. Una irradiación que no cambiaba el manejo.',
+    },
+    deterioroPorHora: 0,
+    estabilidadInicial: [85, 95],
+    manejoCorrecto: 'alta',
+    notaDocente:
+      'Gases conservados, sin vómitos y un tacto rectal con heces duras separan el estreñimiento de la obstrucción. Enema de limpieza, laxante osmótico y retirar el opioide. Alta.',
+  },
+  // ──────────────────────────────────────────────────────────────
+  {
+    id: 'itu_baja',
+    cie10: 'N30.00',
+    nombre: 'Cistitis aguda no complicada',
+    quirurgica: false,
+    frecuencia: 5,
+    presentacion: {
+      sintomas: [
+        'Escozor al orinar y ganas constantes de ir al baño desde ayer',
+        'Dolor sobre el pubis y orina turbia',
+        'Sin fiebre ni escalofríos',
+      ],
+      exploracion: 'Molestia suprapúbica leve. Puñopercusión renal negativa. Abdomen blando, sin peritonismo.',
+      constantes: 'TA 120/76, FC 78, Sat 99%, Tª 36,9 °C',
+    },
+    pruebaDiana: 'orina',
+    hallazgoDiana:
+      'Sedimento: leucocituria intensa con nitritos positivos y bacteriuria. Cistitis aguda no complicada.',
+    hallazgosParciales: {
+      analitica: 'Analítica normal: sin leucocitosis, PCR 6 mg/L.',
+      eco: 'Ecografía: vejiga con sedimento fino, sin ectasia ni litiasis.',
+    },
+    deterioroPorHora: 0,
+    estabilidadInicial: [86, 95],
+    manejoCorrecto: 'alta',
+    notaDocente:
+      'Sin fiebre ni puñopercusión positiva es una cistitis: antibiótico oral y alta. La pielonefritis, con fiebre y dolor lumbar, sí se ingresa. Ojo al diagnóstico diferencial.',
+  },
+  // ──────────────────────────────────────────────────────────────
+  {
+    id: 'gastritis',
+    cie10: 'K29.70',
+    nombre: 'Gastritis aguda por antiinflamatorios',
+    quirurgica: false,
+    frecuencia: 5,
+    presentacion: {
+      sintomas: [
+        'Ardor en la boca del estómago desde hace 2 días, peor con el estómago vacío',
+        'Ibuprofeno de 600 mg cada 8 h por una tendinitis',
+        'Sin vómitos con sangre ni heces negras',
+      ],
+      exploracion: 'Dolor leve a la palpación profunda en epigastrio, sin defensa ni signos peritoneales. Ruidos hidroaéreos normales.',
+      constantes: 'TA 130/82, FC 80, Sat 98%, Tª 36,8 °C',
+    },
+    pruebaDiana: 'rxtorax',
+    hallazgoDiana:
+      'Radiografía de tórax en bipedestación: sin neumoperitoneo bajo las cúpulas diafragmáticas. Perforación descartada.',
+    hallazgosParciales: {
+      analitica: 'Hemoglobina 14,1 g/dL, amilasa normal, sin leucocitosis. Una analítica normal no descarta una perforación.',
+      eco: 'Ecografía abdominal sin hallazgos relevantes.',
+    },
+    deterioroPorHora: 0,
+    estabilidadInicial: [85, 95],
+    manejoCorrecto: 'alta',
+    notaDocente:
+      'Epigastralgia con antiinflamatorios no es siempre úlcera perforada: sin peritonismo ni neumoperitoneo, se trata con inhibidor de bomba de protones y se retira el AINE. Alta con control.',
+  },
+  // ──────────────────────────────────────────────────────────────
+  {
+    id: 'apendagitis',
+    cie10: 'K63.89',
+    nombre: 'Apendagitis epiploica',
+    quirurgica: false,
+    frecuencia: 4,
+    presentacion: {
+      sintomas: [
+        'Dolor punzante y muy localizado en fosa ilíaca izquierda de 24 h',
+        'Sin fiebre ni náuseas, con buen apetito',
+        'El dolor aumenta al toser o al agacharse',
+      ],
+      exploracion: 'Dolor focal a la palpación en FII, sin defensa ni signos peritoneales. Peristaltismo normal.',
+      constantes: 'TA 126/80, FC 76, Sat 99%, Tª 36,8 °C',
+    },
+    pruebaDiana: 'tc',
+    hallazgoDiana:
+      'TC: lesión ovalada de densidad grasa con anillo hiperdenso y estriación adyacente al sigma (signo del anillo). Apendagitis epiploica; sin diverticulitis.',
+    hallazgosParciales: {
+      analitica: 'Sin leucocitosis, PCR 12 mg/L.',
+      eco: 'Ecografía: masa hiperecogénica no compresible en FII, sin flujo Doppler. Orienta a apendagitis.',
+    },
+    deterioroPorHora: 0,
+    estabilidadInicial: [84, 94],
+    manejoCorrecto: 'alta',
+    notaDocente:
+      'Imita a la diverticulitis y a la apendicitis izquierda, pero es un infarto benigno de un apéndice epiploico. Antiinflamatorios y alta: es el caso que hace perder quirófanos a quien no pide la imagen.',
+  },
+  // ──────────────────────────────────────────────────────────────
+  {
+    id: 'diverticulitis_leve',
+    cie10: 'K57.32',
+    nombre: 'Diverticulitis aguda no complicada',
+    quirurgica: false,
+    frecuencia: 5,
+    presentacion: {
+      sintomas: [
+        'Dolor continuo en fosa ilíaca izquierda de 2 días con febrícula',
+        'Estreñimiento previo y dos episodios similares más leves',
+        'Tolera la dieta y no ha vomitado',
+      ],
+      exploracion: 'Dolor y defensa leve en FII sin peritonismo generalizado. Sin masa palpable.',
+      constantes: 'TA 124/78, FC 88, Sat 98%, Tª 37,9 °C',
+    },
+    pruebaDiana: 'tc',
+    hallazgoDiana:
+      'TC: engrosamiento sigmoideo con estriación de la grasa y divertículos. Sin aire extraluminal ni colecciones. Diverticulitis no complicada (Hinchey 0-Ia).',
+    hallazgosParciales: {
+      analitica: 'Leucocitosis 12.400, PCR 70 mg/L.',
+      eco: 'Ecografía: engrosamiento parietal sigmoideo con grasa pericolónica hiperecogénica. Compatible.',
+    },
+    deterioroPorHora: 2,
+    estabilidadInicial: [70, 85],
+    manejoCorrecto: 'conservador',
+    notaDocente:
+      'No toda diverticulitis se opera: la no complicada se trata con antibiótico y dieta, en casa o con un ingreso corto. Operar aquí es el error; la perforada con peritonitis (Hinchey III-IV) sí va a quirófano.',
+  },
+  // ──────────────────────────────────────────────────────────────
+  {
+    id: 'neumonia',
+    cie10: 'J18.1',
+    nombre: 'Neumonía basal derecha (disfrazada de abdomen)',
+    quirurgica: false,
+    frecuencia: 5,
+    presentacion: {
+      sintomas: [
+        'Dolor en el hemiabdomen superior derecho que se acentúa al respirar hondo',
+        'Fiebre de 38,6 °C con escalofríos desde ayer y tos con esputo oscuro',
+        'Fumador de 30 paquetes-año',
+      ],
+      exploracion: 'Abdomen blando y depresible; el dolor no cambia con la palpación. Crepitantes en la base pulmonar derecha y taquipnea.',
+      constantes: 'TA 122/76, FC 102, Sat 92%, Tª 38,6 °C',
+    },
+    pruebaDiana: 'rxtorax',
+    hallazgoDiana:
+      'Radiografía de tórax: consolidación alveolar en el lóbulo inferior derecho con broncograma aéreo. Neumonía basal.',
+    hallazgosParciales: {
+      analitica: 'Leucocitosis 17.800 con neutrofilia, PCR 190 mg/L, lactato normal.',
+      gasometria: 'Gasometría: hipoxemia leve (pO2 62 mmHg) con alcalosis respiratoria.',
+    },
+    deterioroPorHora: 5,
+    estabilidadInicial: [58, 75],
+    manejoCorrecto: 'conservador',
+    notaDocente:
+      'La neumonía de base derecha duele en el abdomen superior y engaña a más de un residente. Sin signos peritoneales y con ruidos pulmonares patológicos, el tratamiento es antibiótico e ingreso, no cirugía.',
+  },
+  // ──────────────────────────────────────────────────────────────
+  {
+    id: 'hepatitis',
+    cie10: 'K70.10',
+    nombre: 'Hepatitis aguda alcohólica',
+    quirurgica: false,
+    frecuencia: 4,
+    presentacion: {
+      sintomas: [
+        'Dolor sordo en hipocondrio derecho de una semana, con náuseas y astenia',
+        'La familia notó el tinte amarillo de los ojos hace dos días',
+        'Dice beber «alguna cerveza» los fines de semana',
+      ],
+      exploracion: 'Ictericia conjuntival. Hepatomegalia dolorosa, Murphy negativo, sin peritonismo.',
+      constantes: 'TA 118/72, FC 96, Sat 97%, Tª 37,6 °C',
+    },
+    pruebaDiana: 'analitica',
+    hallazgoDiana:
+      'Bilirrubina 6,2 mg/dL, AST 210 y ALT 90 (cociente AST/ALT mayor de 2), GGT muy elevada, leucocitosis e INR de 1,4. Hepatitis alcohólica aguda.',
+    hallazgosParciales: {
+      eco: 'Ecografía: hígado aumentado de tamaño e hiperecogénico (esteatosis), vía biliar de calibre normal y vesícula sin litiasis.',
+    },
+    deterioroPorHora: 3,
+    estabilidadInicial: [62, 78],
+    manejoCorrecto: 'conservador',
+    notaDocente:
+      'Colestasis no es colecistitis: vía biliar fina y vesícula normal descartan la causa quirúrgica. Ingreso con soporte, abstinencia y valoración por hepatología.',
   },
 ];
 

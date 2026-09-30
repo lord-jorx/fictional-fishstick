@@ -120,4 +120,19 @@ export const INTERROGATORIOS: Record<string, InterrogatorioClinico> = {
       '«...con el catarro no comía, así que tampoco me la ponía. Era lo lógico, ¿no?» El error clásico: la CAD aplaude.',
     cerrojo: 'Te enseña la pluma de insulina como quien enseña el carnet. El cartucho, curiosamente, lleno.',
   },
+  hepatitis: {
+    afirmacion: '«¿Beber yo? Un par de cervezas los domingos, doctor, como todo el mundo.»',
+    correcta: 'mentira',
+    pruebaClave: 'analitica',
+    revelacion:
+      'Le enseñas la bilirrubina y las transaminasas y se hunde en la silla: «...vale, a diario. Desde que enviudé.»',
+    cerrojo: 'Se cierra en banda: «Yo vengo por la tripa, no por mi vida privada.» Y ahí termina la conversación.',
+  },
+  gastritis: {
+    afirmacion: '«Yo no tomo nada, doctor, solo algún ibuprofenillo de vez en cuando.»',
+    correcta: 'dudar',
+    revelacion:
+      'Su pareja saca una caja del bolso: «Seiscientos cada ocho horas, hace dos semanas.» Él se encoge de hombros.',
+    cerrojo: 'Se cruza de brazos: «Con eso no se hace nadie daño.» Te cuesta una eternidad recuperar su confianza.',
+  },
 };

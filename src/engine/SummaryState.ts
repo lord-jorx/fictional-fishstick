@@ -229,17 +229,17 @@ export class SummaryState implements GameState {
       cirugiasConExito * 120 +
       s.cirugiasPerfectas * 40 +
       s.altasCorrectas * 60 +
-      s.derivacionesCorrectas * 60 -
+      s.derivacionesCorrectas * 70 -
       s.derivacionesErroneas * 40 +
-      s.ingresosCorrectos * 30 -
+      s.ingresosCorrectos * 50 -
       s.altasErroneas * 50 -
       s.ingresosErroneos * 30 -
-      s.complicaciones * 40 +
+      s.complicaciones * 30 +
       s.etiquetasImvCorrectas * 25 -
-      (s.etiquetasImvTotales - s.etiquetasImvCorrectas) * 30 -
-      s.seFueronSinSerVistos * 40 -
-      s.exitus * 200 -
-      abandonados * 60
+      (s.etiquetasImvTotales - s.etiquetasImvCorrectas) * 20 -
+      s.seFueronSinSerVistos * 25 -
+      s.exitus * 120 -
+      abandonados * 40
     );
   }
 

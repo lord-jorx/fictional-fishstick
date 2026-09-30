@@ -238,8 +238,11 @@ export class GameContext {
       }
 
       // ── Deterioro de los pacientes no tratados ──
+      // El paciente que tienes delante está monitorizado y con sueros: se
+      // deteriora más despacio que el que espera en la sala.
       for (const p of this.salaEspera) {
-        p.estabilidad -= p.deterioroPorHora * (dt / 60);
+        const ritmo = p === this.pacienteEnAtencion ? 0.35 : 0.6;
+        p.estabilidad -= p.deterioroPorHora * ritmo * (dt / 60);
       }
 
       // ── La sala de espera se cansa: horas de espera y se van sin ser vistos ──

@@ -41,6 +41,9 @@ const VITALES: Record<string, PerfilVitales> = {
   neumotorax:      { tas: [78, 92],   tad: [48, 58], fc: [125, 140], sat: [82, 88], temp: [36.2, 36.8] },
   tce:             { tas: [148, 168], tad: [85, 98], fc: [48, 58],   sat: [96, 98], temp: [36.4, 36.9] },
   iam:             { tas: [92, 108],  tad: [58, 70], fc: [52, 64],   sat: [95, 97], temp: [36.0, 36.5] },
+  neumonia:        { tas: [108, 128], tad: [66, 80], fc: [98, 112],  sat: [90, 94], temp: [38.2, 39.0] },
+  hepatitis:       { tas: [108, 126], tad: [64, 78], fc: [90, 104],  sat: [96, 98], temp: [37.3, 37.9] },
+  diverticulitis_leve: { tas: [116, 132], tad: [72, 84], fc: [82, 96], sat: [97, 99], temp: [37.6, 38.3] },
   cad:             { tas: [96, 110],  tad: [60, 72], fc: [110, 124], sat: [97, 99], temp: [36.8, 37.4] },
 };
 
@@ -76,14 +79,31 @@ export class PatientFactory {
   }
 
   /** Selección ponderada por la frecuencia de cada patología. */
-  private elegirPatologia(): Patologia {
-    const total = this.catalogo.reduce((suma, p) => suma + p.frecuencia, 0);
+  private elegirPatologia(candidatas: Patologia[] = this.catalogo): Patologia {
+    const total = candidatas.reduce((suma, p) => suma + p.frecuencia, 0);
     let tirada = this.rng() * total;
-    for (const patologia of this.catalogo) {
+    for (const patologia of candidatas) {
       tirada -= patologia.frecuencia;
       if (tirada <= 0) return patologia;
     }
-    return this.catalogo[this.catalogo.length - 1]!;
+    return candidatas[candidatas.length - 1]!;
+  }
+
+  /**
+   * Saca `n` patologías distintas de un grupo, ponderadas por frecuencia y sin
+   * reposición: en una misma guardia no se repite el diagnóstico (salvo que el
+   * grupo se agote, y entonces se vuelve a llenar la bolsa).
+   */
+  private sacarDeLaBolsa(grupo: Patologia[], n: number): Patologia[] {
+    const elegidas: Patologia[] = [];
+    let bolsa = [...grupo];
+    for (let i = 0; i < n; i++) {
+      if (bolsa.length === 0) bolsa = [...grupo];
+      const p = this.elegirPatologia(bolsa);
+      bolsa.splice(bolsa.indexOf(p), 1);
+      elegidas.push(p);
+    }
+    return elegidas;
   }
 
   private entre(min: number, max: number): number {
@@ -202,23 +222,51 @@ export class PatientFactory {
 
   /**
    * Genera las llegadas de las 24 h de guardia.
-   * La franja 10:00-02:00 (minutos 120-1080) concentra la mayor presión.
+   *
+   * Una guardia real no es un desfile de abdómenes quirúrgicos: la mayoría de
+   * lo que entra por la puerta se ingresa, se deriva o se manda a casa. El
+   * reparto es ~35 % quirúrgico, ~35 % conservador/médico y el resto benigno,
+   * sin repetir diagnóstico, y las llegadas se reparten a lo largo de la noche
+   * (con más tráfico por la tarde) en vez de amontonarse.
    */
   generarLlegadasDeGuardia(): LlegadaProgramada[] {
-    const llegadas: LlegadaProgramada[] = [];
-    const numPacientes = this.entre(8, 11) + this.pacientesExtra;
+    const total = Math.max(5, this.entre(8, 10) + this.pacientesExtra);
+    const nQuirurgicos = Math.max(2, Math.round(total * 0.35));
+    const nBenignos = Math.max(1, Math.round(total * 0.27));
+    const nConservadores = Math.max(1, total - nQuirurgicos - nBenignos);
 
-    // El primero llega casi al empezar, para arrancar con ritmo.
-    llegadas.push({ minuto: this.entre(2, 10), paciente: this.crearPaciente(5) });
+    const de = (manejo: (m: string) => boolean) => this.catalogo.filter((p) => manejo(p.manejoCorrecto));
+    const casos: Patologia[] = [
+      ...this.sacarDeLaBolsa(de((m) => m === 'cirugia'), nQuirurgicos),
+      ...this.sacarDeLaBolsa(de((m) => m === 'conservador'), nConservadores),
+      ...this.sacarDeLaBolsa(de((m) => m === 'alta'), nBenignos),
+    ];
+    // Barajar (Fisher-Yates con el rng de la partida).
+    for (let i = casos.length - 1; i > 0; i--) {
+      const j = Math.floor(this.rng() * (i + 1));
+      [casos[i], casos[j]] = [casos[j]!, casos[i]!];
+    }
+    // El primero no es una urgencia vital: da tiempo a situarse.
+    const k = casos.findIndex((p) => p.deterioroPorHora < 8);
+    if (k > 0) [casos[0], casos[k]] = [casos[k]!, casos[0]!];
 
-    for (let i = 1; i < numPacientes; i++) {
-      // 70% de las llegadas caen en la franja de presión, 30% de madrugada.
-      const minuto =
-        this.rng() < 0.7 ? this.entre(30, 1080) : this.entre(1080, 1380);
-      llegadas.push({ minuto, paciente: this.crearPaciente(minuto) });
+    // Tiempos: una franja por paciente, con sacudida; la tarde pesa más.
+    const inicio = 8;
+    const fin = 1230;
+    const franja = (fin - inicio) / casos.length;
+    const minutos = casos.map((_, i) => {
+      const base = inicio + i * franja;
+      return Math.round(base + (this.rng() - 0.2) * franja * 0.9);
+    });
+    minutos[0] = this.entre(3, 12);
+    minutos.sort((a, b) => a - b);
+    for (let i = 1; i < minutos.length; i++) {
+      if (minutos[i]! - minutos[i - 1]! < 25) minutos[i] = minutos[i - 1]! + 25;
     }
 
-    llegadas.sort((a, b) => a.minuto - b.minuto);
-    return llegadas;
+    return casos.map((patologia, i) => ({
+      minuto: minutos[i]!,
+      paciente: this.crearPaciente(i === 0 ? 5 : minutos[i]!, patologia),
+    }));
   }
 }
