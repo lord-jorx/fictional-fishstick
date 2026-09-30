@@ -7,7 +7,7 @@ El Castillo (Kukulcán), retocada y convertida en una escena 2.5D con Three.js.
 |---|---|---|
 | OPPO Find X9 Pro | 1272 × 2772 | `dist/oppo-find-x9-pro/` — vídeo en bucle `.mp4` + imagen `.png` |
 | iPhone 16 Pro | 1206 × 2622 | `dist/iphone-16-pro/` — clip Live Photo `.mov` (3 s) + imagen `.png` |
-| iPhone 15 Pro | 1179 × 2556 | `dist/iphone-15-pro/` — clip Live Photo `.mov` (3 s) + imagen `.png` |
+| iPhone 15 Pro | 1179 × 2556 | `dist/iphone-15-pro/` — clip Live Photo `.mov` (3 s, 1180 px: H.264 exige ancho par) + imagen `.png` |
 
 Vista en vivo (tiempo real, WebGL): sirve `web/` con cualquier servidor estático y abre
 `index.html`. En escritorio se muestra con forma de teléfono; la tecla **C** superpone un

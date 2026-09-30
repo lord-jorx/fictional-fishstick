@@ -58,9 +58,11 @@ def main(frames, out):
             run([*src, "-vf", vf(w, h), *x264, str(d / f"chichen-itza-live-{w}x{h}.mp4")])
         else:
             # iOS: fondo "Live Photo" (se reproduce ~3 s al despertar la pantalla)
+            # H.264 4:2:0 exige dimensiones pares: 1179 → 1180 (iOS reencuadra 1 px, imperceptible)
+            ve, he = w + w % 2, h + h % 2
             run(["-framerate", str(FPS), "-start_number", str(int(LIVE_PHOTO_START * FPS)),
                  "-i", str(frames / "f%04d.png"), "-frames:v", str(int(LIVE_PHOTO_SECONDS * FPS)),
-                 "-vf", vf(w, h), *x264, str(d / f"chichen-itza-livephoto-{w}x{h}.mov")])
+                 "-vf", vf(ve, he), *x264, str(d / f"chichen-itza-livephoto-{ve}x{he}.mov")])
 
 
 if __name__ == "__main__":
