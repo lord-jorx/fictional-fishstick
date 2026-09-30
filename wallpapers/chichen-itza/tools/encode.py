@@ -1,6 +1,10 @@
 """Etapa 4 — codifica los fotogramas maestros (1320x2868) para cada dispositivo.
 
-  python3 tools/encode.py <dir_frames> <dir_salida>
+  python3 tools/encode.py <dir_frames> <dir_salida> [dispositivo]
+
+El OPPO usa un render propio con bucle de 6 s (ColorOS limita los fondos de vídeo a
+6 s): node tools/render.mjs --loop 6 --seconds 6 --out frames6
+     python3 tools/encode.py frames6 dist oppo-find-x9-pro
 
 Resoluciones nativas de pantalla:
   OPPO Find X9 Pro   1272 x 2772
@@ -42,10 +46,12 @@ def run(args):
     subprocess.run([FFMPEG, "-hide_banner", "-loglevel", "error", "-y", *args], check=True)
 
 
-def main(frames, out):
+def main(frames, out, only=None):
     frames, out = Path(frames), Path(out)
     src = ["-framerate", str(FPS), "-i", str(frames / "f%04d.png")]
     for name, (w, h) in DEVICES.items():
+        if only and name != only:
+            continue
         d = out / name
         d.mkdir(parents=True, exist_ok=True)
         still = int(STILL_T * FPS)
@@ -54,7 +60,7 @@ def main(frames, out):
         x264 = ["-c:v", "libx264", "-preset", "slow", "-tune", "film", "-crf", "16", "-pix_fmt", "yuv420p",
                 "-profile:v", "high", "-level:v", "5.1", "-g", str(FPS * 2), *COLOR, "-movflags", "+faststart"]
         if name.startswith("oppo"):
-            # bucle completo (frame 480 == frame 0 → sin salto al reiniciar)
+            # bucle completo (el frame siguiente al último == frame 0 → sin salto)
             run([*src, "-vf", vf(w, h), *x264, str(d / f"chichen-itza-live-{w}x{h}.mp4")])
         else:
             # iOS: fondo "Live Photo" (se reproduce ~3 s al despertar la pantalla)
@@ -66,4 +72,4 @@ def main(frames, out):
 
 
 if __name__ == "__main__":
-    main(sys.argv[1], sys.argv[2])
+    main(sys.argv[1], sys.argv[2], sys.argv[3] if len(sys.argv) > 3 else None)

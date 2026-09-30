@@ -30,6 +30,8 @@ uniform float uViewW, uViewBottom, uViewCX;
 uniform vec2  uCam;          // desplazamiento de cámara (px @ disparidad 1)
 uniform float uZoom;         // dolly
 uniform vec2  uFocus;
+uniform float uFlowP;        // periodo del flow-map de nubes (divide a uLoop)
+uniform vec2  uShadow, uGust; // (celdas por bucle, metros por celda)
 
 in vec2 vUv;
 out vec4 outColor;
@@ -78,13 +80,13 @@ vec4 cloudAt(vec2 pc) {
 }
 vec2 cloudFlow(vec2 pc) {
   float yN = clamp(pc.y / uHorizonY, 0.0, 1.0); // 0 = cénit, 1 = horizonte
-  vec2 wind = vec2(1.0, 0.035) * mix(58.0, 24.0, yN * yN);
+  vec2 wind = vec2(1.0, 0.035) * mix(7.25, 3.0, yN * yN) * uFlowP;   // px/s · periodo
   vec2 q = pc / 820.0;
-  vec2 turb = vec2(pfbm(q, NOPER, 3), pfbm(q + 17.31, NOPER, 3)) * 30.0;
+  vec2 turb = vec2(pfbm(q, NOPER, 3), pfbm(q + 17.31, NOPER, 3)) * 3.75 * uFlowP;
   return wind + turb;
 }
 vec4 flowClouds(vec2 pc) {
-  float P = uLoop * 0.5;
+  float P = uFlowP;
   float ph0 = fract(uTime / P);
   float ph1 = fract(uTime / P + 0.5);
   vec2 f = cloudFlow(pc);
@@ -108,10 +110,10 @@ float cirrusField(vec2 pc) {
   return m * band * clock * 0.22;
 }
 float flowCirrus(vec2 pc) {
-  float P = uLoop * 0.5;
+  float P = uFlowP;
   float ph0 = fract(uTime / P + 0.25);
   float ph1 = fract(uTime / P + 0.75);
-  vec2 f = vec2(92.0, -6.0);
+  vec2 f = vec2(11.5, -0.75) * P;
   float c0 = cirrusField(pc - f * (ph0 - 0.5));
   float c1 = cirrusField(pc - f * (ph1 - 0.5));
   float w = abs(1.0 - 2.0 * ph0);
@@ -144,18 +146,16 @@ vec2 worldXZ(vec2 p) {
 
 // sombras de nubes: se desplazan exactamente un periodo por bucle → loop perfecto
 float cloudShadow(vec2 xz) {
-  const float PER = 4.0;                           // celdas por periodo
-  const float CELL = 46.0;                         // m por celda (periodo = 184 m)
+  float PER = uShadow.x, CELL = uShadow.y;         // periodo = PER·CELL m por bucle
   vec2 q = vec2(xz.x / CELL - uTime / uLoop * PER, xz.y / (CELL * 1.6));
   float n = pfbm(q, vec2(PER, 4096.0), 4);
   return smoothstep(0.02, 0.19, n);
 }
 // rachas de viento sobre el césped
 float grassGust(vec2 xz) {
-  const float PER = 8.0;
-  const float CELL = 7.0;                          // periodo 56 m → ~3.5 m/s en 16 s
+  float PER = uGust.x, CELL = uGust.y;            // ~3,5 m/s para cualquier duración
   vec2 q = vec2(xz.x / CELL - uTime / uLoop * PER, xz.y / (CELL * 1.3));
-  q.x += 0.35 * pnoise(q * 0.5 + 5.0, vec2(PER * 0.5, 4096.0));
+  q.x += 0.35 * pnoise(q + 5.0, vec2(PER, 4096.0));   // periodo entero = PER → bucle exacto
   return pfbm(q, vec2(PER, 4096.0), 3);
 }
 

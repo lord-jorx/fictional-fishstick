@@ -2,6 +2,7 @@
 //
 //   node tools/render.mjs --out frames/ [--w 1320 --h 2868] [--fps 30] [--seconds 16]
 //   node tools/render.mjs --still 4.5 --out still.png
+//   --loop 6   duración del bucle en s (ColorOS limita los fondos de vídeo a 6 s)
 //
 // Variables: CHROMIUM (ruta al ejecutable; por defecto el de Playwright en /opt/pw-browsers)
 import { createServer } from 'node:http';
@@ -37,7 +38,8 @@ const browser = await chromium.launch({
 });
 const page = await browser.newPage({ viewport: { width: W, height: H }, deviceScaleFactor: 1 });
 page.on('console', (m) => { if (m.type() === 'error') console.error('[page]', m.text()); });
-await page.goto(`http://127.0.0.1:${port}/index.html?capture&w=${W}&h=${H}`);
+const loop = args.loop ? `&loop=${args.loop}` : '';
+await page.goto(`http://127.0.0.1:${port}/index.html?capture&w=${W}&h=${H}${loop}`);
 await page.waitForFunction(() => window.wallpaperReady || document.body.dataset.error, null, { timeout: 120000 });
 const err = await page.evaluate(() => document.body.dataset.error);
 if (err) throw new Error(err);

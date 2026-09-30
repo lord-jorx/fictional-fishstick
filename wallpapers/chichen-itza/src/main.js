@@ -7,22 +7,42 @@ import * as THREE from 'three';
 import { vertexShader, fragmentShader } from './shaders.js';
 import { Birds } from './birds.js';
 
-export const LOOP = 16; // s — todas las animaciones son periódicas en LOOP
-
 const params = new URLSearchParams(location.search);
 const capture = params.has('capture');
+
+// s — todas las animaciones son periódicas en LOOP (?loop=6 para ColorOS, que limita
+// los fondos de vídeo a 6 s). Las velocidades físicas no cambian con la duración: se
+// ajustan los periodos espaciales para que cada efecto cierre exactamente en LOOP.
+export const LOOP = Math.max(3, +(params.get('loop') || 16));
+const loopK = Math.sqrt(LOOP / 16);
 
 // Encuadre: ancho visible del lienzo y ancla inferior (px de lienzo)
 const VIEW = { w: 2020, bottomMargin: 40 };
 // Movimiento de cámara (px de lienzo a disparidad 1) y dolly
-const CAM = { ax: 13, ay: 3.5, zoom: 0.014 };
+const CAM = { ax: 13 * loopK, ay: 3.5 * loopK, zoom: 0.014 * loopK };
 
-// Zopilotes: centro de la térmica (m), radio, vueltas por bucle (signo = sentido)
+// Zopilotes: centro de la térmica (m), velocidad (m/s), radio deseado, sentido.
+// Vueltas enteras por bucle → el radio real sale de v·LOOP/(2π·vueltas) y el alabeo
+// de la física del giro coordinado (tan φ = v²/(g·r)), limitado a ~32°.
 const BIRDS = [
-  { cx: -8, cy: 125, cz: 135, r: 24, turns: 1, phase: 0.4, bank: 0.26, teeter: 11, scale: 2.0 },
-  { cx: 18, cy: 142, cz: 168, r: 30, turns: -1, phase: 2.3, bank: 0.22, teeter: 9, scale: 2.3 },
-  { cx: -31, cy: 110, cz: 122, r: 16, turns: 2, phase: 4.1, bank: 0.34, teeter: 13, scale: 1.9 },
-];
+  { cx: -8, cy: 125, cz: 135, v: 9.4, r: 24, dir: 1, phase: 0.4, scale: 2.0 },
+  { cx: 18, cy: 142, cz: 168, v: 11.8, r: 30, dir: -1, phase: 2.3, scale: 2.3 },
+  { cx: -31, cy: 110, cz: 122, v: 12.6, r: 16, dir: 1, phase: 4.1, scale: 1.9 },
+].map((b, k) => {
+  const turns = Math.max(1, Math.round((b.v * LOOP) / (2 * Math.PI * b.r)));
+  const r = (b.v * LOOP) / (2 * Math.PI * turns);
+  const bank = Math.min(0.56, Math.atan((b.v * b.v) / (9.81 * r)));
+  return { ...b, r, turns: turns * b.dir, bank, teeter: Math.max(2, Math.round(0.7 * LOOP)) + k, bob: Math.max(1, Math.round(LOOP / 5)) };
+});
+// periodos espaciales enteros por bucle: sombras ~11 m/s (celda ~40 m), rachas ~3,5 m/s (celda ~7 m)
+const periodic = (speed, cell) => {
+  const per = Math.max(2, Math.round((speed * LOOP) / cell));
+  return [per, (speed * LOOP) / per];
+};
+const [SHADOW_PER, SHADOW_CELL] = periodic(11, 40);
+const [GUST_PER, GUST_CELL] = periodic(3.5, 7);
+// flow-map de nubes: fase de ~6–8 s con número entero de fases por bucle
+const FLOW_P = LOOP / Math.max(1, Math.round(LOOP / 8));
 
 THREE.ColorManagement.enabled = false;
 
@@ -81,6 +101,9 @@ async function init() {
     uCam: { value: new THREE.Vector2() },
     uZoom: { value: 0 },
     uFocus: { value: new THREE.Vector2(cw / 2, layout.pyramidTopY + 300) },
+    uFlowP: { value: FLOW_P },
+    uShadow: { value: new THREE.Vector2(SHADOW_PER, SHADOW_CELL) },
+    uGust: { value: new THREE.Vector2(GUST_PER, GUST_CELL) },
   };
   const quad = new THREE.Mesh(
     new THREE.PlaneGeometry(2, 2),

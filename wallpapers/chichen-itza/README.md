@@ -1,11 +1,11 @@
 # El Castillo · Chichén Itzá — fondo de bloqueo animado
 
-Fondo de pantalla animado (bucle perfecto de 16 s) creado a partir de una foto real de
+Fondo de pantalla animado (bucle perfecto: 6 s para OPPO, 16 s en la vista web) creado a partir de una foto real de
 El Castillo (Kukulcán), retocada y convertida en una escena 2.5D con Three.js.
 
 | Dispositivo | Resolución nativa | Archivos |
 |---|---|---|
-| OPPO Find X9 Pro | 1272 × 2772 | `dist/oppo-find-x9-pro/` — vídeo en bucle `.mp4` + imagen `.png` |
+| OPPO Find X9 Pro | 1272 × 2772 | `dist/oppo-find-x9-pro/` — vídeo en bucle de 6 s `.mp4` (límite de ColorOS) + imagen `.png` |
 | iPhone 16 Pro | 1206 × 2622 | `dist/iphone-16-pro/` — clip Live Photo `.mov` (3 s) + imagen `.png` |
 | iPhone 15 Pro | 1179 × 2556 | `dist/iphone-15-pro/` — clip Live Photo `.mov` (3 s, 1180 px: H.264 exige ancho par) + imagen `.png` |
 
@@ -27,6 +27,10 @@ reloj de bloqueo para comprobar la legibilidad.
   azul, legible siempre.
 
 ## Qué se anima (todo periódico → sin salto en el bucle)
+
+La duración del bucle es un parámetro (`?loop=6`). Las velocidades físicas se mantienen
+(nubes, sombras ~11 m/s, rachas ~3,5 m/s, zopilotes ~10–12 m/s) y se ajustan los periodos
+espaciales, el radio de las térmicas y el alabeo para que todo cierre exactamente en ese tiempo.
 
 - **Nubes**: la capa de nubes se separa del azul (des-mezcla por "azulidad") y se anima con
   un flow-map de doble fase, la técnica de los cinemagraphs.
@@ -59,8 +63,10 @@ npm install
 python3 tools/clean.py foto.jpg /tmp/clean.png        # 1. limpieza fotográfica
 python3 tools/compose.py /tmp/clean.png web/assets    # 2. capas + máscaras
 npm run build                                          # 3. escena Three.js → web/app.min.js
-node tools/render.mjs --out /tmp/frames               # 4. 480 fotogramas 1320×2868 (Chromium headless)
-python3 tools/encode.py /tmp/frames dist              # 5. vídeos e imágenes por dispositivo
+node tools/render.mjs --out /tmp/frames               # 4. bucle de 16 s, 480 fotogramas 1320×2868
+python3 tools/encode.py /tmp/frames dist              # 5. clips Live Photo e imágenes de iPhone
+node tools/render.mjs --loop 6 --seconds 6 --out /tmp/frames6
+python3 tools/encode.py /tmp/frames6 dist oppo-find-x9-pro   # bucle de 6 s para ColorOS
 ```
 
 `render.mjs` usa el Chromium de Playwright (`CHROMIUM=/ruta/a/chrome` para cambiarlo).

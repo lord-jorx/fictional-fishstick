@@ -63,7 +63,7 @@ export class Birds {
     this.defs.forEach((b, k) => {
       const th = b.phase + (TAU * b.turns * t) / loop;
       const dir = Math.sign(b.turns);
-      const bob = Math.sin(TAU * 3 * t / loop + k) * 0.8;
+      const bob = Math.sin(TAU * b.bob * t / loop + k) * 0.8;
       const pos = [b.cx + b.r * Math.cos(th), b.cy + bob, b.cz + b.r * Math.sin(th)];
       // tangente (heading) y normal hacia el centro
       const F = [-Math.sin(th) * dir, 0, Math.cos(th) * dir];
