@@ -389,7 +389,7 @@
   .res-perla small { display: block; color: var(--acento); font-size: .72em; letter-spacing: .14em; text-transform: uppercase; font-weight: 700; margin-bottom: 3px; }
 
   /* Toasts */
-  #toasts { position: absolute; z-index: 45; top: 84px; left: 50%; transform: translateX(-50%); width: min(520px, calc(100% - 24px)); display: grid; gap: 8px; pointer-events: none; }
+  #toasts { position: absolute; z-index: 45; top: 84px; left: 0; right: 0; margin: 0 auto; width: min(520px, calc(100% - 24px)); display: grid; gap: 8px; pointer-events: none; }
   .toast { display: flex; gap: 11px; align-items: flex-start; padding: 11px 15px; border-radius: 13px; font-size: .9em; background: var(--vidrio-fuerte); backdrop-filter: blur(14px); border: 1px solid var(--borde); box-shadow: var(--sombra); animation: bajar .35s cubic-bezier(.2, .8, .2, 1) both; }
   .toast.sale { animation: sale .45s ease-in forwards; }
   .toast .ico { width: 20px; height: 20px; margin-top: 1px; }
@@ -516,10 +516,15 @@
     #hud { right: 12px; top: 58px; flex-wrap: wrap; gap: 8px 12px; padding: 8px 12px; }
     .hud-marca small, .hud-equipo .miembro small { display: none; }
     .hud-recursos { order: 3; } .hud-equipo { order: 4; margin-left: auto; }
+    .hud-reloj { min-width: 0; } .hud-reloj .resta { min-width: 0; overflow: hidden; text-overflow: ellipsis; }
     .hud-reloj .hora { font-size: 1.5em; }
     #botones-flotantes { top: 8px; right: 8px; } #botones-flotantes button span { display: none; }
-    #riel { top: 168px; left: 8px; width: 160px; max-height: 38vh; }
-    #toasts { top: 168px; }
+    #riel { top: 196px; left: 8px; width: 160px; max-height: 34vh; }
+    #toasts { top: 146px; width: min(520px, calc(100% - 16px)); }
+    .toast, .toast * { pointer-events: none; }
+    .toast { padding: 7px 11px; gap: 8px; font-size: .8em; line-height: 1.3; border-radius: 11px; box-shadow: 0 6px 18px rgba(0, 0, 0, .4); }
+    .toast > span:last-child { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+    .toast .ico { width: 16px; height: 16px; }
     .panel { left: 8px !important; right: 8px; width: auto !important; }
     #panel-ficha { top: auto; bottom: 8px; height: 25vh; }
     #panel-acciones { top: auto; bottom: calc(25vh + 16px); height: 41vh; padding: 12px; }
@@ -534,7 +539,7 @@
     .imv-tags { grid-template-columns: 1fr 1fr; }
     .inf-puntos { grid-template-columns: 1fr; text-align: center; }
     .dock-ayuda { display: none; }
-    #resultado-q { top: 168px; }
+    #resultado-q { top: 150px; }
   }
   @media (max-width: 560px) {
     .hud-reloj { min-width: 120px; }

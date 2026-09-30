@@ -202,7 +202,10 @@ export class ThreeIO implements IO {
     if (texto === this.ultimoToast.texto && ahora - this.ultimoToast.t < 2500) return;
     this.ultimoToast = { texto, t: ahora };
     const cont = this.el('toasts');
-    while (cont.children.length >= 4) cont.firstElementChild?.remove();
+    // En pantallas estrechas un solo aviso a la vez y de paso corto: no tapan el juego.
+    const estrecha = window.matchMedia('(max-width: 1019px)').matches;
+    if (estrecha) ms = Math.min(ms, 3200);
+    while (cont.children.length >= (estrecha ? 1 : 4)) cont.firstElementChild?.remove();
     const d = document.createElement('div');
     d.className = `toast ${tono}`;
     d.innerHTML = `<span class="t-ico">${iconoPorNombre(tono === 'mal' ? 'alerta' : tono === 'ok' ? 'ok' : tono === 'aviso' ? 'alerta' : 'reloj')}</span><span>${escaparHtml(texto)}</span>`;
