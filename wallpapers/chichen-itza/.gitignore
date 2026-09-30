@@ -1,0 +1,2 @@
+# Los entregables de este fondo sí se versionan (el .gitignore raíz ignora dist/ del build TS)
+!dist/
