@@ -98,7 +98,7 @@ function camaraBase(v: VistaMundo): Cam {
   const o = OFF[v];
   switch (v) {
     case 'sala':
-      return { pos: o.clone().add(new THREE.Vector3(0, 20, 15.2)), look: o.clone().add(new THREE.Vector3(0, 0.3, -2.8)) };
+      return { pos: o.clone().add(new THREE.Vector3(1.4, 25.5, 20)), look: o.clone().add(new THREE.Vector3(1.4, 0.3, -2.3)) };
     case 'quirofano':
       return { pos: o.clone().add(new THREE.Vector3(5.6, 6.6, 7.0)), look: o.clone().add(new THREE.Vector3(0, 1.3, -0.2)) };
     case 'puerta':
@@ -379,8 +379,15 @@ export class Mundo {
 
     // Pantallas estrechas: aléjate para que quepa el escenario
     if (aspecto < 1.6 && this.vista !== 'exterior') {
-      const f = Math.min(2.6, 1.6 / Math.max(0.35, aspecto));
+      const sigueAlCirujano = this.vista === 'sala' && !this.foco;
+      // En vertical la sala no cabe entera: se encuadra una parte y la cámara sigue al cirujano.
+      const f = sigueAlCirujano ? Math.min(1.45, 1.6 / Math.max(0.35, aspecto)) : Math.min(2.6, 1.6 / Math.max(0.35, aspecto));
       this.rigPos.sub(this.rigLook).multiplyScalar(f).add(this.rigLook);
+      if (sigueAlCirujano) {
+        const ajuste = THREE.MathUtils.clamp(this.posCirujano.x, -9, 9) * 0.85 - this.posCirujano.x * 0.2;
+        this.rigPos.x += ajuste;
+        this.rigLook.x += ajuste;
+      }
     }
     // Paralaje de ratón
     this.rigPos.x += this.puntero.x * 0.55;

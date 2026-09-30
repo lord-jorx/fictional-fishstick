@@ -469,7 +469,7 @@ export class ThreeIO implements IO {
         const op = visibles[i];
         if (!op) return;
         sonido.click();
-        if (!this.partidaEmpezada) this.cadenaSetup.push(sinAnsi(op.etiqueta).replace(/\s*\(.*\)\s*$/, ''));
+        if (!this.partidaEmpezada) this.cadenaSetup.push(sinAnsi(tr(op.etiqueta)).replace(/\s*\(.*\)\s*$/, ''));
         resolver(op.valor);
       };
 
@@ -753,7 +753,7 @@ export class ThreeIO implements IO {
         const decor = [...this.decoracion.values()].join('');
         this.decoracion.clear();
         const chips = this.cadenaSetup.length > 0
-          ? `<div class="chips-setup">${this.cadenaSetup.map((c) => `<span>${escaparHtml(c)}</span>`).join('')}</div>`
+          ? `<div class="chips-setup">${this.cadenaSetup.map((c) => `<span>${escaparHtml(tr(c))}</span>`).join('')}</div>`
           : '';
         modal.innerHTML = `<div class="modal-caja">${chips}${decor}<button type="button" class="gran-boton">${escaparHtml(texto)}${icono('continuar')}</button></div>`;
         modal.classList.add('visible');
