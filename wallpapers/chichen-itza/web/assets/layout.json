@@ -1,0 +1,15 @@
+{
+  "canvas": [
+    2304,
+    4672
+  ],
+  "photo": {
+    "x": 0,
+    "y": 1600,
+    "w": 2304,
+    "h": 3072
+  },
+  "horizonY": 3842.5,
+  "pyramidTopY": 3130.0,
+  "note": "coordenadas en p\u00edxeles de lienzo, origen arriba-izquierda"
+}

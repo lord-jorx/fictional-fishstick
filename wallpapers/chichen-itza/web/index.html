@@ -1,0 +1,73 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#123a8c">
+<title>El Castillo en vivo</title>
+<style>
+  :root {
+    --bg: #0b0f16;
+    --ink: #ffffff;
+    --muted: rgba(255, 255, 255, 0.72);
+    --device-radius: 44px;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; height: 100%; background: var(--bg); color: var(--ink); overflow: hidden;
+    font-family: -apple-system, "SF Pro Display", "OPPO Sans", system-ui, "Segoe UI", Roboto, sans-serif; }
+  body { display: grid; place-items: center; }
+
+  /* móvil: pantalla completa · escritorio: vista previa con forma de teléfono (19,5:9) */
+  #stage { position: relative; width: 100vw; height: 100vh; height: 100dvh; overflow: hidden; }
+  @media (min-aspect-ratio: 5/8) {
+    #stage { height: 94vh; width: calc(94vh * 1272 / 2772); border-radius: var(--device-radius);
+      box-shadow: 0 0 0 10px #1b1f27, 0 30px 80px rgba(0, 0, 0, 0.6); }
+  }
+  #stage canvas { display: block; position: absolute; inset: 0; opacity: 0; transition: opacity 1.2s ease; }
+  body.ready #stage canvas { opacity: 1; }
+
+  /* superposición opcional para comprobar la legibilidad del reloj (tecla C / botón) */
+  .lock { position: absolute; inset: 0; pointer-events: none; text-align: center; display: none;
+    text-shadow: 0 1px 12px rgba(0, 20, 60, 0.25); }
+  body.clock .lock { display: block; }
+  .lock .date { margin-top: 9.5%; font-size: clamp(14px, 2.1vh, 22px); font-weight: 600; color: var(--muted); }
+  .lock .time { font-size: clamp(64px, 11.5vh, 130px); font-weight: 700; letter-spacing: -0.02em; line-height: 1.02; }
+  .toggle { position: fixed; right: 16px; bottom: 16px; border: 0; border-radius: 999px; padding: 10px 16px;
+    background: rgba(255, 255, 255, 0.12); color: var(--ink); font: 600 13px/1 inherit; cursor: pointer;
+    backdrop-filter: blur(8px); }
+  @media (max-aspect-ratio: 5/8) { .toggle { display: none; } }
+</style>
+</head>
+<body>
+  <div id="stage">
+    <div class="lock" aria-hidden="true">
+      <div class="date" id="date"></div>
+      <div class="time" id="time"></div>
+    </div>
+  </div>
+  <button class="toggle" id="toggle" type="button">Reloj de bloqueo</button>
+  <script>
+    (function () {
+      var q = new URLSearchParams(location.search);
+      if (q.has('capture')) {
+        document.documentElement.style.background = '#000';
+        document.getElementById('toggle').remove();
+        var s = document.getElementById('stage');
+        s.style.cssText = 'width:' + (q.get('w') || 1320) + 'px;height:' + (q.get('h') || 2868) + 'px;border-radius:0;box-shadow:none';
+        document.body.style.display = 'block';
+      }
+      if (q.has('clock')) document.body.classList.add('clock');
+      function tick() {
+        var d = new Date();
+        document.getElementById('time').textContent = d.toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' });
+        document.getElementById('date').textContent = d.toLocaleDateString('es-ES', { weekday: 'long', day: 'numeric', month: 'long' });
+      }
+      tick(); setInterval(tick, 15000);
+      function toggle() { document.body.classList.toggle('clock'); }
+      document.getElementById('toggle') && document.getElementById('toggle').addEventListener('click', toggle);
+      addEventListener('keydown', function (e) { if (e.key === 'c' || e.key === 'C') toggle(); });
+    })();
+  </script>
+  <script type="module" src="app.min.js"></script>
+</body>
+</html>

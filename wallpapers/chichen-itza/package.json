@@ -1,0 +1,16 @@
+{
+  "name": "chichen-itza-live-wallpaper",
+  "private": true,
+  "version": "1.0.0",
+  "description": "Fondo de pantalla animado (Three.js) de El Castillo, Chichén Itzá, para pantalla de bloqueo",
+  "type": "module",
+  "scripts": {
+    "build": "esbuild src/main.js --bundle --minify --format=esm --target=es2020 --outfile=web/app.min.js",
+    "render": "node tools/render.mjs"
+  },
+  "devDependencies": {
+    "esbuild": "^0.24.0",
+    "playwright-core": "^1.56.0",
+    "three": "0.186.1"
+  }
+}
