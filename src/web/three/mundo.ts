@@ -102,7 +102,7 @@ function camaraBase(v: VistaMundo): Cam {
     case 'quirofano':
       return { pos: o.clone().add(new THREE.Vector3(5.6, 6.6, 7.0)), look: o.clone().add(new THREE.Vector3(0, 1.3, -0.2)) };
     case 'puerta':
-      return { pos: o.clone().add(new THREE.Vector3(0, 7, 13)), look: o.clone().add(new THREE.Vector3(0, 0.8, 0.8)) };
+      return { pos: o.clone().add(new THREE.Vector3(0, 9.5, 19)), look: o.clone().add(new THREE.Vector3(0, 0.6, 0.4)) };
     case 'exterior':
       return { pos: o.clone().add(new THREE.Vector3(-4, 5.2, 44)), look: o.clone().add(new THREE.Vector3(2, 7.5, -8)) };
   }

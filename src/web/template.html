@@ -224,7 +224,7 @@
   .dock-btn b { font-size: .9em; }
   .dock-btn small { color: var(--tenue); font-size: .74em; }
   .dock-ayuda { width: 100%; text-align: center; font-size: .74em; color: var(--debil); text-shadow: 0 1px 8px #000; }
-  #prompt { display: none; position: absolute; z-index: 16; left: 50%; bottom: 98px; transform: translateX(-50%); padding: 8px 16px; border-radius: 99px; background: var(--vidrio-fuerte); border: 1px solid var(--acento); color: var(--tinta); font-size: .9em; white-space: nowrap; animation: subir .25s both; }
+  #prompt { display: none; position: absolute; z-index: 16; left: 0; right: 0; margin: 0 auto; width: max-content; bottom: 98px; padding: 8px 16px; border-radius: 99px; background: var(--vidrio-fuerte); border: 1px solid var(--acento); color: var(--tinta); font-size: .9em; white-space: nowrap; animation: subir .25s both; }
   #prompt.visible { display: flex; align-items: center; gap: 9px; }
   @media (pointer: coarse) { #prompt { display: none !important; } }
 
@@ -347,14 +347,14 @@
   .tecnica.adjunto .t-icono { background: var(--acento-suave); color: var(--acento); }
   .t-feedback { margin-bottom: 10px; padding: 9px 14px; border-radius: 12px; background: var(--vidrio-fuerte); border: 1px solid var(--borde); font-size: .85em; }
   .t-feedback p { margin: 2px 0; }
-  #resultado-q { display: none; position: absolute; z-index: 25; top: 84px; left: 50%; transform: translateX(-50%); width: min(560px, calc(100% - 24px)); gap: 12px; align-items: center; padding: 12px 18px; border-radius: 14px; font-size: .95em; background: var(--vidrio-fuerte); backdrop-filter: blur(14px); border: 1px solid var(--borde); box-shadow: var(--sombra); }
+  #resultado-q { display: none; position: absolute; z-index: 25; top: 84px; left: 0; right: 0; margin: 0 auto; width: min(560px, calc(100% - 24px)); gap: 12px; align-items: center; padding: 12px 18px; border-radius: 14px; font-size: .95em; background: var(--vidrio-fuerte); backdrop-filter: blur(14px); border: 1px solid var(--borde); box-shadow: var(--sombra); }
   #resultado-q.visible { display: flex; animation: bajar .35s cubic-bezier(.2, .8, .2, 1) both; }
   #resultado-q.ok { border-color: rgba(61, 220, 151, .55); } #resultado-q.ok .r-ico { color: var(--exito); }
   #resultado-q.mal { border-color: rgba(255, 93, 108, .65); background: rgba(40, 10, 18, .92); } #resultado-q.mal .r-ico { color: var(--alarma); }
   .r-ico .ico { width: 24px; height: 24px; }
 
   /* IMV */
-  #panel-imv { position: absolute; z-index: 18; left: 50%; bottom: 12px; transform: translateX(-50%); width: min(900px, calc(100% - 24px)); padding: 14px; border-radius: 18px; background: var(--vidrio); backdrop-filter: blur(16px); border: 1px solid rgba(255, 93, 108, .45); box-shadow: var(--sombra), 0 0 40px rgba(255, 93, 108, .12); }
+  #panel-imv { position: absolute; z-index: 18; left: 0; right: 0; margin: 0 auto; bottom: 12px; width: min(900px, calc(100% - 24px)); padding: 14px; border-radius: 18px; background: var(--vidrio); backdrop-filter: blur(16px); border: 1px solid rgba(255, 93, 108, .45); box-shadow: var(--sombra), 0 0 40px rgba(255, 93, 108, .12); }
   #panel-imv.visible { display: block; animation: subir .4s both; }
   .imv-cab { display: flex; justify-content: center; margin-bottom: 10px; }
   .imv-alerta { display: inline-flex; align-items: center; gap: 8px; font-size: .74em; letter-spacing: .2em; font-weight: 800; color: var(--alarma); animation: pulso-cruz 1.4s ease-in-out infinite; }
