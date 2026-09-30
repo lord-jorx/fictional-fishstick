@@ -98,7 +98,7 @@ function camaraBase(v: VistaMundo): Cam {
   const o = OFF[v];
   switch (v) {
     case 'sala':
-      return { pos: o.clone().add(new THREE.Vector3(0, 20.5, 18.5)), look: o.clone().add(new THREE.Vector3(0, 0.3, 0.6)) };
+      return { pos: o.clone().add(new THREE.Vector3(0, 20, 15.2)), look: o.clone().add(new THREE.Vector3(0, 0.3, -2.8)) };
     case 'quirofano':
       return { pos: o.clone().add(new THREE.Vector3(5.6, 6.6, 7.0)), look: o.clone().add(new THREE.Vector3(0, 1.3, -0.2)) };
     case 'puerta':

@@ -19,7 +19,7 @@ import type {
   Opcion,
 } from '../core/io.js';
 import { MEJORAS, proximoRango, rangoPorXp, talismanPorId } from '../data/mejoras.js';
-import { t } from '../i18n.js';
+import { t, tr, u } from '../i18n.js';
 import { esquemaQuirurgico } from './anatomia.js';
 import { ansiAHtml, escaparHtml, sinAnsi } from './ansiHtml.js';
 import { cuerpoConDolor, QUEJAS } from './arte.js';
@@ -142,7 +142,7 @@ export class ThreeIO implements IO {
       this.mundo.onPasos = () => sonido.pasos();
     } catch (e) {
       const a = this.el('aviso-gl');
-      a.textContent = 'Este navegador no puede iniciar gráficos 3D (WebGL). Prueba con Chrome, Edge, Firefox o Safari actualizados.';
+      a.textContent = tr('Este navegador no puede iniciar gráficos 3D (WebGL). Prueba con Chrome, Edge, Firefox o Safari actualizados.');
       a.classList.add('visible');
       console.error(e);
     }
@@ -167,7 +167,7 @@ export class ThreeIO implements IO {
     const b = this.el('btn-sonido') as HTMLButtonElement;
     const pintar = () => {
       b.innerHTML = iconoPorNombre(sonido.activo ? 'sonido' : 'mudo');
-      b.title = sonido.activo ? 'Silenciar' : 'Activar sonido';
+      b.title = tr(sonido.activo ? 'Silenciar' : 'Activar sonido');
     };
     pintar();
     b.addEventListener('click', () => {
@@ -495,7 +495,7 @@ export class ThreeIO implements IO {
     const decor = [...this.decoracion.values()].join('');
     this.decoracion.clear();
     const chips = !this.partidaEmpezada && this.cadenaSetup.length > 0
-      ? `<div class="chips-setup">${this.cadenaSetup.map((c) => `<span>${escaparHtml(c)}</span>`).join('')}</div>`
+      ? `<div class="chips-setup">${this.cadenaSetup.map((c) => `<span>${escaparHtml(tr(c))}</span>`).join('')}</div>`
       : '';
     const compacto = visibles.length > 4 || visibles.some((o) => /^(piel|pelo|idioma):/.test(o.clave ?? ''));
     const tarjetas = visibles
@@ -509,14 +509,14 @@ export class ThreeIO implements IO {
           const nivel = c.endsWith('comarcal') ? 1 : c.endsWith('general') ? 2 : 3;
           lateral = `<span class="oc-nivel">N${nivel}</span>`;
         }
-        const det = op.detalle ? `<small>${escaparHtml(op.detalle)}</small>` : '';
-        return `<button type="button" class="opcion-card${c.startsWith('idioma:') ? ' idioma' : ''}" data-i="${i}" style="--d:${i * 40}ms">${lateral}<span class="oc-txt"><b>${ansiAHtml(op.etiqueta)}</b>${det}</span><kbd>${i + 1}</kbd></button>`;
+        const det = op.detalle ? `<small>${escaparHtml(tr(op.detalle))}</small>` : '';
+        return `<button type="button" class="opcion-card${c.startsWith('idioma:') ? ' idioma' : ''}" data-i="${i}" style="--d:${i * 40}ms">${lateral}<span class="oc-txt"><b>${ansiAHtml(tr(op.etiqueta))}</b>${det}</span><kbd>${i + 1}</kbd></button>`;
       })
       .join('');
     modal.innerHTML = `
       <div class="modal-caja${compacto ? ' compacto' : ''}">
         ${chips}
-        ${titulo.trim() ? `<h2>${ansiAHtml(titulo)}</h2>` : ''}
+        ${titulo.trim() ? `<h2>${ansiAHtml(tr(titulo))}</h2>` : ''}
         ${decor}
         <div class="opciones-grid">${tarjetas}</div>
       </div>`;
@@ -706,10 +706,10 @@ export class ThreeIO implements IO {
       })
       .join('');
     panel.innerHTML = `
-      <div class="imv-cab"><span class="imv-alerta">${iconoPorNombre('alerta')} INCIDENTE DE MÚLTIPLES VÍCTIMAS</span></div>
+      <div class="imv-cab"><span class="imv-alerta">${iconoPorNombre('alerta')} ${tr('INCIDENTE DE MÚLTIPLES VÍCTIMAS')}</span></div>
       ${feedback.length ? `<div class="t-feedback">${feedback.map((l) => `<p>${ansiAHtml(l.trim())}</p>`).join('')}</div>` : ''}
       <div class="imv-paciente">
-        <div><small>Valoras a</small><h3>${escaparHtml(m?.[1] ?? '')}</h3><span>${m ? `${m[2]} años` : ''}</span></div>
+        <div><small>${tr('Valoras a')}</small><h3>${escaparHtml(m?.[1] ?? '')}</h3><span>${m ? `${m[2]} ${u('pacientesLlegada')}` : ''}</span></div>
         <div class="vitales">${vit.map((v) => `<span class="vital ${v.tono}"><small>${v.k}</small><b>${v.v}</b><em>${v.u}</em></span>`).join('')}</div>
       </div>
       <div class="imv-tags">${tags}</div>`;
@@ -765,7 +765,7 @@ export class ThreeIO implements IO {
         return;
       }
       const cuerpo = this.formatearResolucion(lineas);
-      const cab = this.vista === 'puerta' ? 'Incidente de múltiples víctimas' : t('uiResolucion');
+      const cab = this.vista === 'puerta' ? tr('Incidente de múltiples víctimas') : t('uiResolucion');
       const card = this.el('resolucion');
       card.innerHTML = `<div class="res-caja"><header><span class="res-kicker">${escaparHtml(cab)}</span></header>${cuerpo}<button type="button" class="gran-boton">${escaparHtml(texto)}${icono('continuar')}</button></div>`;
       card.classList.add('visible');
@@ -813,7 +813,7 @@ export class ThreeIO implements IO {
       this.decoracion.clear();
       modal.innerHTML = `
         <div class="modal-caja">
-          <h2>${ansiAHtml(pregunta)}</h2>
+          <h2>${ansiAHtml(tr(pregunta))}</h2>
           ${decor}
           <input id="campo-texto" type="text" maxlength="24" placeholder="${escaparHtml(porDefecto)}" autocomplete="off" />
           <button type="button" class="gran-boton">OK${icono('ok')}</button>
@@ -904,16 +904,16 @@ export class ThreeIO implements IO {
     const pct = prox ? Math.max(4, Math.min(100, Math.round((c.xp / (c.xp + prox.faltan)) * 100))) : 100;
     const exp = conExpediente
       ? `<div class="expediente">
-           <div class="exp-fila"><span class="exp-rango">${escaparHtml(rangoPorXp(c.xp))}</span><span>${c.xp} XP</span></div>
+           <div class="exp-fila"><span class="exp-rango">${escaparHtml(tr(rangoPorXp(c.xp)))}</span><span>${c.xp} XP</span></div>
            <div class="meter grande"><i style="width:${pct}%"></i></div>
-           <div class="exp-datos"><span>${c.guardias} guardia${c.guardias === 1 ? '' : 's'}</span><span>${iconoPorNombre('candado')}${abiertas}/${MEJORAS.length}</span>${prox ? `<span>→ ${escaparHtml(prox.nombre)} · ${prox.faltan} XP</span>` : '<span>Rango máximo</span>'}</div>
+           <div class="exp-datos"><span>${tr(`${c.guardias} guardia${c.guardias === 1 ? '' : 's'}`)}</span><span>${iconoPorNombre('candado')}${abiertas}/${MEJORAS.length}</span>${prox ? `<span>→ ${escaparHtml(tr(prox.nombre))} · ${prox.faltan} XP</span>` : `<span>${tr('Rango máximo')}</span>`}</div>
          </div>`
       : '';
     this.el('titulo-juego').innerHTML = `
       <svg class="cruz" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 3h6v6h6v6h-6v6H9v-6H3V9h6z"/></svg>
       <h1>Surgeon's Night</h1>
-      <p class="sub">El Turno de Guardia</p>
-      <p class="lema">Llueve sobre la ciudad y el busca acaba de sonar.</p>
+      <p class="sub">${tr('EL TURNO DE GUARDIA')}</p>
+      <p class="lema">${tr('Llueve sobre la ciudad y el busca acaba de sonar.')}</p>
       ${exp}`;
   }
 
@@ -922,15 +922,15 @@ export class ThreeIO implements IO {
       const abierta = xp >= m.xpMin;
       return `<div class="taq-carta ${abierta ? 'abierta' : 'cerrada'}">
         <span class="taq-ico">${abierta ? iconoPorNombre(m.id === 'termo' ? 'cafe' : m.id === 'ojo' ? 'prueba:eco' : m.id === 'busca' ? 'adjunto' : m.id === 'equipo' ? 'duo' : 'modo:adjunto') : iconoPorNombre('candado')}</span>
-        <span class="taq-txt"><b>${escaparHtml(m.nombre)}</b><small>${escaparHtml(m.efecto)}</small></span>
-        <span class="taq-estado">${abierta ? 'ACTIVA' : `${m.xpMin - xp} XP`}</span>
+        <span class="taq-txt"><b>${escaparHtml(tr(m.nombre))}</b><small>${escaparHtml(tr(m.efecto))}</small></span>
+        <span class="taq-estado">${abierta ? tr('ACTIVA') : `${m.xpMin - xp} XP`}</span>
       </div>`;
     }).join('');
     const tal = talismanPorId(talismanId);
     const talHtml = tal
-      ? `<div class="taq-talisman">${iconoPorNombre('talisman')}<span><small>${t('uiBolsillo')}</small><b>${escaparHtml(tal.nombre)}</b><em>${escaparHtml(tal.efecto)} · solo esta noche</em></span></div>`
+      ? `<div class="taq-talisman">${iconoPorNombre('talisman')}<span><small>${t('uiBolsillo')}</small><b>${escaparHtml(tr(tal.nombre))}</b><em>${escaparHtml(tr(`${tal.efecto} · solo esta noche`))}</em></span></div>`
       : '';
-    return `<div class="taquilla"><div class="taq-cab"><b>${t('uiTaquilla')}</b><span>${escaparHtml(rangoPorXp(xp))} · ${xp} XP</span></div>${talHtml}<div class="taq-rejilla">${cartas}</div></div>`;
+    return `<div class="taquilla"><div class="taq-cab"><b>${t('uiTaquilla')}</b><span>${escaparHtml(tr(rangoPorXp(xp)))} · ${xp} XP</span></div>${talHtml}<div class="taq-rejilla">${cartas}</div></div>`;
   }
 
   /** Historia clínica del paciente: retrato, queja, constantes, pruebas y diagnóstico. */
@@ -958,17 +958,17 @@ export class ThreeIO implements IO {
         <div class="fc-id">
           <small>${t('uiHistoria')} · #${f.id}</small>
           <h2>${escaparHtml(f.nombre)}</h2>
-          <p>${f.edad} años · ${f.llegada}${f.reingreso ? ' · <span class="chip mal">reingreso</span>' : ''}</p>
+          <p>${f.edad} ${u('pacientesLlegada')} · ${f.llegada}${f.reingreso ? ` · <span class="chip mal">${tr('reingreso')}</span>` : ''}</p>
           <div class="estab ${NIVEL(f.estabilidad)}"><span>${t('uiEstabilidad')}</span><div class="meter"><i style="width:${n}%"></i></div><b>${Math.round(f.estabilidad)}%</b></div>
         </div>
       </header>
-      ${queja ? `<div class="fc-queja"><div class="fc-cuerpo">${cuerpo}</div><div class="bocadillo">«${escaparHtml(queja)}»<span class="ay">¡ay!</span></div></div>` : ''}
+      ${queja ? `<div class="fc-queja"><div class="fc-cuerpo">${cuerpo}</div><div class="bocadillo">«${escaparHtml(queja)}»<span class="ay">${u('ay')}</span></div></div>` : ''}
       <section><h4>${t('uiConstantes')}</h4><div class="vitales">${vit.map((v) => `<span class="vital ${v.tono}"><small>${v.k}</small><b>${v.v}</b><em>${v.u}</em></span>`).join('')}</div></section>
       <section><h4>${t('uiAnamnesis')}</h4><ul class="fc-lista">${f.sintomas.map((s) => `<li>${escaparHtml(s)}</li>`).join('')}</ul></section>
       ${f.exploracion ? `<section><h4>${t('uiExploracion')}</h4><p class="fc-texto">${escaparHtml(f.exploracion)}</p></section>` : ''}
       ${f.notas.length ? `<section class="fc-notas">${f.notas.map((x) => `<p>${iconoPorNombre('alerta')}<span>${escaparHtml(x)}</span></p>`).join('')}</section>` : ''}
       ${pruebas ? `<section><h4>${t('uiPruebas')}</h4><ul class="fc-pruebas">${pruebas}</ul></section>` : ''}
-      ${f.diagnostico ? `<div class="fc-dx">${iconoPorNombre('ok')}<div><small>Diagnóstico confirmado</small><b>${escaparHtml(f.diagnostico.nombre)}</b></div>${f.diagnostico.cie10 ? `<span class="cie">CIE-10 ${escaparHtml(f.diagnostico.cie10)}</span>` : ''}</div>` : ''}`;
+      ${f.diagnostico ? `<div class="fc-dx">${iconoPorNombre('ok')}<div><small>${tr('Diagnóstico confirmado')}</small><b>${escaparHtml(f.diagnostico.nombre)}</b></div>${f.diagnostico.cie10 ? `<span class="cie">CIE-10 ${escaparHtml(f.diagnostico.cie10)}</span>` : ''}</div>` : ''}`;
     panel.classList.add('visible');
     if (hayNueva) {
       const ult = panel.querySelector('.fc-pruebas .nueva:last-child, .fc-pruebas li:last-child');
@@ -981,7 +981,7 @@ export class ThreeIO implements IO {
   private pintarPanelCirugia(d: EscenaDato, inicio: boolean): void {
     const panel = this.el('panel-cirugia');
     if (inicio) {
-      panel.innerHTML = `<header class="cir-cab"><small>QUIRÓFANO</small><h3>${escaparHtml(d.nombreCirugia ?? '')}</h3><p>${escaparHtml(d.nombre ?? '')}${d.edad ? ` · ${d.edad} años` : ''}</p></header>`;
+      panel.innerHTML = `<header class="cir-cab"><small>${tr('QUIRÓFANO')}</small><h3>${escaparHtml(d.nombreCirugia ?? '')}</h3><p>${escaparHtml(d.nombre ?? '')}${d.edad ? ` · ${d.edad} ${u('pacientesLlegada')}` : ''}</p></header>`;
       panel.classList.add('visible');
       return;
     }
@@ -991,7 +991,7 @@ export class ThreeIO implements IO {
     const puntos = Array.from({ length: total }, (_, i) => `<i class="${i + 1 < actual ? 'hecho' : i + 1 === actual ? 'ahora' : ''}"></i>`).join('');
     const e = Math.max(0, Math.min(100, Math.round(d.estabilidad ?? 0)));
     panel.innerHTML = `
-      <header class="cir-cab"><small>${d.imprevisto ? 'COMPLICACIÓN IMPREVISTA' : 'QUIRÓFANO'}</small><h3>${escaparHtml(d.nombreCirugia ?? '')}</h3></header>
+      <header class="cir-cab"><small>${d.imprevisto ? tr('COMPLICACIÓN IMPREVISTA') : tr('QUIRÓFANO')}</small><h3>${escaparHtml(d.nombreCirugia ?? '')}</h3></header>
       <div class="cir-pasos"><span>${t('uiPaso')} ${actual}/${total}</span><div class="puntos">${puntos}</div></div>
       <h4 class="cir-titulo${d.imprevisto ? ' mal' : ''}">${escaparHtml(d.titulo ?? '')}</h4>
       <p class="cir-evento${d.imprevisto ? ' mal' : ''}">${escaparHtml(d.evento ?? '')}</p>
@@ -1019,51 +1019,51 @@ export class ThreeIO implements IO {
     const pac = inf.pacientes
       .map((p) => {
         const est = p.estrellas !== undefined ? `<span class="estrellas" title="${p.estrellas}/5">${'★'.repeat(p.estrellas)}<i>${'★'.repeat(5 - p.estrellas)}</i></span>` : '';
-        return `<li class="${p.tono}"><div><b>${escaparHtml(p.nombre)}</b><small>${escaparHtml(p.patologia)}${p.cie10 ? ` · <em>${escaparHtml(p.cie10)}</em>` : ''}${p.atipica ? ' · atípica' : ''}</small></div><span class="destino ${p.tono}">${escaparHtml(p.destino)}</span>${est}</li>`;
+        return `<li class="${p.tono}"><div><b>${escaparHtml(p.nombre)}</b><small>${escaparHtml(p.patologia)}${p.cie10 ? ` · <em>${escaparHtml(p.cie10)}</em>` : ''}${p.atipica ? ` · ${tr('atípica')}` : ''}</small></div><span class="destino ${p.tono}">${escaparHtml(tr(p.destino))}</span>${est}</li>`;
       })
       .join('');
-    const balance = inf.balance.map((b) => `<div class="${b.tono ?? ''}"><dt>${escaparHtml(b.etiqueta)}</dt><dd>${escaparHtml(b.valor)}</dd></div>`).join('');
+    const balance = inf.balance.map((b) => `<div class="${b.tono ?? ''}"><dt>${escaparHtml(tr(b.etiqueta))}</dt><dd>${escaparHtml(tr(b.valor))}</dd></div>`).join('');
     const equipo = inf.equipo
-      ? `<h3>Por cirujano</h3><ul class="inf-equipo">${inf.equipo.map((e) => `<li><b>${escaparHtml(e.nombre)}</b><span>${e.expedientes} exp. · media ${e.media.toFixed(1)} ★</span></li>`).join('')}</ul>`
+      ? `<h3>${tr('Por cirujano')}</h3><ul class="inf-equipo">${inf.equipo.map((e) => `<li><b>${escaparHtml(e.nombre)}</b><span>${e.expedientes} ${u('exp')} · ${u('media')} ${e.media.toFixed(1)} ★</span></li>`).join('')}</ul>`
       : '';
     const pr = this.progreso;
     const prox = pr ? proximoRango(pr.xp) : null;
     const carreraHtml = pr
       ? `<section class="inf-card carrera"><h3>${t('uiExpediente')}</h3>
-          <div class="carrera-xp"><b>+${pr.ganada} XP</b><span>${pr.xp} XP · guardia nº ${pr.guardias}</span></div>
-          ${pr.rangoAhora !== pr.rangoAntes ? `<div class="ascenso">${iconoPorNombre('estrella')}<span>ASCENSO · <b>${escaparHtml(pr.rangoAhora)}</b></span></div>` : `<p class="rango-txt">${escaparHtml(pr.rangoAhora)}${prox ? ` · a ${prox.faltan} XP de ${escaparHtml(prox.nombre)}` : ''}</p>`}
-          ${pr.nuevas.map((m) => `<div class="nueva-mejora">${iconoPorNombre('candado')}<span><small>Nuevo en tu taquilla</small><b>${escaparHtml(m.nombre)}</b><em>${escaparHtml(m.efecto)}</em></span></div>`).join('')}
+          <div class="carrera-xp"><b>+${pr.ganada} XP</b><span>${pr.xp} XP · ${u('xpGuardia')} ${pr.guardias}</span></div>
+          ${pr.rangoAhora !== pr.rangoAntes ? `<div class="ascenso">${iconoPorNombre('estrella')}<span>${tr('ASCENSO')} · <b>${escaparHtml(tr(pr.rangoAhora))}</b></span></div>` : `<p class="rango-txt">${escaparHtml(tr(pr.rangoAhora))}${prox ? ` · ${escaparHtml(tr(`a ${prox.faltan} XP de ${prox.nombre}`))}` : ''}</p>`}
+          ${pr.nuevas.map((m) => `<div class="nueva-mejora">${iconoPorNombre('candado')}<span><small>${tr('Nuevo en tu taquilla')}</small><b>${escaparHtml(tr(m.nombre))}</b><em>${escaparHtml(tr(m.efecto))}</em></span></div>`).join('')}
         </section>`
       : '';
     const dia = this.intentosDiario;
     const idxEste = dia ? dia.intentos.indexOf(dia.puntos) : -1;
     const diarioHtml = dia
-      ? `<section class="inf-card diario"><h3>Guardia del día · ${escaparHtml(dia.fecha)}</h3><ol>${dia.intentos.slice(0, 8).map((p, i) => `<li class="${i === idxEste ? 'este' : ''}">${i === 0 ? '🏆 ' : ''}<b>${p}</b>${i === idxEste ? '<small>esta guardia</small>' : ''}</li>`).join('')}</ol><p>Intento nº ${dia.intentos.length} de hoy. La misma noche espera a cualquiera: reta a alguien.</p></section>`
+      ? `<section class="inf-card diario"><h3>${tr('Guardia del día')} · ${escaparHtml(dia.fecha)}</h3><ol>${dia.intentos.slice(0, 8).map((p, i) => `<li class="${i === idxEste ? 'este' : ''}">${i === 0 ? '🏆 ' : ''}<b>${p}</b>${i === idxEste ? `<small>${tr('esta guardia')}</small>` : ''}</li>`).join('')}</ol><p>${tr(`Intento nº ${dia.intentos.length} de hoy. La misma noche espera a cualquiera: reta a alguien.`)}</p></section>`
       : '';
     let pie = '';
     if (this.botinPendiente) {
-      pie = `<section class="inf-botin"><h3>Botín de guardia</h3><p>Hasta la peor noche te manda a casa con algo. Elige un talismán para la próxima (una noche, un uso):</p>
+      pie = `<section class="inf-botin"><h3>${tr('Botín de guardia')}</h3><p>${tr('Hasta la peor noche te manda a casa con algo. Elige un talismán para la próxima (una noche, un uso):')}</p>
         <div class="botin-fila">${this.botinPendiente.opciones
           .map(
             (op, i) =>
-              `<button type="button" class="talisman" data-i="${i}">${iconoPorNombre('talisman')}<b>${escaparHtml(sinAnsi(op.etiqueta).replace(/^\S+\s/, ''))}</b><small>${escaparHtml(op.detalle ?? '')}</small><kbd>${i + 1}</kbd></button>`,
+              `<button type="button" class="talisman" data-i="${i}">${iconoPorNombre('talisman')}<b>${escaparHtml(tr(sinAnsi(op.etiqueta).replace(/^\S+\s/, '')))}</b><small>${escaparHtml(tr(op.detalle ?? ''))}</small><kbd>${i + 1}</kbd></button>`,
           )
           .join('')}</div></section>`;
     } else if (terminada) {
-      pie = `<section class="inf-botin hecho"><p>Talismán guardado en tu taquilla: te espera en la próxima guardia.</p><button type="button" class="gran-boton" id="nueva">${t('uiNuevaGuardia')}${icono('continuar')}</button></section>`;
+      pie = `<section class="inf-botin hecho"><p>${tr('Talismán guardado en tu taquilla: te espera en la próxima guardia.')}</p><button type="button" class="gran-boton" id="nueva">${t('uiNuevaGuardia')}${icono('continuar')}</button></section>`;
     }
     const positivo = inf.puntos >= 0;
     cont.innerHTML = `
       <div class="inf-wrap">
-        <header class="inf-cab"><small>08:00 · ${escaparHtml(this.hudEstado?.hospital ?? '')}</small><h1>${t('uiParte')}</h1></header>
+        <header class="inf-cab"><small>08:00 · ${escaparHtml(tr(this.hudEstado?.hospital ?? ''))}</small><h1>${t('uiParte')}</h1></header>
         <section class="inf-puntos">
           <div class="gran-puntos ${positivo ? 'ok' : 'mal'}"><small>${t('uiPuntuacion')}</small><b id="cuenta">0</b></div>
-          <blockquote class="inf-verdicto">«${escaparHtml(inf.veredicto)}»<cite>Jefe de Servicio</cite></blockquote>
+          <blockquote class="inf-verdicto">«${escaparHtml(inf.veredicto)}»<cite>${tr('Jefe de Servicio')}</cite></blockquote>
         </section>
-        ${inf.notas.length ? `<ul class="inf-notas">${inf.notas.map((n) => `<li>${escaparHtml(n)}</li>`).join('')}</ul>` : ''}
+        ${inf.notas.length ? `<ul class="inf-notas">${inf.notas.map((n) => `<li>${escaparHtml(tr(n))}</li>`).join('')}</ul>` : ''}
         <div class="inf-cols">
-          <section class="inf-card"><h3>Pacientes</h3><ul class="inf-pacientes">${pac}</ul></section>
-          <section class="inf-card"><h3>Balance</h3><dl class="inf-balance">${balance}</dl>${equipo}</section>
+          <section class="inf-card"><h3>${tr('Pacientes')}</h3><ul class="inf-pacientes">${pac}</ul></section>
+          <section class="inf-card"><h3>${tr('Balance')}</h3><dl class="inf-balance">${balance}</dl>${equipo}</section>
         </div>
         <div class="inf-cols">${carreraHtml}${diarioHtml}</div>
         ${pie}
